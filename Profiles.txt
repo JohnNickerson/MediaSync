@@ -1,0 +1,7 @@
+Photos:
+	Filenames: *.jpg
+Music:
+	Filenames: *.mp3
+Video:
+	Filenames: *.avi|*.3gp|*.mov
+	Blocksize: 10MB

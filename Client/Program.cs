@@ -8,28 +8,21 @@ namespace Client
 {
     class Program
     {
+        // TODO: Allow output to be redirected for GUIs.
         static void Main(string[] args)
         {
             if (ConfigurationManager.AppSettings.AllKeys.Contains(Environment.MachineName))
             {
                 string[] paths = ConfigurationManager.AppSettings[Environment.MachineName].Split(';');
-                Service s = new Service(paths[0], paths[1]);
-                // Loop while there are active requests.
-                while (true)
-                {
-                    s.CheckInbox();
-                    s.RequestFiles();
-                    s.ClearEmptyFolders();
-                    //s.RemoveMissedRequests();
-                    if (s.OutgoingRequests == 0)
-                    {
-                        break;
-                    }
-                    System.Threading.Thread.Sleep(new TimeSpan(0, 5, 0));
-                }
+                bool simulate = true;
+                ulong size = 100 * (10 ^ 6);
+                Service s = new Service(paths[0], paths[1], size, simulate, new ConsoleView());
+
+                s.Sync();
             }
             else
             {
+                Console.WriteLine("Please add a configuration entry for the following machine name:");
                 Console.WriteLine(Environment.MachineName);
             }
             Console.WriteLine("Finished. Press a key to exit.");

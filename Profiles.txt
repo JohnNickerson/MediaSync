@@ -1,7 +1,10 @@
-Photos:
-	Filenames: *.jpg
-Music:
-	Filenames: *.mp3
-Video:
-	Filenames: *.avi|*.3gp|*.mov
-	Blocksize: 10MB
+[Photos]
+	sync-space = 4GB
+
+[Music]
+	sync-space = 4GB
+
+[Video]
+	sync-space = 4GB
+	
+;Seems too simple to be required.

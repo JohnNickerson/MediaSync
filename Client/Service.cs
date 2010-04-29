@@ -9,13 +9,24 @@ namespace Client
     /// <summary>
     /// A photo synchronising service.
     /// </summary>
-    class Service
+    public class Service
     {
         #region Fields
         public string SourcePath;
         public string WatchPath;
-        private List<string> ActiveRequests;
-        private string InboxPath;
+        private int NumPeers;
+        private Dictionary<string, int> FileCounts;
+        public ulong SizeLimit;
+
+        /// <summary>
+        /// A flag that indicates whether the processes should be simulated (no actual file operations).
+        /// </summary>
+        private bool Simulate;
+
+        /// <summary>
+        /// A view to show output from operations.
+        /// </summary>
+        private IOutputView _view;
         #endregion
 
         #region Constructors
@@ -24,58 +35,77 @@ namespace Client
         /// </summary>
         /// <param name="source">The photo folder location.</param>
         /// <param name="watch">The sync folder, where requests are made and fulfilled.</param>
-        public Service(string source, string watch)
+        public Service(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
         {
             SourcePath = source;
             WatchPath = watch;
-            ActiveRequests = new List<string>();
-            InboxPath = PathCombine(WatchPath, Environment.MachineName);
+            NumPeers = 0;
+            FileCounts = new Dictionary<string, int>();
+            SizeLimit = reservesize;
+            Simulate = simulate;
+            _view = view;
         }
         #endregion
 
         #region Methods
         /// <summary>
-        /// Checks the machine inbox for requests and images.
+        /// Creates an index file for this machine.
         /// </summary>
-        public void CheckInbox()
+        public void IndexFiles()
         {
-            if (!Directory.Exists(InboxPath))
+            string indexfile = PathCombine(WatchPath, string.Format("{0}_index.txt", Environment.MachineName));
+
+            Queue<string> queue = new Queue<string>();
+            queue.Enqueue(SourcePath);
+            List<string> contents = new List<string>();
+            // While the queue is not empty,
+            while (queue.Count > 0)
             {
-                Directory.CreateDirectory(InboxPath);
+                // Dequeue a folder to process.
+                string folder = queue.Dequeue();
+                // Enqueue subfolders.
+                foreach (string subfolder in Directory.GetDirectories(folder))
+                {
+                    queue.Enqueue(subfolder);
+                }
+                // Add all image files to the index.
+                foreach (string file in Directory.GetFiles(folder, "*.jpg"))
+                {
+                    // Remove the base path.
+                    string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
+                    contents.Add(trunc_file);
+                    FileCounts[trunc_file] = 1;
+                }
+            }
+            // Overwrite any old index that exists.
+            if (Simulate)
+            {
+                _view.WriteLine("Simulation run: no index writing.");
+            }
+            else
+            {
+                File.WriteAllLines(indexfile, contents.ToArray());
             }
 
-            // Look for incoming photos.
-            // TODO: Handle all image file types.
-            foreach (string incoming in Directory.GetFiles(InboxPath, "*.jpg", SearchOption.AllDirectories))
+            // Compare this index with others.
+            NumPeers = Directory.GetFiles(WatchPath, "*_index.txt").Length;
+
+            foreach (string otherindex in Directory.GetFiles(WatchPath, "*_index.txt"))
             {
-                // These paths might need some more processing.
-                // Remove the watch path.
-                string relativepath = incoming.Substring(WatchPath.Length + Environment.MachineName.Length + 2);
-                string targetfile = PathCombine(SourcePath, relativepath);
-                string targetdir = Path.GetDirectoryName(targetfile);
-                if (!Directory.Exists(targetdir))
-                    Directory.CreateDirectory(targetdir);
-                if (!incoming.Equals(targetfile))
+                if (!otherindex.Equals(indexfile))
                 {
-                    try
+                    foreach (string idxfilename in File.ReadAllLines(otherindex))
                     {
-                        // Bug: Linux not moving files. Source and target locations the same.
-                        File.Move(incoming, targetfile);
-                        if (ActiveRequests.Contains(relativepath))
+                        if (FileCounts.ContainsKey(idxfilename))
                         {
-                            ActiveRequests.Remove(relativepath);
+                            FileCounts[idxfilename]++;
+                        }
+                        else
+                        {
+                            FileCounts[idxfilename] = 1;
                         }
                     }
-                    catch (Exception)
-                    {
-                        Console.WriteLine("Could not move file: {0}->{1}", incoming, targetfile);
-                    }
                 }
-                else
-                {
-                    Console.WriteLine("Error: source file location for move is target location.");
-                }
-                Console.WriteLine("Moving {0} to {1}", incoming, Path.Combine(SourcePath, incoming));
             }
         }
 
@@ -83,6 +113,7 @@ namespace Client
         /// Compares this machine's stock with another machine's index and requests any missing files.
         /// </summary>
         /// <param name="machine">The machine whose index to compare with.</param>
+        [Obsolete]
         public void RequestFiles()
         {
             string machine;
@@ -97,25 +128,18 @@ namespace Client
                     {
                         // Open other machine's index.
                         string[] index = File.ReadAllLines(PathCombine(WatchPath, machine, "index.txt"));
-                        int requestcount = Directory.GetFiles(PathCombine(WatchPath, machine), "*.get").Length + ActiveRequests.Count;
                         
                         // For each line...
                         foreach (string filename in index)
                         {
                             // Check whether the listed file exists locally.
-                            if (!File.Exists(PathCombine(SourcePath, filename))
-                                // Only make a few requests at a time.
-                                && requestcount < 10
-                                // Don't keep requesting the same files from everywhere
-                                && !ActiveRequests.Contains(filename))
+                            if (!File.Exists(PathCombine(SourcePath, filename)))
                             {
                                 // If not, construct a request.
                                 string[] request = new string[] { filename, Environment.MachineName };
-                                Console.WriteLine("Requesting {0} from {1}", filename, machine);
+                                _view.WriteLine("Requesting {0} from {1}", filename, machine);
                                 // Bug: This results in invalid file names.
                                 File.WriteAllLines(PathCombine(WatchPath, machine, Path.GetFileName(filename.Replace('\\', Path.DirectorySeparatorChar)) + ".get"), request);
-                                requestcount++;
-                                ActiveRequests.Add(filename);
                             }
                         }
                     }
@@ -149,66 +173,181 @@ namespace Client
         /// </summary>
         internal void ClearEmptyFolders()
         {
-            string inbox = Path.Combine(WatchPath, Environment.MachineName);
-            foreach (string dir in Directory.GetDirectories(inbox))
+            string inbox = WatchPath;
+            foreach (string dir in Directory.GetDirectories(inbox, "*", SearchOption.AllDirectories))
             {
                 if (Directory.GetFiles(dir).Length == 0)
                 {
                     // Empty folder. Remove it.
                     try
                     {
-                        Directory.Delete(dir);
+                        if (Simulate)
+                        {
+                            _view.WriteLine("Simulation: remove directory {0}", dir);
+                        }
+                        else
+                        {
+                            Directory.Delete(dir);
+                        }
                     }
                     catch
                     {
-                        Console.WriteLine("Could not delete apparently empty folder: {0}", dir);
+                        _view.WriteLine("Could not delete apparently empty folder: {0}", dir);
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Removes requests that have somehow been missed, perhaps due to Dropbox lag.
+        /// Pushes files to shared storage where they are found wanting in other peers.
         /// </summary>
-        public void RemoveMissedRequests()
+        internal void PushFiles()
         {
-            if (ActiveRequests.Count > 100)
+            // For every file in the index
+            foreach (string filename in FileCounts.Keys)
             {
-                for (int x = 0; x < ActiveRequests.Count; )
+                // If the size allocation has been exceeded, stop.
+                if (WatchPathSize() > SizeLimit)
                 {
-                    string filename = ActiveRequests[x];
-                    if (!File.Exists(PathCombine(SourcePath, filename)))
+                    break;
+                }
+                string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
+                string targetfile = PathCombine(WatchPath, filename);
+
+                // If the file is missing from somewhere
+                if (FileCounts[filename] < NumPeers
+                    // ...and exists locally
+                    && File.Exists(PathCombine(SourcePath, filename_local))
+                    // ...and is not in shared storage
+                    && !File.Exists(targetfile))
+                {
+                    // ...copy it to shared storage.
+                    string targetdir = Path.GetDirectoryName(targetfile);
+                    if (Simulate)
                     {
-                        ActiveRequests.RemoveAt(x);
+                        _view.WriteLine("Simulation: copy -> {0}", targetfile);
                     }
                     else
                     {
-                        x++;
+                        _view.WriteLine("Copying -> {0}", targetfile);
+                        if (!Directory.Exists(targetdir))
+                            Directory.CreateDirectory(targetdir);
+                        File.Copy(PathCombine(SourcePath, filename_local), targetfile);
                     }
                 }
             }
         }
-        #endregion
 
-        #region Properties
         /// <summary>
-        /// Gets the number of currently-active requests.
+        /// Copies files from shared storage if they are not present locally.
         /// </summary>
-        public int OutgoingRequests
+        internal void PullFiles()
         {
-            get
+            foreach (string incoming in Directory.GetFiles(WatchPath, "*.jpg", SearchOption.AllDirectories))
             {
-                return ActiveRequests.Count;
+                // These paths might need some more processing.
+                // Remove the watch path.
+                string relativepath = incoming.Substring(WatchPath.Length + 1);
+                string targetfile = PathCombine(SourcePath, relativepath);
+                string targetdir = Path.GetDirectoryName(targetfile);
+                if (!Directory.Exists(targetdir) && !Simulate)
+                    Directory.CreateDirectory(targetdir);
+                if (!incoming.Equals(targetfile)
+                    && !File.Exists(targetfile))
+                {
+                    try
+                    {
+                        if (Simulate)
+                        {
+                            _view.WriteLine("Simulation: copy <- {0}", targetfile);
+                        }
+                        else
+                        {
+                            // Linux Bug: Source and target locations the same. Probably a slash problem.
+                            _view.WriteLine("Copying <- {0}", targetfile);
+                            File.Copy(incoming, targetfile);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                    }
+                }
+                else
+                {
+                    _view.WriteLine("Error: source file location for move is target location.");
+                }
             }
         }
 
-        public int IncomingRequests
+        /// <summary>
+        /// Checks for files in shared storage that are now present everywhere and removes them from shared
+        /// storage to make more room.
+        /// </summary>
+        internal void PruneFiles()
         {
-            get
+            // For each file in the watch path
+            foreach (string filename in Directory.GetFiles(WatchPath, "*.jpg", SearchOption.AllDirectories))
             {
-                return Directory.GetFiles(InboxPath, "*.get").Length;
+                // If the file exists in all peers
+                string relativefile = filename.Remove(0, WatchPath.Length + 1);
+                if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
+                {
+                    if (Simulate)
+                    {
+                        _view.WriteLine("Simulation: remove {0}", filename);
+                    }
+                    else
+                    {
+                        // Remove it from shared storage.
+                        _view.WriteLine("Removing {0}", filename);
+                        File.Delete(filename);
+                    }
+                }
             }
+            ClearEmptyFolders();
+        }
+
+        /// <summary>
+        /// Gets the size of all files in the watch path combined.
+        /// </summary>
+        /// <returns>A size, in bytes, representing all files combined.</returns>
+        private ulong WatchPathSize()
+        {
+            ulong total = 0;
+
+            foreach (string filename in Directory.GetFiles(WatchPath, "*.jpg"))
+            {
+                total += (ulong)File.ReadAllBytes(filename).Length;
+            }
+
+            return total;
         }
         #endregion
+
+        public void Sync()
+        {
+            // Check for files in storage wanted here, and copy them.
+            // Doing this first ensures that any found everywhere can be removed early.
+            PullFiles();
+
+            // Index local files.
+            IndexFiles();
+            // Compare this index to other indices.
+            // For each index, including local,
+            // for each file name,
+            // Increment a file name count.
+            // Need names of files that are:
+            //  1. Here but missing elsewhere. (count < peers && File.Exists)
+            //  2. Elsewhere but missing here. (!File.Exists)
+            //  3. Found everywhere.            (count == peers)
+
+            // Check for files found in all indexes and in storage, and remove them.
+            PruneFiles();
+
+            // Where files are found wanting in other machines, push to shared storage.
+            // If storage is full, do not copy any further.
+            PushFiles();
+        }
     }
 }

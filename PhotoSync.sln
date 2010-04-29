@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "PhotoSync\Server.csproj", "{947A93EE-87BE-4CAD-A494-34E7B7871D47}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatientSync", "PatientSync\PatientSync.csproj", "{54167779-6BAC-441C-BF93-5A6715DBEA60}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,14 +11,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{947A93EE-87BE-4CAD-A494-34E7B7871D47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{947A93EE-87BE-4CAD-A494-34E7B7871D47}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{947A93EE-87BE-4CAD-A494-34E7B7871D47}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{947A93EE-87BE-4CAD-A494-34E7B7871D47}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

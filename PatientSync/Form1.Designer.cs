@@ -41,6 +41,7 @@
             this.RunButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.OutputBox = new System.Windows.Forms.TextBox();
+            this.SimCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -172,11 +173,24 @@
             this.OutputBox.Size = new System.Drawing.Size(347, 193);
             this.OutputBox.TabIndex = 11;
             // 
+            // SimCheckBox
+            // 
+            this.SimCheckBox.AutoSize = true;
+            this.SimCheckBox.Checked = true;
+            this.SimCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.SimCheckBox.Location = new System.Drawing.Point(13, 130);
+            this.SimCheckBox.Name = "SimCheckBox";
+            this.SimCheckBox.Size = new System.Drawing.Size(94, 17);
+            this.SimCheckBox.TabIndex = 12;
+            this.SimCheckBox.Text = "Simulate only?";
+            this.SimCheckBox.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(374, 378);
+            this.Controls.Add(this.SimCheckBox);
             this.Controls.Add(this.OutputBox);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.RunButton);
@@ -211,6 +225,7 @@
         private System.Windows.Forms.Button RunButton;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox OutputBox;
+        private System.Windows.Forms.CheckBox SimCheckBox;
     }
 }
 

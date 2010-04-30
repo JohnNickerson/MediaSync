@@ -7,11 +7,18 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Client;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
+using System.IO;
 
 namespace PatientSync
 {
     public partial class Form1 : Form, IOutputView
     {
+        #region Fields
+        private string _filename;
+        #endregion
+
         #region Constructors
         /// <summary>
         /// Constructs a new form instance.
@@ -58,28 +65,150 @@ namespace PatientSync
         {
             OutputBox.Clear();
             WriteLine("Run {0} at {1}", SimCheckBox.Checked ? "(simulated)" : string.Empty, DateTime.Now);
-            ulong sharesize = ulong.Parse(SpaceBox.Text);
-            switch (SpaceUnitSelect.Text)
-            {
-                case "TB":
-                    sharesize *= 10 ^ 12;
-                    break;
-                case "GB":
-                    sharesize *= 10 ^ 9;
-                    break;
-                case "MB":
-                    sharesize *= 10 ^ 6;
-                    break;
-                case "KB":
-                    sharesize *= 1000;
-                    break;
-                case "B":
-                default:
-                    break;
-            }
+            ulong sharesize = ReserveSize;
             Service syncer = new Service(SourceBox.Text, SharedBox.Text, sharesize, SimCheckBox.Checked, this);
             syncer.Sync();
             WriteLine("Done.");
+        }
+
+        private ulong ReserveSize
+        {
+            get
+            {
+                ulong sharesize = ulong.Parse(SpaceBox.Text);
+                switch (SpaceUnitSelect.Text)
+                {
+                    case "TB":
+                        sharesize *= (ulong)Math.Pow(10, 12);
+                        break;
+                    case "GB":
+                        sharesize *= (ulong)Math.Pow(10, 9);
+                        break;
+                    case "MB":
+                        sharesize *= (ulong)Math.Pow(10, 6);
+                        break;
+                    case "KB":
+                        sharesize *= 1000;
+                        break;
+                    case "B":
+                    default:
+                        break;
+                }
+                return sharesize;
+            }
+            set
+            {
+                SpaceBox.Text = value.ToString();
+                int zeroes = 0;
+                for (int x = SpaceBox.Text.Length - 1; x > 0 && SpaceBox.Text[x] == '0'; x--)
+                {
+                    zeroes++;
+                }
+                if (zeroes >= 12)
+                {
+                    SpaceUnitSelect.Text = "TB";
+                    SpaceBox.Text = SpaceBox.Text.Substring(0, SpaceBox.Text.Length - 12);
+                }
+                else if (zeroes >= 9)
+                {
+                    SpaceUnitSelect.Text = "GB";
+                    SpaceBox.Text = SpaceBox.Text.Substring(0, SpaceBox.Text.Length - 9);
+                }
+                else if (zeroes >= 6)
+                {
+                    SpaceUnitSelect.Text = "MB";
+                    SpaceBox.Text = SpaceBox.Text.Substring(0, SpaceBox.Text.Length - 6);
+                }
+                else if (zeroes >= 3)
+                {
+                    SpaceUnitSelect.Text = "KB";
+                    SpaceBox.Text = SpaceBox.Text.Substring(0, SpaceBox.Text.Length - 3);
+                }
+                else
+                {
+                    SpaceUnitSelect.Text = "B";
+                }
+            }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_filename == null)
+            {
+                saveAsToolStripMenuItem_Click(sender, e);
+            }
+            else
+            {
+                SaveOptions();
+            }
+        }
+
+        private void SaveOptions()
+        {
+            SyncOptions s = new SyncOptions();
+            s.SourcePath = SourceBox.Text;
+            s.SharedPath = SharedBox.Text;
+            s.Simulate = SimCheckBox.Checked;
+            s.ReserveSpace = ReserveSize;
+
+            XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
+            Stream stream = new FileStream(_filename,
+                                     FileMode.Create,
+                                     FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, s);
+            stream.Close();
+
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DialogResult.OK == saveFileDialog1.ShowDialog(this))
+            {
+                _filename = saveFileDialog1.FileName;
+            }
+            SaveOptions();
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DialogResult.OK == openFileDialog1.ShowDialog(this))
+            {
+                _filename = openFileDialog1.FileName;
+                LoadOptions();
+            }
+            else
+            {
+                _filename = null;
+            }
+        }
+
+        private void LoadOptions()
+        {
+            XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
+            Stream stream = new FileStream(_filename,
+                FileMode.Open,
+                FileAccess.Read, FileShare.Read);
+            SyncOptions s = (SyncOptions)formatter.Deserialize(stream);
+            stream.Close();
+
+            SourceBox.Text = s.SourcePath;
+            SharedBox.Text = s.SharedPath;
+            ReserveSize = s.ReserveSpace;
+            SimCheckBox.Checked = s.Simulate;
+        }
+
+        private void newToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _filename = null;
+            SourceBox.Text = string.Empty;
+            SharedBox.Text = string.Empty;
+            ReserveSize = 0;
+            SimCheckBox.Checked = true;
         }
         #endregion
     }

@@ -8,7 +8,6 @@ namespace Client
 {
     class Program
     {
-        // TODO: Allow output to be redirected for GUIs.
         static void Main(string[] args)
         {
             if (ConfigurationManager.AppSettings.AllKeys.Contains(Environment.MachineName))

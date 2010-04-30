@@ -27,6 +27,8 @@ namespace Client
         /// A view to show output from operations.
         /// </summary>
         private IOutputView _view;
+
+        private string filesearch = "*.*";
         #endregion
 
         #region Constructors
@@ -69,7 +71,7 @@ namespace Client
                     queue.Enqueue(subfolder);
                 }
                 // Add all image files to the index.
-                foreach (string file in Directory.GetFiles(folder, "*.jpg"))
+                foreach (string file in Directory.GetFiles(folder, filesearch))
                 {
                     // Remove the base path.
                     string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
@@ -103,44 +105,6 @@ namespace Client
                         else
                         {
                             FileCounts[idxfilename] = 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Compares this machine's stock with another machine's index and requests any missing files.
-        /// </summary>
-        /// <param name="machine">The machine whose index to compare with.</param>
-        [Obsolete]
-        public void RequestFiles()
-        {
-            string machine;
-            foreach (string folder in Directory.GetDirectories(WatchPath))
-            {
-                if (!folder.EndsWith(Environment.MachineName))
-                {
-                    string[] parts = folder.Split(Path.DirectorySeparatorChar);
-                    machine = (parts[parts.Length - 1]);
-                    string indexfile = PathCombine(WatchPath, machine, "index.txt");
-                    if (File.Exists(indexfile))
-                    {
-                        // Open other machine's index.
-                        string[] index = File.ReadAllLines(PathCombine(WatchPath, machine, "index.txt"));
-                        
-                        // For each line...
-                        foreach (string filename in index)
-                        {
-                            // Check whether the listed file exists locally.
-                            if (!File.Exists(PathCombine(SourcePath, filename)))
-                            {
-                                // If not, construct a request.
-                                string[] request = new string[] { filename, Environment.MachineName };
-                                _view.WriteLine("Requesting {0} from {1}", filename, machine);
-                                // Bug: This results in invalid file names.
-                                File.WriteAllLines(PathCombine(WatchPath, machine, Path.GetFileName(filename.Replace('\\', Path.DirectorySeparatorChar)) + ".get"), request);
-                            }
                         }
                     }
                 }
@@ -243,7 +207,7 @@ namespace Client
         /// </summary>
         internal void PullFiles()
         {
-            foreach (string incoming in Directory.GetFiles(WatchPath, "*.jpg", SearchOption.AllDirectories))
+            foreach (string incoming in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
             {
                 // These paths might need some more processing.
                 // Remove the watch path.
@@ -287,7 +251,7 @@ namespace Client
         internal void PruneFiles()
         {
             // For each file in the watch path
-            foreach (string filename in Directory.GetFiles(WatchPath, "*.jpg", SearchOption.AllDirectories))
+            foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
             {
                 // If the file exists in all peers
                 string relativefile = filename.Remove(0, WatchPath.Length + 1);
@@ -312,18 +276,17 @@ namespace Client
         /// Gets the size of all files in the watch path combined.
         /// </summary>
         /// <returns>A size, in bytes, representing all files combined.</returns>
-        private ulong WatchPathSize()
+        public ulong WatchPathSize()
         {
             ulong total = 0;
 
-            foreach (string filename in Directory.GetFiles(WatchPath, "*.jpg"))
+            foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
             {
                 total += (ulong)File.ReadAllBytes(filename).Length;
             }
 
             return total;
         }
-        #endregion
 
         public void Sync()
         {
@@ -349,5 +312,6 @@ namespace Client
             // If storage is full, do not copy any further.
             PushFiles();
         }
+        #endregion
     }
 }

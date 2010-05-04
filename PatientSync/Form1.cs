@@ -27,10 +27,19 @@ namespace PatientSync
         {
             InitializeComponent();
 
-            // SourceBox.Text = User folder + Pictures
-            SourceBox.Text = string.Format(@"C:\Users\{0}\Pictures", Environment.UserName);
-            // SharedBox.Text = User folder + Dropbox + Pictures
-            SharedBox.Text = string.Format(@"C:\Users\{0}\Documents\My Dropbox\Photos", Environment.UserName);
+            // Look for default settings.
+            if (File.Exists("default.xml"))
+            {
+                _filename = "default.xml";
+                LoadOptions();
+            }
+            else
+            {
+                // SourceBox.Text = User folder + Pictures
+                SourceBox.Text = string.Format(@"C:\Users\{0}\Pictures", Environment.UserName);
+                // SharedBox.Text = User folder + Dropbox + Pictures
+                SharedBox.Text = string.Format(@"C:\Users\{0}\Documents\My Dropbox\Photos", Environment.UserName);
+            }
         }
         #endregion
 
@@ -133,6 +142,11 @@ namespace PatientSync
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // Save details if working with the default file.
+            if (_filename == "default.xml")
+            {
+                SaveOptions();
+            }
             Application.Exit();
         }
 

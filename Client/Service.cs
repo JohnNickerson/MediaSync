@@ -73,10 +73,13 @@ namespace Client
                 // Add all image files to the index.
                 foreach (string file in Directory.GetFiles(folder, filesearch))
                 {
-                    // Remove the base path.
-                    string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
-                    contents.Add(trunc_file);
-                    FileCounts[trunc_file] = 1;
+                    if (!file.EndsWith("_index.txt"))
+                    {
+                        // Remove the base path.
+                        string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
+                        contents.Add(trunc_file);
+                        FileCounts[trunc_file] = 1;
+                    }
                 }
             }
             // Overwrite any old index that exists.
@@ -167,6 +170,8 @@ namespace Client
         /// </summary>
         internal void PushFiles()
         {
+            // No point trying to push files when they'll all be ignored.
+            if (NumPeers == 1) return;
             // For every file in the index
             foreach (string filename in FileCounts.Keys)
             {

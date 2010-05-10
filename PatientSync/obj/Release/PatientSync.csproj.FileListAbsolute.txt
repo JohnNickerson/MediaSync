@@ -8,3 +8,5 @@ C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\PhotoSync\PatientSync\obj\
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\PhotoSync\PatientSync\obj\Release\PatientSync.pdb
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\PhotoSync\PatientSync\bin\Release\Client.exe
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\PhotoSync\PatientSync\bin\Release\Client.pdb
+C:\Users\John\Documents\My Dropbox\Code\PhotoSync\PatientSync\obj\Release\PatientSync.exe
+C:\Users\John\Documents\My Dropbox\Code\PhotoSync\PatientSync\obj\Release\PatientSync.pdb

@@ -21,6 +21,9 @@ namespace Client
         /// <summary>
         /// A flag that indicates whether the processes should be simulated (no actual file operations).
         /// </summary>
+        /// <remarks>
+        /// TODO: Allow for creation of an update script rather than just simulation output.
+        /// </remarks>
         private bool Simulate;
 
         /// <summary>
@@ -221,25 +224,31 @@ namespace Client
                 string targetdir = Path.GetDirectoryName(targetfile);
                 if (!Directory.Exists(targetdir) && !Simulate)
                     Directory.CreateDirectory(targetdir);
-                if (!incoming.Equals(targetfile)
-                    && !File.Exists(targetfile))
+                if (!incoming.Equals(targetfile))
                 {
-                    try
+                    if (File.Exists(targetfile))
                     {
-                        if (Simulate)
-                        {
-                            _view.WriteLine("Simulation: copy <- {0}", targetfile);
-                        }
-                        else
-                        {
-                            // Linux Bug: Source and target locations the same. Probably a slash problem.
-                            _view.WriteLine("Copying <- {0}", targetfile);
-                            File.Copy(incoming, targetfile);
-                        }
+                        _view.WriteLine("Target file already exists.");
                     }
-                    catch (Exception)
+                    else
                     {
-                        _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                        try
+                        {
+                            if (Simulate)
+                            {
+                                _view.WriteLine("Simulation: copy <- {0}", targetfile);
+                            }
+                            else
+                            {
+                                // Linux Bug: Source and target locations the same. Probably a slash problem.
+                                _view.WriteLine("Copying <- {0}", targetfile);
+                                File.Copy(incoming, targetfile);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                        }
                     }
                 }
                 else
@@ -283,6 +292,7 @@ namespace Client
         /// <returns>A size, in bytes, representing all files combined.</returns>
         public ulong WatchPathSize()
         {
+            // TODO: Optimise. This method is called a lot and takes a long time.
             ulong total = 0;
 
             foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))

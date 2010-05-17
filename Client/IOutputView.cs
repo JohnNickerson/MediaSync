@@ -11,5 +11,7 @@ namespace Client
     public interface IOutputView
     {
         void WriteLine(string format, params object[] args);
+
+        void Report(SyncOperation op);
     }
 }

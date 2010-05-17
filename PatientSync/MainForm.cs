@@ -13,7 +13,7 @@ using System.IO;
 
 namespace PatientSync
 {
-    public partial class Form1 : Form, IOutputView
+    public partial class MainForm : Form, IOutputView
     {
         #region Fields
         private string _filename;
@@ -23,7 +23,7 @@ namespace PatientSync
         /// <summary>
         /// Constructs a new form instance.
         /// </summary>
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
@@ -65,6 +65,23 @@ namespace PatientSync
         public void WriteLine(string format, params object[] args)
         {
             OutputBox.AppendText(string.Format(format, args));
+            OutputBox.AppendText(Environment.NewLine);
+        }
+
+        public void Report(SyncOperation op)
+        {
+            switch (op.Action)
+            {
+                case SyncOperation.SyncAction.Copy:
+                    OutputBox.AppendText(string.Format("Copying:{2}\t{0}{2}\t->{2}\t{1}", op.SourceFile, op.TargetFile, Environment.NewLine));
+                    break;
+                case SyncOperation.SyncAction.Delete:
+                    OutputBox.AppendText(string.Format("Deleting {0}", op.TargetFile));
+                    break;
+                default:
+                    OutputBox.AppendText(string.Format("Unknown sync action: {0}", op.Action));
+                    break;
+            }
             OutputBox.AppendText(Environment.NewLine);
         }
 

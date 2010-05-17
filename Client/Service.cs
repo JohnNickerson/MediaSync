@@ -17,6 +17,7 @@ namespace Client
         private int NumPeers;
         private Dictionary<string, int> FileCounts;
         public ulong SizeLimit;
+        private ulong _sizecache;
 
         /// <summary>
         /// A flag that indicates whether the processes should be simulated (no actual file operations).
@@ -49,6 +50,7 @@ namespace Client
             SizeLimit = reservesize;
             Simulate = simulate;
             _view = view;
+            _sizecache = 0;
         }
         #endregion
 
@@ -151,11 +153,8 @@ namespace Client
                     // Empty folder. Remove it.
                     try
                     {
-                        if (Simulate)
-                        {
-                            _view.WriteLine("Simulation: remove directory {0}", dir);
-                        }
-                        else
+                        _view.Report(new SyncOperation(dir));
+                        if (!Simulate)
                         {
                             Directory.Delete(dir);
                         }
@@ -195,17 +194,15 @@ namespace Client
                 {
                     // ...copy it to shared storage.
                     string targetdir = Path.GetDirectoryName(targetfile);
-                    if (Simulate)
+                    _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
+                    if (!Simulate)
                     {
-                        _view.WriteLine("Simulation: copy -> {0}", targetfile);
-                    }
-                    else
-                    {
-                        _view.WriteLine("Copying -> {0}", targetfile);
                         if (!Directory.Exists(targetdir))
                             Directory.CreateDirectory(targetdir);
                         File.Copy(PathCombine(SourcePath, filename_local), targetfile);
                     }
+                    // Update size cache.
+                    _sizecache += (ulong)File.ReadAllBytes(targetfile).Length;
                 }
             }
         }
@@ -234,14 +231,10 @@ namespace Client
                     {
                         try
                         {
-                            if (Simulate)
-                            {
-                                _view.WriteLine("Simulation: copy <- {0}", targetfile);
-                            }
-                            else
+                            _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                            if (!Simulate)
                             {
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
-                                _view.WriteLine("Copying <- {0}", targetfile);
                                 File.Copy(incoming, targetfile);
                             }
                         }
@@ -271,14 +264,10 @@ namespace Client
                 string relativefile = filename.Remove(0, WatchPath.Length + 1);
                 if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
                 {
-                    if (Simulate)
-                    {
-                        _view.WriteLine("Simulation: remove {0}", filename);
-                    }
-                    else
+                    _view.Report(new SyncOperation(filename));
+                    if (!Simulate)
                     {
                         // Remove it from shared storage.
-                        _view.WriteLine("Removing {0}", filename);
                         File.Delete(filename);
                     }
                 }
@@ -292,17 +281,27 @@ namespace Client
         /// <returns>A size, in bytes, representing all files combined.</returns>
         public ulong WatchPathSize()
         {
-            // TODO: Optimise. This method is called a lot and takes a long time.
-            ulong total = 0;
-
-            foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
+            if (_sizecache == 0)
             {
-                total += (ulong)File.ReadAllBytes(filename).Length;
-            }
+                // TODO: Optimise. This method is called a lot and takes a long time.
+                ulong total = 0;
 
-            return total;
+                foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
+                {
+                    total += (ulong)File.ReadAllBytes(filename).Length;
+                }
+                _sizecache = total;
+                return total;
+            }
+            else
+            {
+                return _sizecache;
+            }
         }
 
+        /// <summary>
+        /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
+        /// </summary>
         public void Sync()
         {
             // Check for files in storage wanted here, and copy them.

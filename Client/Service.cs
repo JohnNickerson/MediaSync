@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Client
 {
@@ -33,6 +34,11 @@ namespace Client
         private IOutputView _view;
 
         private string filesearch = "*.*";
+
+        /// <summary>
+        /// A list of file name patterns to exclude from synchronisation.
+        /// </summary>
+        public List<Regex> Exclusions;
         #endregion
 
         #region Constructors
@@ -49,6 +55,8 @@ namespace Client
             FileCounts = new Dictionary<string, int>();
             SizeLimit = reservesize;
             Simulate = simulate;
+            Exclusions = new List<Regex>();
+            Exclusions.Add(new Regex(".*_index.txt"));
             _view = view;
             _sizecache = 0;
         }
@@ -78,7 +86,7 @@ namespace Client
                 // Add all image files to the index.
                 foreach (string file in Directory.GetFiles(folder, filesearch))
                 {
-                    if (!file.EndsWith("_index.txt"))
+                    if (!Exclude(file))
                     {
                         // Remove the base path.
                         string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
@@ -120,6 +128,28 @@ namespace Client
         }
 
         /// <summary>
+        /// Checks whether a file name matches any exclusion pattern.
+        /// </summary>
+        /// <param name="file">The file name to test.</param>
+        /// <returns>True if any of the exclusion patterns match the given file name, false otherwise.</returns>
+        private bool Exclude(string file)
+        {
+            bool result = false;
+            string testfile = Path.GetFileName(file);
+
+            foreach (Regex r in Exclusions)
+            {
+                if (r.IsMatch(testfile))
+                {
+                    result = true;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Combines multiple paths into one string according to environment settings.
         /// </summary>
         /// <param name="paths">A list of paths to combine.</param>
@@ -146,9 +176,12 @@ namespace Client
         internal void ClearEmptyFolders()
         {
             string inbox = WatchPath;
-            foreach (string dir in Directory.GetDirectories(inbox, "*", SearchOption.AllDirectories))
+            // Sort by descending length to get leaf nodes first.
+            foreach (string dir in from s in Directory.GetDirectories(inbox, "*", SearchOption.AllDirectories)
+                                       orderby s.Length descending
+                                       select s)
             {
-                if (Directory.GetFiles(dir).Length == 0)
+                if (Directory.GetFiles(dir).Length == 0 && Directory.GetDirectories(dir).Length == 0)
                 {
                     // Empty folder. Remove it.
                     try
@@ -190,7 +223,9 @@ namespace Client
                     // ...and exists locally
                     && File.Exists(PathCombine(SourcePath, filename_local))
                     // ...and is not in shared storage
-                    && !File.Exists(targetfile))
+                    && !File.Exists(targetfile)
+                    // ...and it doesn't match an exclusion pattern
+                    && !Exclude(filename))
                 {
                     // ...copy it to shared storage.
                     string targetdir = Path.GetDirectoryName(targetfile);
@@ -200,9 +235,9 @@ namespace Client
                         if (!Directory.Exists(targetdir))
                             Directory.CreateDirectory(targetdir);
                         File.Copy(PathCombine(SourcePath, filename_local), targetfile);
+                        _sizecache += (ulong)File.ReadAllBytes(targetfile).Length;
                     }
                     // Update size cache.
-                    _sizecache += (ulong)File.ReadAllBytes(targetfile).Length;
                 }
             }
         }
@@ -232,7 +267,7 @@ namespace Client
                         try
                         {
                             _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
-                            if (!Simulate)
+                            if (!Simulate && !Exclude(incoming))
                             {
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
                                 File.Copy(incoming, targetfile);
@@ -283,7 +318,6 @@ namespace Client
         {
             if (_sizecache == 0)
             {
-                // TODO: Optimise. This method is called a lot and takes a long time.
                 ulong total = 0;
 
                 foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))

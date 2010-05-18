@@ -13,9 +13,10 @@ namespace Client
             if (ConfigurationManager.AppSettings.AllKeys.Contains(Environment.MachineName))
             {
                 string[] paths = ConfigurationManager.AppSettings[Environment.MachineName].Split(';');
-                bool simulate = true;
-                ulong size = 100 * (10 ^ 6);
+                bool simulate = false;
+                ulong size = 100 * (ulong)Math.Pow(10, 6);
                 Service s = new Service(paths[0], paths[1], size, simulate, new ConsoleView());
+                s.Exclusions.Add(new System.Text.RegularExpressions.Regex(@"Thumbs\.db"));
 
                 s.Sync();
             }

@@ -187,13 +187,7 @@ namespace PatientSync
             s.Simulate = SimCheckBox.Checked;
             s.ReserveSpace = ReserveSize;
 
-            XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
-            Stream stream = new FileStream(_filename,
-                                     FileMode.Create,
-                                     FileAccess.Write, FileShare.None);
-            formatter.Serialize(stream, s);
-            stream.Close();
-
+            SyncOptions.Save(_filename, s);
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -220,12 +214,7 @@ namespace PatientSync
 
         private void LoadOptions()
         {
-            XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
-            Stream stream = new FileStream(_filename,
-                FileMode.Open,
-                FileAccess.Read, FileShare.Read);
-            SyncOptions s = (SyncOptions)formatter.Deserialize(stream);
-            stream.Close();
+            SyncOptions s = SyncOptions.Load(_filename);
 
             SourceBox.Text = s.SourcePath;
             SharedBox.Text = s.SharedPath;

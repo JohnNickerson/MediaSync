@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<SyncOptions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourcePath>C:\Users\John\Pictures</SourcePath>
+  <SharedPath>J:\Pictures</SharedPath>
+  <Simulate>true</Simulate>
+  <ReserveSpace>1000000000</ReserveSpace>
+</SyncOptions>

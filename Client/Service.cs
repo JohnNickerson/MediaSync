@@ -60,6 +60,23 @@ namespace Client
             _view = view;
             _sizecache = 0;
         }
+
+        public Service(SyncOptions opts, IOutputView view)
+        {
+            SourcePath = opts.SourcePath;
+            WatchPath = opts.SharedPath;
+            NumPeers = 0;
+            FileCounts = new Dictionary<string, int>();
+            SizeLimit = opts.ReserveSpace;
+            Simulate = opts.Simulate;
+            Exclusions = new List<Regex>();
+            foreach (string r in opts.ExcludePatterns)
+            {
+                Exclusions.Add(new Regex(r));
+            }
+            _view = view;
+            _sizecache = 0;
+        }
         #endregion
 
         #region Methods
@@ -338,6 +355,13 @@ namespace Client
         /// </summary>
         public void Sync()
         {
+            // Setup, just in case.
+            if (!Directory.Exists(WatchPath))
+            {
+                Directory.CreateDirectory(WatchPath);
+            }
+            _sizecache = 0;
+
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
             PullFiles();

@@ -12,13 +12,13 @@ namespace Client
         {
             if (ConfigurationManager.AppSettings.AllKeys.Contains(Environment.MachineName))
             {
-                string[] paths = ConfigurationManager.AppSettings[Environment.MachineName].Split(';');
-                bool simulate = false;
-                ulong size = 100 * (ulong)Math.Pow(10, 6);
-                Service s = new Service(paths[0], paths[1], size, simulate, new ConsoleView());
-                s.Exclusions.Add(new System.Text.RegularExpressions.Regex(@"Thumbs\.db"));
-
-                s.Sync();
+                string[] profiles = ConfigurationManager.AppSettings[Environment.MachineName].Split(';');
+                foreach (string profile in profiles)
+                {
+                    SyncOptions opts = SyncOptions.Load(profile);
+                    Service s = new Service(opts, new ConsoleView());
+                    s.Sync();
+                }
             }
             else
             {

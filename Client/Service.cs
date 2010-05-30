@@ -358,8 +358,10 @@ namespace Client
             // Setup, just in case.
             if (!Directory.Exists(WatchPath))
             {
-                Directory.CreateDirectory(WatchPath);
+                _view.WriteLine("Shared storage not available ({0}). Aborting.", WatchPath);
+                return;
             }
+            // Reset size cache in case this is a multiple-run and other changes have been made.
             _sizecache = 0;
 
             // Check for files in storage wanted here, and copy them.

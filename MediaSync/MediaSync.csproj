@@ -8,8 +8,8 @@
     <ProjectGuid>{54167779-6BAC-441C-BF93-5A6715DBEA60}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PatientSync</RootNamespace>
-    <AssemblyName>PatientSync</AssemblyName>
+    <RootNamespace>AssimilationSoftware.MediaSync</RootNamespace>
+    <AssemblyName>MediaSync</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -67,6 +67,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

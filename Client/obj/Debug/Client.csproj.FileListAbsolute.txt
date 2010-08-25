@@ -16,3 +16,9 @@ C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\Client\bin\Debug
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\Client\obj\Debug\ResolveAssemblyReference.cache
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\Client\obj\Debug\Client.exe
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\Client\obj\Debug\Client.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\Client\bin\Debug\Client.exe.config
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\Client\obj\Debug\Client.exe
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\Client\obj\Debug\Client.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\Client\bin\Debug\Client.exe
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\Client\bin\Debug\Client.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\Client\obj\Debug\ResolveAssemblyReference.cache

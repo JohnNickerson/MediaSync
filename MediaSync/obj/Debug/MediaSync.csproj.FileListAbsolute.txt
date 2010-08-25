@@ -18,3 +18,13 @@ C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\MediaSync\obj\De
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\MediaSync\obj\Debug\MediaSync.csproj.GenerateResource.Cache
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\MediaSync\obj\Debug\MediaSync.exe
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Code\MediaSync\MediaSync\obj\Debug\MediaSync.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\bin\Debug\MediaSync.exe
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\bin\Debug\MediaSync.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\bin\Debug\Client.exe
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\bin\Debug\Client.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\PatientSync.MainForm.resources
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\AssimilationSoftware.MediaSync.Properties.Resources.resources
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\MediaSync.csproj.GenerateResource.Cache
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\MediaSync.exe
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\MediaSync.pdb

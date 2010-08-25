@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Client
 {
@@ -39,6 +40,11 @@ namespace Client
         /// A list of file name patterns to exclude from synchronisation.
         /// </summary>
         public List<Regex> Exclusions;
+
+		/// <summary>
+		/// An asynchronous file copier.
+		/// </summary>
+		public FileCopyQueue _copyq;
         #endregion
 
         #region Constructors
@@ -59,6 +65,7 @@ namespace Client
             Exclusions.Add(new Regex(".*_index.txt"));
             _view = view;
             _sizecache = 0;
+			_copyq = new FileCopyQueue();
         }
 
         public Service(SyncOptions opts, IOutputView view)
@@ -76,6 +83,7 @@ namespace Client
             }
             _view = view;
             _sizecache = 0;
+			_copyq = new FileCopyQueue();
         }
         #endregion
 
@@ -251,13 +259,15 @@ namespace Client
                     {
                         if (!Directory.Exists(targetdir))
                             Directory.CreateDirectory(targetdir);
-                        File.Copy(PathCombine(SourcePath, filename_local), targetfile);
-                        _sizecache += (ulong)File.ReadAllBytes(targetfile).Length;
+						string fullpathlocal = PathCombine(SourcePath, filename_local);
+						_copyq.CopyFile(fullpathlocal, targetfile);
+						// Update size cache.
+						_sizecache += (ulong)new FileInfo(fullpathlocal).Length;
                     }
-                    // Update size cache.
                 }
             }
-        }
+			WaitForCopies();
+		}
 
         /// <summary>
         /// Copies files from shared storage if they are not present locally.
@@ -287,7 +297,7 @@ namespace Client
                             if (!Simulate && !Exclude(incoming))
                             {
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
-                                File.Copy(incoming, targetfile);
+                                _copyq.CopyFile(incoming, targetfile);
                             }
                         }
                         catch (Exception)
@@ -301,7 +311,8 @@ namespace Client
                     _view.WriteLine("Error: source file location for move is target location.");
                 }
             }
-        }
+			WaitForCopies();
+		}
 
         /// <summary>
         /// Checks for files in shared storage that are now present everywhere and removes them from shared
@@ -386,6 +397,19 @@ namespace Client
             // If storage is full, do not copy any further.
             PushFiles();
         }
+
+		/// <summary>
+		/// Spins until all async file copies are complete.
+		/// </summary>
+		private void WaitForCopies()
+		{
+			// Wait for file copies to finish.
+			while (_copyq.Count > 0)
+			{
+				_view.WriteLine("Waiting on {0} copies...", _copyq.Count);
+				Thread.Sleep(1000);
+			}
+		}
         #endregion
     }
 }

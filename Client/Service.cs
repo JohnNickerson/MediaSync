@@ -396,7 +396,17 @@ namespace Client
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
             PushFiles();
-        }
+
+			// Report any errors.
+			if (_copyq.Errors.Count > 0)
+			{
+				_view.WriteLine("Errors encountered:");
+				for (int x = 0; x < _copyq.Errors.Count; x++)
+				{
+					_view.WriteLine(_copyq.Errors[x].Message);
+				}
+			}
+		}
 
 		/// <summary>
 		/// Spins until all async file copies are complete.
@@ -404,9 +414,14 @@ namespace Client
 		private void WaitForCopies()
 		{
 			// Wait for file copies to finish.
+            int lastcount = 0;
 			while (_copyq.Count > 0)
 			{
-				_view.WriteLine("Waiting on {0} copies...", _copyq.Count);
+				if (_copyq.Count != lastcount)
+				{
+					_view.WriteLine("Waiting on {0} copies...", _copyq.Count);
+					lastcount = _copyq.Count;
+				}
 				Thread.Sleep(1000);
 			}
 		}

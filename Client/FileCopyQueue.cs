@@ -12,15 +12,30 @@ namespace Client
 	public class FileCopyQueue
 	{
 		#region Types
+		/// <summary>
+		/// A delegate type for performing asynchronous file copies.
+		/// </summary>
+		/// <param name="source">The file to be copied.</param>
+		/// <param name="dest">The location to copy to.</param>
 		delegate void CopyFileDelegate(string source, string dest);
 		#endregion
 
 		#region Variables
+		/// <summary>
+		/// A list of asynchronous file copy results.
+		/// </summary>
 		private List<IAsyncResult> CopyActions;
-		private List<Exception> Errors;
+
+		/// <summary>
+		/// A list of errors that occurred during copies.
+		/// </summary>
+		public List<Exception> Errors;
 		#endregion
 
 		#region Constructors
+		/// <summary>
+		/// Constructs a new asynchronous file copy service.
+		/// </summary>
 		public FileCopyQueue()
 		{
 			CopyActions = new List<IAsyncResult>();
@@ -29,6 +44,11 @@ namespace Client
 		#endregion
 
 		#region Methods
+		/// <summary>
+		/// Starts an asynchronous file copy operation.
+		/// </summary>
+		/// <param name="source">The source file to copy.</param>
+		/// <param name="target">The destination where the file will be copied to.</param>
 		public void CopyFile(string source, string target)
 		{
 			lock (CopyActions)
@@ -37,7 +57,10 @@ namespace Client
 				CopyActions.Add(cf.BeginInvoke(source, target, FinishCopy, cf));
 			}
 		}
-
+		/// <summary>
+		/// Tidies up after a copy operation is complete.
+		/// </summary>
+		/// <param name="result">The asynchronous details of the copy operation.</param>
 		public void FinishCopy(IAsyncResult result)
 		{
 			lock (CopyActions)
@@ -57,6 +80,9 @@ namespace Client
 		#endregion
 
 		#region Properties
+		/// <summary>
+		/// Gets the number of pending copy operations.
+		/// </summary>
 		public int Count
 		{
 			get

@@ -38,3 +38,4 @@ C:\Documents and Settings\jnickerson\My Documents\My Dropbox\Projects\Utils\Medi
 C:\Documents and Settings\jnickerson\My Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\MediaSync.csproj.GenerateResource.Cache
 C:\Documents and Settings\jnickerson\My Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\MediaSync.exe
 C:\Documents and Settings\jnickerson\My Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\obj\Debug\MediaSync.pdb
+C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\MediaSync\bin\Debug\index.sdf

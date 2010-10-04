@@ -45,6 +45,8 @@ namespace Client
 		/// An asynchronous file copier.
 		/// </summary>
 		public FileCopyQueue _copyq;
+
+		private SyncOptions _options;
         #endregion
 
         #region Constructors
@@ -53,7 +55,8 @@ namespace Client
         /// </summary>
         /// <param name="source">The photo folder location.</param>
         /// <param name="watch">The sync folder, where requests are made and fulfilled.</param>
-        public Service(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
+        [Obsolete]
+		public Service(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
         {
             SourcePath = source;
             WatchPath = watch;
@@ -84,6 +87,7 @@ namespace Client
             _view = view;
             _sizecache = 0;
 			_copyq = new FileCopyQueue();
+			_options = opts;
         }
         #endregion
 
@@ -377,7 +381,11 @@ namespace Client
 
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
-            PullFiles();
+			// TODO: Only pull files for consumer profiles.
+			if (_options.Consumer)
+			{
+				PullFiles();
+			}
 
             // Index local files.
             IndexFiles();
@@ -386,16 +394,21 @@ namespace Client
             // for each file name,
             // Increment a file name count.
             // Need names of files that are:
-            //  1. Here but missing elsewhere. (count < peers && File.Exists)
+            //  1. Here but missing elsewhere. (count < consumers && File.Exists)
             //  2. Elsewhere but missing here. (!File.Exists)
-            //  3. Found everywhere.            (count == peers)
+            //  3. Found everywhere.            (count == consumers)
+			// TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
             PruneFiles();
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
-            PushFiles();
+			// TODO: Only push files for contributor profiles.
+			if (_options.Contributor)
+			{
+				PushFiles();
+			}
 
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)

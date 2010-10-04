@@ -14,6 +14,8 @@ namespace Client
         public string SourcePath;
         public string SharedPath;
         public bool Simulate;
+		public bool Contributor;
+		public bool Consumer;
         public ulong ReserveSpace;
         public string[] ExcludePatterns;
         #endregion
@@ -24,7 +26,8 @@ namespace Client
         /// </summary>
         /// <param name="filename">The file name to load.</param>
         /// <returns>The sync options stored in the named file, if any.</returns>
-        public static SyncOptions Load(string filename)
+        [Obsolete("Sync options are now stored in a database.")]
+		public static SyncOptions Load(string filename)
         {
             XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
             Stream stream = new FileStream(filename,
@@ -41,7 +44,8 @@ namespace Client
         /// </summary>
         /// <param name="filename">The name of the file to save to.</param>
         /// <param name="saveobject">The sync options to save.</param>
-        public static void Save(string filename, SyncOptions saveobject)
+		[Obsolete("Sync options are now stored in a database.")]
+		public static void Save(string filename, SyncOptions saveobject)
         {
             XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
             Stream stream = new FileStream(filename,
@@ -50,6 +54,10 @@ namespace Client
             formatter.Serialize(stream, saveobject);
             stream.Close();
         }
+
+		//TODO: public static SyncOptions[] Load(string machineName)
+		//TODO: public static SyncOptions Load(string machineName, string profile)
+		//TODO: public static void Save(SyncOptions saveObject)
         #endregion
     }
 }

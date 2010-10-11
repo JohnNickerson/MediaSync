@@ -214,12 +214,12 @@ namespace PatientSync
 
         private void LoadOptions()
         {
-            SyncOptions s = SyncOptions.Load(_filename);
+			//SyncOptions s = SyncOptions.Load(_filename);
 
-            SourceBox.Text = s.SourcePath;
-            SharedBox.Text = s.SharedPath;
-            ReserveSize = s.ReserveSpace;
-            SimCheckBox.Checked = s.Simulate;
+			//SourceBox.Text = s.SourcePath;
+			//SharedBox.Text = s.SharedPath;
+			//ReserveSize = s.ReserveSpace;
+			//SimCheckBox.Checked = s.Simulate;
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)

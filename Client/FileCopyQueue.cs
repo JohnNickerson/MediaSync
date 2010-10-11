@@ -27,6 +27,16 @@ namespace Client
 		private List<IAsyncResult> CopyActions;
 
 		/// <summary>
+		/// Sync operations waiting to go ahead.
+		/// </summary>
+		private Queue<SyncOperation> PendingActions;
+
+		/// <summary>
+		/// The maximum number of simultaneous copies to perform.
+		/// </summary>
+		private int MaxCopies;
+
+		/// <summary>
 		/// A list of errors that occurred during copies.
 		/// </summary>
 		public List<Exception> Errors;
@@ -39,6 +49,8 @@ namespace Client
 		public FileCopyQueue()
 		{
 			CopyActions = new List<IAsyncResult>();
+			PendingActions = new Queue<SyncOperation>();
+			MaxCopies = 2;
 			Errors = new List<Exception>();
 		}
 		#endregion
@@ -53,8 +65,15 @@ namespace Client
 		{
 			lock (CopyActions)
 			{
-				CopyFileDelegate cf = new CopyFileDelegate(File.Copy);
-				CopyActions.Add(cf.BeginInvoke(source, target, FinishCopy, cf));
+				if (CopyActions.Count < MaxCopies)
+				{
+					CopyFileDelegate cf = new CopyFileDelegate(File.Copy);
+					CopyActions.Add(cf.BeginInvoke(source, target, FinishCopy, cf));
+				}
+				else
+				{
+					PendingActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+				}
 			}
 		}
 		/// <summary>
@@ -66,6 +85,11 @@ namespace Client
 			lock (CopyActions)
 			{
 				CopyActions.Remove(result);
+				while (CopyActions.Count < MaxCopies)
+				{
+					SyncOperation op = PendingActions.Dequeue();
+					CopyFile(op.SourceFile, op.TargetFile);
+				}
 			}
 			try
 			{
@@ -87,7 +111,7 @@ namespace Client
 		{
 			get
 			{
-				return CopyActions.Count;
+				return CopyActions.Count + PendingActions.Count;
 			}
 		}
 		#endregion

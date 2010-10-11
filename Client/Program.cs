@@ -12,22 +12,8 @@ namespace Client
     {
         static void Main(string[] args)
         {
-			SqlCeConnection connection = new SqlCeConnection(ConfigurationManager.ConnectionStrings["database"].ConnectionString);
-			// Read all rows from the table test_table into a dataset (note, the adapter automatically opens the connection)
-			SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Profiles", connection);
-			DataSet data = new DataSet();
-			adapter.Fill(data);
-
-			foreach (DataRow r in data.Tables[0].Select(string.Format("Machine = '{0}'", Environment.MachineName)))
+			foreach (SyncOptions opts in SyncOptions.Load(Environment.MachineName))
 			{
-				SyncOptions opts = new SyncOptions();
-				opts.ExcludePatterns = new string[] { @"Thumbs\.db", @"desktop\.ini", @".*_index\.txt" };
-				opts.ReserveSpace = (ulong)(long)r["SharedSpace"];
-				opts.SharedPath = (string)r["SharedPath"];
-				opts.Simulate = false;
-				opts.Consumer = (bool)r["Consumer"];
-				opts.Contributor = (bool)r["Contributor"];
-				opts.SourcePath = (string)r["MediaPath"];
 				Service s = new Service(opts, new ConsoleView());
 				s.Sync();
 			}

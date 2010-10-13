@@ -9,7 +9,7 @@ namespace Client
 	/// <summary>
 	/// A class to handle asynchronous file copying.
 	/// </summary>
-	public class FileCopyQueue
+	public class FileCopyQueue : Client.IFileCopier
 	{
 		#region Types
 		/// <summary>

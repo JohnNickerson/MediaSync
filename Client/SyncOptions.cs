@@ -21,10 +21,29 @@ namespace Client
 		public bool Consumer;
         public ulong ReserveSpace;
         public string[] ExcludePatterns;
+		public string ProfileName;
         #endregion
 
-        #region Methods
-        /// <summary>
+		#region Constructors
+		public SyncOptions()
+		{
+		}
+
+		public SyncOptions(DataRow row)
+		{
+			this.ExcludePatterns = new string[] { @"Thumbs\.db", @"desktop\.ini", @".*_index\.txt" };
+			this.ReserveSpace = (ulong)(long)row["SharedSpace"];
+			this.SharedPath = (string)row["SharedPath"];
+			this.Simulate = false;
+			this.Consumer = (bool)row["Consumer"];
+			this.Contributor = (bool)row["Contributor"];
+			this.SourcePath = (string)row["MediaPath"];
+			this.ProfileName = (string)row["Profile"];
+		}
+		#endregion
+
+		#region Methods
+		/// <summary>
         /// Serialises a SyncOptions object to a named file.
         /// </summary>
         /// <param name="filename">The name of the file to save to.</param>
@@ -56,14 +75,7 @@ namespace Client
 			List<SyncOptions> result = new List<SyncOptions>();
 			foreach (DataRow r in data.Tables[0].Select(string.Format("Machine = '{0}'", machineName)))
 			{
-				SyncOptions opts = new SyncOptions();
-				opts.ExcludePatterns = new string[] { @"Thumbs\.db", @"desktop\.ini", @".*_index\.txt" };
-				opts.ReserveSpace = (ulong)(long)r["SharedSpace"];
-				opts.SharedPath = (string)r["SharedPath"];
-				opts.Simulate = false;
-				opts.Consumer = (bool)r["Consumer"];
-				opts.Contributor = (bool)r["Contributor"];
-				opts.SourcePath = (string)r["MediaPath"];
+				SyncOptions opts = new SyncOptions(r);
 				result.Add(opts);
 			}
 			return result.ToArray();
@@ -85,14 +97,7 @@ namespace Client
 
 			SyncOptions result = new SyncOptions();
 			DataRow r = data.Tables[0].Select(string.Format("Machine = '{0}' And Profile = '{1}'", machineName, profile))[0];
-			SyncOptions opts = new SyncOptions();
-			opts.ExcludePatterns = new string[] { @"Thumbs\.db", @"desktop\.ini", @".*_index\.txt" };
-			opts.ReserveSpace = (ulong)(long)r["SharedSpace"];
-			opts.SharedPath = (string)r["SharedPath"];
-			opts.Simulate = false;
-			opts.Consumer = (bool)r["Consumer"];
-			opts.Contributor = (bool)r["Contributor"];
-			opts.SourcePath = (string)r["MediaPath"];
+			SyncOptions opts = new SyncOptions(r);
 			result = opts;
 			return result;
 		}

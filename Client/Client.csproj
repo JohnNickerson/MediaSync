@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="ConsoleView.cs" />
     <Compile Include="FileCopyQueue.cs" />
+    <Compile Include="IFileCopier.cs" />
     <Compile Include="IOutputView.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

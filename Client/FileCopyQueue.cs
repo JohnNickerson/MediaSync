@@ -85,7 +85,7 @@ namespace Client
 			lock (CopyActions)
 			{
 				CopyActions.Remove(result);
-				while (CopyActions.Count < MaxCopies)
+				while (CopyActions.Count < MaxCopies && PendingActions.Count > 0)
 				{
 					SyncOperation op = PendingActions.Dequeue();
 					CopyFile(op.SourceFile, op.TargetFile);

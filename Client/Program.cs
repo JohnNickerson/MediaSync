@@ -5,6 +5,7 @@ using System.Text;
 using System.Configuration;
 using System.Data.SqlServerCe;
 using System.Data;
+using System.IO;
 
 namespace Client
 {
@@ -12,11 +13,20 @@ namespace Client
     {
         static void Main(string[] args)
         {
-			foreach (SyncOptions opts in SyncOptions.Load(Environment.MachineName))
-			{
-				Service s = new Service(opts, new ConsoleView());
-				s.Sync();
-			}
+            try
+            {
+                foreach (SyncOptions opts in SyncOptions.Load(Environment.MachineName))
+                {
+                    Service s = new Service(opts, new ConsoleView());
+                    s.Sync();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Could not sync.");
+                Console.WriteLine(e.Message);
+                File.WriteAllText("error.log", e.StackTrace);
+            }
 
             Console.WriteLine("Finished. Press a key to exit.");
             Console.ReadKey();

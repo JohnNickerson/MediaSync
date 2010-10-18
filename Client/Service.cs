@@ -318,11 +318,7 @@ namespace Client
                     Directory.CreateDirectory(targetdir);
                 if (!incoming.Equals(targetfile))
                 {
-                    if (File.Exists(targetfile))
-                    {
-                        _view.WriteLine("Target file already exists.");
-                    }
-                    else
+                    if (!File.Exists(targetfile))
                     {
                         try
                         {
@@ -383,7 +379,7 @@ namespace Client
 
                 foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
                 {
-                    total += (ulong)File.ReadAllBytes(filename).Length;
+                    total += (ulong)new FileInfo(filename).Length;
                 }
                 _sizecache = total;
                 return total;

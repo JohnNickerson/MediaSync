@@ -8,8 +8,9 @@ using System.Threading;
 using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
+using AssimilationSoftware.MediaSync.Core.Indexing;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core
 {
     /// <summary>
     /// A photo synchronising service.
@@ -76,7 +77,7 @@ namespace Client
 			_copyq = new FileCopyQueue();
         }
 
-        public Service(SyncOptions opts, IOutputView view)
+        public Service(SyncOptions opts, IOutputView view, IIndexService indexer)
         {
             SourcePath = opts.SourcePath;
             WatchPath = opts.SharedPath;
@@ -93,6 +94,7 @@ namespace Client
             _sizecache = 0;
 			_copyq = new FileCopyQueue();
 			_options = opts;
+            _indexer = indexer;
         }
         #endregion
 
@@ -102,7 +104,6 @@ namespace Client
         /// </summary>
         public void IndexFiles()
         {
-            _indexer = new Client.Indexing.TextIndexer(_options);
             Queue<string> queue = new Queue<string>();
             queue.Enqueue(SourcePath);
             // While the queue is not empty,

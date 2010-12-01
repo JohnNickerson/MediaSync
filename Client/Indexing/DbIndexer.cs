@@ -7,7 +7,7 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 
-namespace Client.Indexing
+namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
     class DbIndexer : IIndexService
     {

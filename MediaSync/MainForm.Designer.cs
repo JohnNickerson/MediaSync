@@ -1,4 +1,4 @@
-﻿namespace PatientSync
+﻿namespace AssimilationSoftware.MediaSync.WinForms
 {
     partial class MainForm
     {

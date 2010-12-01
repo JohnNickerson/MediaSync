@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core
 {
     /// <summary>
     /// Records details of a single file sync operation, such as a copy or delete.

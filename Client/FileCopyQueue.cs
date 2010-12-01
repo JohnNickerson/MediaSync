@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core
 {
 	/// <summary>
 	/// A class to handle asynchronous file copying.

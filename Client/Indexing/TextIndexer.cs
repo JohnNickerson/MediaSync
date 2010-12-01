@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace Client.Indexing
+namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
     public class TextIndexer : IIndexService
     {

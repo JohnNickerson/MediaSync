@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
-    interface IIndexService
+    public interface IIndexService
     {
         void Add(string trunc_file);
 

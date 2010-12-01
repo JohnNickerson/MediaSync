@@ -10,8 +10,9 @@ using Client;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using System.IO;
+using AssimilationSoftware.MediaSync.Core;
 
-namespace PatientSync
+namespace AssimilationSoftware.MediaSync.WinForms
 {
     public partial class MainForm : Form, IOutputView
     {

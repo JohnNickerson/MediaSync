@@ -6,8 +6,9 @@ using System.Configuration;
 using System.Data.SqlServerCe;
 using System.Data;
 using System.IO;
+using AssimilationSoftware.MediaSync.Core.Indexing;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core
 {
     class Program
     {
@@ -17,7 +18,7 @@ namespace Client
             {
                 foreach (SyncOptions opts in SyncOptions.Load(Environment.MachineName))
                 {
-                    Service s = new Service(opts, new ConsoleView());
+                    Service s = new Service(opts, new ConsoleView(), new TextIndexer(opts));
                     s.Sync();
                 }
             }

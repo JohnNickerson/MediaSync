@@ -8,7 +8,7 @@ using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core
 {
     [Serializable]
     public class SyncOptions

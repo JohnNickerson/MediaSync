@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Client
+namespace AssimilationSoftware.MediaSync.Core
 {
     /// <summary>
     /// A generic interface for sync operation output.

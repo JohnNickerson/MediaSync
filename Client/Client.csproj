@@ -55,6 +55,9 @@
     <Compile Include="ConsoleView.cs" />
     <Compile Include="FileCopyQueue.cs" />
     <Compile Include="IFileCopier.cs" />
+    <Compile Include="Indexing\DbIndexer.cs" />
+    <Compile Include="Indexing\IIndexService.cs" />
+    <Compile Include="Indexing\TextIndexer.cs" />
     <Compile Include="IOutputView.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

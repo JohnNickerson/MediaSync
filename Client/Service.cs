@@ -50,6 +50,8 @@ namespace Client
 		public FileCopyQueue _copyq;
 
 		private SyncOptions _options;
+
+        private IIndexService _indexer;
         #endregion
 
         #region Constructors
@@ -100,11 +102,9 @@ namespace Client
         /// </summary>
         public void IndexFiles()
         {
-            string indexfile = PathCombine(WatchPath, string.Format("{0}_index.txt", Environment.MachineName));
-
+            _indexer = new Client.Indexing.TextIndexer(_options);
             Queue<string> queue = new Queue<string>();
             queue.Enqueue(SourcePath);
-            List<string> contents = new List<string>();
             // While the queue is not empty,
             while (queue.Count > 0)
             {
@@ -122,7 +122,7 @@ namespace Client
                     {
                         // Remove the base path.
                         string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
-                        contents.Add(trunc_file);
+                        _indexer.Add(trunc_file);
                         FileCounts[trunc_file] = 1;
                     }
                 }
@@ -134,55 +134,12 @@ namespace Client
             }
             else
             {
-                File.WriteAllLines(indexfile, contents.ToArray());
-				
-				// Also write index to the database.
-				SqlCeConnection connection = new SqlCeConnection(ConfigurationManager.ConnectionStrings["database"].ConnectionString);
-				SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
-				adapter.InsertCommand = new SqlCeCommand("Insert Into Indexes (Timestamp, Machine, Profile, RelPath, Size, Hash) Values (@Timestamp, @Machine, @Profile, @RelPath, @Size, @Hash)", connection);
-				adapter.InsertCommand.Parameters.Add("@Timestamp", SqlDbType.DateTime);
-				adapter.InsertCommand.Parameters.Add("@Machine", SqlDbType.NVarChar);
-				adapter.InsertCommand.Parameters.Add("@Profile", SqlDbType.NVarChar);
-				adapter.InsertCommand.Parameters.Add("@RelPath", SqlDbType.NVarChar);
-				adapter.InsertCommand.Parameters.Add("@Size", SqlDbType.BigInt);
-				adapter.InsertCommand.Parameters.Add("@Hash", SqlDbType.NVarChar);
-				// A static timestamp to share among all records.
-				DateTime indextime = DateTime.Now;
-				connection.Open();
-				foreach (string filename in contents)
-				{
-					adapter.InsertCommand.Parameters["@Timestamp"] = new SqlCeParameter("@Timestamp", indextime);
-					adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Environment.MachineName);
-					adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
-					adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", filename);
-					adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", new FileInfo(Path.Combine(_options.SourcePath, filename)).Length);
-					// TODO: Include file hash value. Will require reading the entire file.
-					adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", DBNull.Value);
-					adapter.InsertCommand.ExecuteNonQuery();
-				}
-				connection.Close();
+                _indexer.WriteIndex();
 			}
 
             // Compare this index with others.
-            NumPeers = Directory.GetFiles(WatchPath, "*_index.txt").Length;
-
-            foreach (string otherindex in Directory.GetFiles(WatchPath, "*_index.txt"))
-            {
-                if (!otherindex.Equals(indexfile))
-                {
-                    foreach (string idxfilename in File.ReadAllLines(otherindex))
-                    {
-                        if (FileCounts.ContainsKey(idxfilename))
-                        {
-                            FileCounts[idxfilename]++;
-                        }
-                        else
-                        {
-                            FileCounts[idxfilename] = 1;
-                        }
-                    }
-                }
-            }
+            NumPeers = _indexer.PeerCount;
+            FileCounts = _indexer.CompareCounts();
         }
 
         /// <summary>
@@ -212,7 +169,7 @@ namespace Client
         /// </summary>
         /// <param name="paths">A list of paths to combine.</param>
         /// <returns>One path value, combined into an environment-appropriate string.</returns>
-        private static string PathCombine(params string[] paths)
+        public static string PathCombine(params string[] paths)
         {
             Stack<string> stack = new Stack<string>();
             for (int x = 0; x < paths.Length; x++)
@@ -265,6 +222,9 @@ namespace Client
         {
             // No point trying to push files when they'll all be ignored.
             if (NumPeers == 1) return;
+
+            // TODO: Prioritise the least-common files.
+            //var sortedfilelist = from f in FileCounts.Keys orderby FileCounts[f] select f;
             // For every file in the index
             foreach (string filename in FileCounts.Keys)
             {

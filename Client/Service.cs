@@ -9,6 +9,7 @@ using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
 using AssimilationSoftware.MediaSync.Core.Indexing;
+using AssimilationSoftware.MediaSync.Core.Views;
 
 namespace AssimilationSoftware.MediaSync.Core
 {

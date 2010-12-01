@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core;
+using AssimilationSoftware.MediaSync.Core.Views;
 
 namespace AssimilationSoftware.MediaSync.WinForms
 {

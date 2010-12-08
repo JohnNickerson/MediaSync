@@ -1,10 +1,11 @@
 ﻿using System;
-namespace Client
+using System.Collections.Generic;
+namespace AssimilationSoftware.MediaSync.Core
 {
 	/// <summary>
 	/// An interface for components that handle file copying.
 	/// </summary>
-	interface IFileCopier
+	public interface IFileManager
 	{
 		#region Methods
 		/// <summary>
@@ -21,5 +22,15 @@ namespace Client
 		/// </summary>
 		int Count { get; }
 		#endregion
-	}
+
+        void CreateIndex(Indexing.IIndexService _indexer);
+
+        bool Exclude(string incoming);
+
+        List<Exception> Errors { get; }
+
+        ulong WatchPathSize();
+
+        bool ShouldCopy(string filename);
+    }
 }

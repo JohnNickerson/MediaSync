@@ -11,7 +11,7 @@ using System.Data;
 namespace AssimilationSoftware.MediaSync.Core
 {
     [Serializable]
-    public class SyncOptions
+    public class SyncProfile
     {
         #region Fields
         public string SourcePath;
@@ -25,11 +25,11 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
 		#region Constructors
-		public SyncOptions()
+		public SyncProfile()
 		{
 		}
 
-		public SyncOptions(DataRow row)
+		public SyncProfile(DataRow row)
 		{
 			this.ExcludePatterns = new string[] { @"Thumbs\.db", @"desktop\.ini", @".*_index\.txt" };
 			this.ReserveSpace = (ulong)(long)row["SharedSpace"];
@@ -44,14 +44,13 @@ namespace AssimilationSoftware.MediaSync.Core
 
 		#region Methods
 		/// <summary>
-        /// Serialises a SyncOptions object to a named file.
+        /// Serialises a SyncProfile object to a named file.
         /// </summary>
         /// <param name="filename">The name of the file to save to.</param>
         /// <param name="saveobject">The sync options to save.</param>
-		[Obsolete("Sync options are now stored in a database.")]
-		public static void Save(string filename, SyncOptions saveobject)
+		public static void Save(string filename, SyncProfile saveobject)
         {
-            XmlSerializer formatter = new XmlSerializer(typeof(SyncOptions));
+            XmlSerializer formatter = new XmlSerializer(typeof(SyncProfile));
             Stream stream = new FileStream(filename,
                                      FileMode.Create,
                                      FileAccess.Write, FileShare.None);
@@ -64,7 +63,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// </summary>
 		/// <param name="machineName">The name of the machine whose profiles to load.</param>
 		/// <returns>An array of profiles.</returns>
-		public static SyncOptions[] Load(string machineName)
+		public static SyncProfile[] Load(string machineName)
 		{
 			SqlCeConnection connection = new SqlCeConnection(ConfigurationManager.ConnectionStrings["database"].ConnectionString);
 			// Read all rows from the table test_table into a dataset (note, the adapter automatically opens the connection)
@@ -72,10 +71,10 @@ namespace AssimilationSoftware.MediaSync.Core
 			DataSet data = new DataSet();
 			adapter.Fill(data);
 
-			List<SyncOptions> result = new List<SyncOptions>();
+			List<SyncProfile> result = new List<SyncProfile>();
 			foreach (DataRow r in data.Tables[0].Select(string.Format("Machine = '{0}'", machineName)))
 			{
-				SyncOptions opts = new SyncOptions(r);
+				SyncProfile opts = new SyncProfile(r);
 				result.Add(opts);
 			}
 			return result.ToArray();
@@ -87,7 +86,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <param name="machineName">The machine name whose profile to load.</param>
 		/// <param name="profile">The name of the profile to load.</param>
 		/// <returns>The profile options for the given machine name and profile name if any.</returns>
-		public static SyncOptions Load(string machineName, string profile)
+		public static SyncProfile Load(string machineName, string profile)
 		{
 			SqlCeConnection connection = new SqlCeConnection(ConfigurationManager.ConnectionStrings["database"].ConnectionString);
 			// Read all rows from the table test_table into a dataset (note, the adapter automatically opens the connection)
@@ -95,13 +94,14 @@ namespace AssimilationSoftware.MediaSync.Core
 			DataSet data = new DataSet();
 			adapter.Fill(data);
 
-			SyncOptions result = new SyncOptions();
+			SyncProfile result = new SyncProfile();
 			DataRow r = data.Tables[0].Select(string.Format("Machine = '{0}' And Profile = '{1}'", machineName, profile))[0];
-			SyncOptions opts = new SyncOptions(r);
+			SyncProfile opts = new SyncProfile(r);
 			result = opts;
 			return result;
 		}
-		//TODO: public static void Save(SyncOptions saveObject)
+		//TODO: public static void Save(SyncProfile saveObject)
+        //TODO: move SyncProfile load/save methods to a ProfileManager class.
         #endregion
     }
 }

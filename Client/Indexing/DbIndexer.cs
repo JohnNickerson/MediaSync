@@ -12,9 +12,9 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
     class DbIndexer : IIndexService
     {
         private List<string> contents = new List<string>();
-        private SyncOptions _options;
+        private SyncProfile _options;
 
-        public DbIndexer(SyncOptions options)
+        public DbIndexer(SyncProfile options)
         {
             this._options = options;
         }

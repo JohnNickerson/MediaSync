@@ -17,9 +17,12 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             try
             {
-                foreach (SyncOptions opts in SyncOptions.Load(Environment.MachineName))
+                foreach (SyncProfile opts in SyncProfile.Load(Environment.MachineName))
                 {
-                    Service s = new Service(opts, new ConsoleView(), new TextIndexer(opts));
+                    IOutputView view = new ConsoleView();
+                    IIndexService indexer = new TextIndexer(opts);
+                    IFileManager copier = new QueuedDiskCopier(opts, indexer);
+                    SyncService s = new SyncService(opts, view, indexer, copier);
                     s.Sync();
                 }
             }

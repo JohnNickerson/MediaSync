@@ -13,5 +13,10 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         void WriteLine(string format, params object[] args);
 
         void Report(SyncOperation op);
+
+        string Status
+        {
+            set;
+        }
     }
 }

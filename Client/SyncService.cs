@@ -16,7 +16,7 @@ namespace AssimilationSoftware.MediaSync.Core
     /// <summary>
     /// A photo synchronising service.
     /// </summary>
-    public class Service
+    public class SyncService
     {
         #region Fields
         public string SourcePath;
@@ -49,9 +49,9 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// An asynchronous file copier.
 		/// </summary>
-		public FileCopyQueue _copyq;
+		public IFileManager _copyq;
 
-		private SyncOptions _options;
+		private SyncProfile _options;
 
         private IIndexService _indexer;
         #endregion
@@ -63,7 +63,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <param name="source">The photo folder location.</param>
         /// <param name="watch">The sync folder, where requests are made and fulfilled.</param>
         [Obsolete]
-		public Service(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
+		public SyncService(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
         {
             SourcePath = source;
             WatchPath = watch;
@@ -75,10 +75,10 @@ namespace AssimilationSoftware.MediaSync.Core
             Exclusions.Add(new Regex(".*_index.txt"));
             _view = view;
             _sizecache = 0;
-			_copyq = new FileCopyQueue();
+			_copyq = new QueuedDiskCopier(null, null);
         }
 
-        public Service(SyncOptions opts, IOutputView view, IIndexService indexer)
+        public SyncService(SyncProfile opts, IOutputView view, IIndexService indexer, IFileManager filemanager)
         {
             SourcePath = opts.SourcePath;
             WatchPath = opts.SharedPath;
@@ -93,7 +93,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             _view = view;
             _sizecache = 0;
-			_copyq = new FileCopyQueue();
+            _copyq = filemanager;
 			_options = opts;
             _indexer = indexer;
         }
@@ -105,30 +105,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         public void IndexFiles()
         {
-            Queue<string> queue = new Queue<string>();
-            queue.Enqueue(SourcePath);
-            // While the queue is not empty,
-            while (queue.Count > 0)
-            {
-                // Dequeue a folder to process.
-                string folder = queue.Dequeue();
-                // Enqueue subfolders.
-                foreach (string subfolder in Directory.GetDirectories(folder))
-                {
-                    queue.Enqueue(subfolder);
-                }
-                // Add all image files to the index.
-                foreach (string file in Directory.GetFiles(folder, filesearch))
-                {
-                    if (!Exclude(file))
-                    {
-                        // Remove the base path.
-                        string trunc_file = file.Remove(0, this.SourcePath.Length + 1).Replace("/", "\\");
-                        _indexer.Add(trunc_file);
-                        FileCounts[trunc_file] = 1;
-                    }
-                }
-            }
+            _copyq.CreateIndex(_indexer);
             // Overwrite any old index that exists.
             if (Simulate)
             {
@@ -142,28 +119,6 @@ namespace AssimilationSoftware.MediaSync.Core
             // Compare this index with others.
             NumPeers = _indexer.PeerCount;
             FileCounts = _indexer.CompareCounts();
-        }
-
-        /// <summary>
-        /// Checks whether a file name matches any exclusion pattern.
-        /// </summary>
-        /// <param name="file">The file name to test.</param>
-        /// <returns>True if any of the exclusion patterns match the given file name, false otherwise.</returns>
-        private bool Exclude(string file)
-        {
-            bool result = false;
-            string testfile = Path.GetFileName(file);
-
-            foreach (Regex r in Exclusions)
-            {
-                if (r.IsMatch(testfile))
-                {
-                    result = true;
-                    break;
-                }
-            }
-
-            return result;
         }
 
         /// <summary>
@@ -231,7 +186,7 @@ namespace AssimilationSoftware.MediaSync.Core
             foreach (string filename in FileCounts.Keys)
             {
                 // If the size allocation has been exceeded, stop.
-                if (WatchPathSize() > SizeLimit)
+                if (_copyq.WatchPathSize() > SizeLimit)
                 {
                     break;
                 }
@@ -245,7 +200,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     // ...and is not in shared storage
                     && !File.Exists(targetfile)
                     // ...and it doesn't match an exclusion pattern
-                    && !Exclude(filename))
+                    && !_copyq.Exclude(filename)
+                    && _copyq.ShouldCopy(filename))
                 {
                     // ...copy it to shared storage.
                     string targetdir = Path.GetDirectoryName(targetfile);
@@ -285,7 +241,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         try
                         {
                             _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
-                            if (!Simulate && !Exclude(incoming))
+                            if (!Simulate && !_copyq.Exclude(incoming))
                             {
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
                                 _copyq.CopyFile(incoming, targetfile);
@@ -327,29 +283,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             ClearEmptyFolders();
-        }
-
-        /// <summary>
-        /// Gets the size of all files in the watch path combined.
-        /// </summary>
-        /// <returns>A size, in bytes, representing all files combined.</returns>
-        public ulong WatchPathSize()
-        {
-            if (_sizecache == 0)
-            {
-                ulong total = 0;
-
-                foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
-                {
-                    total += (ulong)new FileInfo(filename).Length;
-                }
-                _sizecache = total;
-                return total;
-            }
-            else
-            {
-                return _sizecache;
-            }
         }
 
         /// <summary>
@@ -400,7 +333,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)
 			{
-				_view.WriteLine("Errors encountered:");
+				_view.Status = "Errors encountered:";
 				for (int x = 0; x < _copyq.Errors.Count; x++)
 				{
 					_view.WriteLine(_copyq.Errors[x].Message);
@@ -419,7 +352,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			{
 				if (_copyq.Count != lastcount)
 				{
-					_view.WriteLine("Waiting on {0} copies...", _copyq.Count);
+					_view.Status = string.Format("Waiting on {0} copies...", _copyq.Count);
 					lastcount = _copyq.Count;
 				}
 				Thread.Sleep(1000);

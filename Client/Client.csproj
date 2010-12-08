@@ -8,7 +8,7 @@
     <ProjectGuid>{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Client</RootNamespace>
+    <RootNamespace>AssimilationSoftware.MediaSync.Core</RootNamespace>
     <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -36,6 +36,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Synchronization.Files, Version=2.1.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files\Microsoft Sync Framework\2.1\Runtime\x86\Microsoft.Synchronization.Files.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -52,18 +56,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Indexing\MockIndexer.cs" />
     <Compile Include="Views\ConsoleView.cs" />
-    <Compile Include="FileCopyQueue.cs" />
-    <Compile Include="IFileCopier.cs" />
+    <Compile Include="QueuedDiskCopier.cs" />
+    <Compile Include="IFileManager.cs" />
     <Compile Include="Indexing\DbIndexer.cs" />
     <Compile Include="Indexing\IIndexService.cs" />
     <Compile Include="Indexing\TextIndexer.cs" />
     <Compile Include="Views\IOutputView.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Service.cs" />
+    <Compile Include="SyncService.cs" />
     <Compile Include="SyncOperation.cs" />
-    <Compile Include="SyncOptions.cs" />
+    <Compile Include="SyncProfile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

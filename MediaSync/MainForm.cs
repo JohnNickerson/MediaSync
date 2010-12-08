@@ -6,12 +6,12 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Client;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.Views;
+using AssimilationSoftware.MediaSync.Core.Indexing;
 
 namespace AssimilationSoftware.MediaSync.WinForms
 {
@@ -62,15 +62,13 @@ namespace AssimilationSoftware.MediaSync.WinForms
             }
         }
 
-        #region IOutputView Members
-
-        public void WriteLine(string format, params object[] args)
+        void IOutputView.WriteLine(string format, params object[] args)
         {
             OutputBox.AppendText(string.Format(format, args));
             OutputBox.AppendText(Environment.NewLine);
         }
 
-        public void Report(SyncOperation op)
+        void IOutputView.Report(SyncOperation op)
         {
             switch (op.Action)
             {
@@ -87,16 +85,23 @@ namespace AssimilationSoftware.MediaSync.WinForms
             OutputBox.AppendText(Environment.NewLine);
         }
 
-        #endregion
-
         private void RunButton_Click(object sender, EventArgs e)
         {
             OutputBox.Clear();
-            WriteLine("Run {0} at {1}", SimCheckBox.Checked ? "(simulated)" : string.Empty, DateTime.Now);
+            toolStripStatusLabel1.Text = string.Format("Run {0} at {1}", SimCheckBox.Checked ? "(simulated)" : string.Empty, DateTime.Now);
             ulong sharesize = ReserveSize;
-            Service syncer = new Service(SourceBox.Text, SharedBox.Text, sharesize, SimCheckBox.Checked, this);
+
+            // Create an ad-hoc profile to run.
+            SyncProfile profile = new SyncProfile();
+            profile.SourcePath = SourceBox.Text;
+            profile.SharedPath = SharedBox.Text;
+            profile.Simulate = SimCheckBox.Checked;
+            profile.ReserveSpace = sharesize;
+
+            IIndexService indexer = new Core.Indexing.TextIndexer(profile);
+            var syncer = new SyncService(profile, this, indexer, new QueuedDiskCopier(profile, indexer));
             syncer.Sync();
-            WriteLine("Done.");
+            toolStripStatusLabel1.Text = "Done";
         }
 
         private ulong ReserveSize
@@ -183,13 +188,13 @@ namespace AssimilationSoftware.MediaSync.WinForms
 
         private void SaveOptions()
         {
-            SyncOptions s = new SyncOptions();
+            SyncProfile s = new SyncProfile();
             s.SourcePath = SourceBox.Text;
             s.SharedPath = SharedBox.Text;
             s.Simulate = SimCheckBox.Checked;
             s.ReserveSpace = ReserveSize;
 
-            SyncOptions.Save(_filename, s);
+            SyncProfile.Save(_filename, s);
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -216,7 +221,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
 
         private void LoadOptions()
         {
-			//SyncOptions s = SyncOptions.Load(_filename);
+			//SyncProfile s = SyncProfile.Load(_filename);
 
 			//SourceBox.Text = s.SourcePath;
 			//SharedBox.Text = s.SharedPath;
@@ -231,6 +236,16 @@ namespace AssimilationSoftware.MediaSync.WinForms
             SharedBox.Text = string.Empty;
             ReserveSize = 0;
             SimCheckBox.Checked = true;
+        }
+        #endregion
+
+        #region Properties
+        string IOutputView.Status
+        {
+            set
+            {
+                toolStripStatusLabel1.Text = value;
+            }
         }
         #endregion
     }

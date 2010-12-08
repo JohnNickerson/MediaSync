@@ -6,45 +6,57 @@ using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
+    /// <summary>
+    /// An index class that writes to a text file.
+    /// </summary>
     public class TextIndexer : IIndexService
     {
-        private SyncOptions _options;
-        private List<string> _fileList;
+        #region Fields
+        /// <summary>
+        /// The sync profile to work from.
+        /// </summary>
+        private SyncProfile _options;
 
-        public TextIndexer(SyncOptions _options)
+        /// <summary>
+        /// The current list of files.
+        /// </summary>
+        private List<string> _fileList;
+        #endregion
+
+        #region Constructors
+        /// <summary>
+        /// Constructs a new text indexer for a given sync profile.
+        /// </summary>
+        /// <param name="_options">The sync profile to work from.</param>
+        public TextIndexer(SyncProfile _options)
         {
             this._options = _options;
             _fileList = new List<string>();
         }
+        #endregion
 
+        #region Methods
+        /// <summary>
+        /// Adds a file to the index.
+        /// </summary>
+        /// <param name="trunc_file">The file name to add to the index.</param>
         void IIndexService.Add(string trunc_file)
         {
             _fileList.Add(trunc_file);
         }
 
+        /// <summary>
+        /// Writes the index out to a file.
+        /// </summary>
         void IIndexService.WriteIndex()
         {
             File.WriteAllLines(IndexFileName, _fileList.ToArray());
         }
 
-
-        int IIndexService.PeerCount
-        {
-            get
-            {
-                return Directory.GetFiles(_options.SourcePath, "*_index.txt").Length;
-            }
-        }
-
-        private string IndexFileName
-        {
-            get
-            {
-                string indexfile = Path.Combine(_options.SourcePath, string.Format("{0}_index.txt", Environment.MachineName));
-                return indexfile;
-            }
-        }
-
+        /// <summary>
+        /// Compares this index to all the other indices on disk.
+        /// </summary>
+        /// <returns>A dictionary of file names to index membership counts.</returns>
         Dictionary<string, int> IIndexService.CompareCounts()
         {
             var FileCounts = new Dictionary<string, int>();
@@ -67,5 +79,31 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             }
             return FileCounts;
         }
+        #endregion
+
+        #region Properties
+        /// <summary>
+        /// Gets the number of peers participating in this sync profile, based on index files on disk.
+        /// </summary>
+        int IIndexService.PeerCount
+        {
+            get
+            {
+                return Directory.GetFiles(_options.SourcePath, "*_index.txt").Length;
+            }
+        }
+
+        /// <summary>
+        /// Gets the name of the file to which the index will be written.
+        /// </summary>
+        private string IndexFileName
+        {
+            get
+            {
+                string indexfile = Path.Combine(_options.SourcePath, string.Format("{0}_index.txt", Environment.MachineName));
+                return indexfile;
+            }
+        }
+        #endregion
     }
 }

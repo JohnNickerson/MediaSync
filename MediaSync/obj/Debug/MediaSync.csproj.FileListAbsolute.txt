@@ -54,7 +54,6 @@ C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\bi
 C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\bin\Debug\Client.exe
 C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\bin\Debug\Client.pdb
 C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\PatientSync.MainForm.resources
 C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\AssimilationSoftware.MediaSync.Properties.Resources.resources
 C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\GenerateResource.read.1.tlog
 C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\GenerateResource.write.1.tlog
@@ -63,3 +62,4 @@ C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\ob
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\GenerateResource.read.1.tlog
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\GenerateResource.write.1.tlog
 C:\Users\jnickerson.SNOWDEN\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\AssimilationSoftware.MediaSync.WinForms.MainForm.resources
+C:\Users\John\Documents\My Dropbox\Projects\Utils\MediaSync\release\MediaSync\obj\Debug\AssimilationSoftware.MediaSync.WinForms.MainForm.resources

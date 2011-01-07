@@ -9,6 +9,9 @@ using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
+    /// <summary>
+    /// Stores file indexes in a database.
+    /// </summary>
     class DbIndexer : IIndexService
     {
         private List<string> contents = new List<string>();
@@ -24,9 +27,11 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             contents.Add(trunc_file);
         }
 
+        /// <summary>
+        /// Writes a file index to the database.
+        /// </summary>
         void IIndexService.WriteIndex()
         {
-            // Also write index to the database.
             SqlCeConnection connection = new SqlCeConnection(ConfigurationManager.ConnectionStrings["database"].ConnectionString);
             SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
             adapter.InsertCommand = new SqlCeCommand("Insert Into Indexes (Timestamp, Machine, Profile, RelPath, Size, Hash) Values (@Timestamp, @Machine, @Profile, @RelPath, @Size, @Hash)", connection);
@@ -50,6 +55,14 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
                 adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", DBNull.Value);
                 adapter.InsertCommand.ExecuteNonQuery();
             }
+
+            // TODO: Find any indexes older than the last two. Remove them.
+            adapter.DeleteCommand = new SqlCeCommand("Delete From Indexes Where Timestamp Not In (Select Top 2 Timestamp From Indexes Where Machine = @Machine And Profile = @Profile) And Machine = @Machine And Profile = @Profile", connection);
+            adapter.DeleteCommand.Parameters.Add("@Machine", SqlDbType.NVarChar);
+            adapter.DeleteCommand.Parameters.Add("@Profile", SqlDbType.NVarChar);
+            adapter.DeleteCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Environment.MachineName);
+            adapter.DeleteCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
+            adapter.DeleteCommand.ExecuteNonQuery();
             connection.Close();
         }
 

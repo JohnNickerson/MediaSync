@@ -322,6 +322,8 @@ namespace AssimilationSoftware.MediaSync.Core
             // Check for files found in all indexes and in storage, and remove them.
             PruneFiles();
 
+            // TODO: Find delete operations to pass on?
+
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
 			// TODO: Only push files for contributor profiles.

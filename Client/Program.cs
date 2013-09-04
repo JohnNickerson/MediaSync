@@ -8,6 +8,7 @@ using System.Data;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core.Indexing;
 using AssimilationSoftware.MediaSync.Core.Views;
+using AssimilationSoftware.MediaSync.Core.Profile;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -15,22 +16,38 @@ namespace AssimilationSoftware.MediaSync.Core
     {
         static void Main(string[] args)
         {
-            try
+            IProfileManager profileManager = new DiskProfileManager();
+            if (args.Contains("addprofile"))
             {
-                foreach (SyncProfile opts in SyncProfile.Load(Environment.MachineName))
-                {
-                    IOutputView view = new ConsoleView();
-                    IIndexService indexer = new TextIndexer(opts);
-                    IFileManager copier = new QueuedDiskCopier(opts, indexer);
-                    SyncService s = new SyncService(opts, view, indexer, copier);
-                    s.Sync();
-                }
+                var profile = new SyncProfile();
+                profile.ProfileName = "NewProfile";
+                profile.SharedPath = @"D:\Temp";
+                profile.SourcePath = @"D:\Src\MediaSync\TestData\Pictures";
+                profile.ReserveSpace = 100000;
+                profile.Consumer = true;
+                profile.Contributor = true;
+                profile.Simulate = false;
+                profileManager.Save(Environment.MachineName, profile);
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine("Could not sync.");
-                Console.WriteLine(e.Message);
-                File.WriteAllText("error.log", e.StackTrace);
+                try
+                {
+                    foreach (SyncProfile opts in profileManager.Load(Environment.MachineName))
+                    {
+                        IOutputView view = new ConsoleView();
+                        IIndexService indexer = new TextIndexer(opts);
+                        IFileManager copier = new QueuedDiskCopier(opts, indexer);
+                        SyncService s = new SyncService(opts, view, indexer, copier);
+                        s.Sync();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Could not sync.");
+                    Console.WriteLine(e.Message);
+                    File.WriteAllText("error.log", e.StackTrace);
+                }
             }
 
             Console.WriteLine("Finished. Press a key to exit.");

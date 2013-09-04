@@ -12,6 +12,7 @@ using System.IO;
 using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.Views;
 using AssimilationSoftware.MediaSync.Core.Indexing;
+using AssimilationSoftware.MediaSync.Core.Profile;
 
 namespace AssimilationSoftware.MediaSync.WinForms
 {
@@ -194,7 +195,8 @@ namespace AssimilationSoftware.MediaSync.WinForms
             s.Simulate = SimCheckBox.Checked;
             s.ReserveSpace = ReserveSize;
 
-            SyncProfile.Save(_filename, s);
+            IProfileManager profileManager = new DiskProfileManager();
+            profileManager.Save(Environment.MachineName, s);
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)

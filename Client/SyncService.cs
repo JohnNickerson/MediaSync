@@ -93,9 +93,17 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             _view = view;
             _sizecache = 0;
-            _copyq = filemanager;
 			_options = opts;
-            _indexer = indexer;
+            if (opts.Simulate)
+            {
+                _copyq = new MockFileManager();
+                _indexer = new MockIndexer();
+            }
+            else
+            {
+                _copyq = filemanager;
+                _indexer = indexer;
+            }
         }
         #endregion
 
@@ -107,14 +115,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             _copyq.CreateIndex(_indexer);
             // Overwrite any old index that exists.
-            if (Simulate)
-            {
-                _view.WriteLine("Simulation run: no index writing.");
-            }
-            else
-            {
-                _indexer.WriteIndex();
-			}
+            _indexer.WriteIndex();
 
             // Compare this index with others.
             NumPeers = _indexer.PeerCount;
@@ -159,10 +160,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     try
                     {
                         _view.Report(new SyncOperation(dir));
-                        if (!Simulate)
-                        {
-                            Directory.Delete(dir);
-                        }
+                        _copyq.Delete(dir);
                     }
                     catch
                     {
@@ -206,15 +204,11 @@ namespace AssimilationSoftware.MediaSync.Core
                     // ...copy it to shared storage.
                     string targetdir = Path.GetDirectoryName(targetfile);
                     _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
-                    if (!Simulate)
-                    {
-                        if (!Directory.Exists(targetdir))
-                            Directory.CreateDirectory(targetdir);
-						string fullpathlocal = PathCombine(SourcePath, filename_local);
-						_copyq.CopyFile(fullpathlocal, targetfile);
-						// Update size cache.
-						_sizecache += (ulong)new FileInfo(fullpathlocal).Length;
-                    }
+                    _copyq.EnsureFolder(targetdir);
+					string fullpathlocal = PathCombine(SourcePath, filename_local);
+					_copyq.CopyFile(fullpathlocal, targetfile);
+					// Update size cache.
+					_sizecache += (ulong)new FileInfo(fullpathlocal).Length;
                 }
             }
 			WaitForCopies();
@@ -232,25 +226,21 @@ namespace AssimilationSoftware.MediaSync.Core
                 string relativepath = incoming.Substring(WatchPath.Length + 1);
                 string targetfile = PathCombine(SourcePath, relativepath);
                 string targetdir = Path.GetDirectoryName(targetfile);
-                if (!Directory.Exists(targetdir) && !Simulate)
-                    Directory.CreateDirectory(targetdir);
+                _copyq.EnsureFolder(targetdir);
                 if (!incoming.Equals(targetfile))
                 {
-                    if (!File.Exists(targetfile))
+                    try
                     {
-                        try
+                        _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                        if (!_copyq.Exclude(incoming))
                         {
-                            _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
-                            if (!Simulate && !_copyq.Exclude(incoming))
-                            {
-                                // Linux Bug: Source and target locations the same. Probably a slash problem.
-                                _copyq.CopyFile(incoming, targetfile);
-                            }
+                            // Linux Bug: Source and target locations the same. Probably a slash problem.
+                            _copyq.CopyFile(incoming, targetfile);
                         }
-                        catch (Exception)
-                        {
-                            _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
-                        }
+                    }
+                    catch (Exception)
+                    {
+                        _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
                     }
                 }
                 else
@@ -275,11 +265,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
                 {
                     _view.Report(new SyncOperation(filename));
-                    if (!Simulate)
-                    {
-                        // Remove it from shared storage.
-                        File.Delete(filename);
-                    }
+                    // Remove it from shared storage.
+                    _copyq.Delete(filename);
                 }
             }
             ClearEmptyFolders();

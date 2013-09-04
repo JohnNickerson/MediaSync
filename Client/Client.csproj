@@ -57,9 +57,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Indexing\MockIndexer.cs" />
+    <Compile Include="FileManagement\MockFileManager.cs" />
+    <Compile Include="Profile\DiskProfileManager.cs" />
+    <Compile Include="Profile\IProfileManager.cs" />
     <Compile Include="Views\ConsoleView.cs" />
-    <Compile Include="QueuedDiskCopier.cs" />
-    <Compile Include="IFileManager.cs" />
+    <Compile Include="FileManagement\QueuedDiskCopier.cs" />
+    <Compile Include="FileManagement\IFileManager.cs" />
     <Compile Include="Indexing\DbIndexer.cs" />
     <Compile Include="Indexing\IIndexService.cs" />
     <Compile Include="Indexing\TextIndexer.cs" />
@@ -68,7 +71,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SyncService.cs" />
     <Compile Include="SyncOperation.cs" />
-    <Compile Include="SyncProfile.cs" />
+    <Compile Include="Profile\SyncProfile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

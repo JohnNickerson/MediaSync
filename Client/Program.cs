@@ -21,9 +21,9 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 var profile = new SyncProfile();
                 profile.ProfileName = "NewProfile";
-                profile.SharedPath = @"D:\Temp";
-                profile.SourcePath = @"D:\Src\MediaSync\TestData\Pictures";
-                profile.ReserveSpace = 100000;
+                profile.LocalPath = @"D:\Src\MediaSync\TestData\SharedSpace";
+                profile.SharedPath = @"D:\Src\MediaSync\TestData\Pictures";
+                profile.ReserveSpace = 50000;
                 profile.Consumer = true;
                 profile.Contributor = true;
                 profile.Simulate = false;

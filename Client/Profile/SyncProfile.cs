@@ -14,7 +14,7 @@ namespace AssimilationSoftware.MediaSync.Core
     public class SyncProfile
     {
         #region Fields
-        public string SourcePath;
+        public string LocalPath;
         public string SharedPath;
         public bool Simulate;
 		public bool Contributor;
@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			this.Simulate = false;
 			this.Consumer = (bool)row["Consumer"];
 			this.Contributor = (bool)row["Contributor"];
-			this.SourcePath = (string)row["MediaPath"];
+			this.LocalPath = (string)row["MediaPath"];
 			this.ProfileName = (string)row["Profile"];
 		}
 		#endregion

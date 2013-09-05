@@ -94,7 +94,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
 
             // Create an ad-hoc profile to run.
             SyncProfile profile = new SyncProfile();
-            profile.SourcePath = SourceBox.Text;
+            profile.LocalPath = SourceBox.Text;
             profile.SharedPath = SharedBox.Text;
             profile.Simulate = SimCheckBox.Checked;
             profile.ReserveSpace = sharesize;
@@ -190,7 +190,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
         private void SaveOptions()
         {
             SyncProfile s = new SyncProfile();
-            s.SourcePath = SourceBox.Text;
+            s.LocalPath = SourceBox.Text;
             s.SharedPath = SharedBox.Text;
             s.Simulate = SimCheckBox.Checked;
             s.ReserveSpace = ReserveSize;
@@ -225,7 +225,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
         {
 			//SyncProfile s = SyncProfile.Load(_filename);
 
-			//SourceBox.Text = s.SourcePath;
+			//SourceBox.Text = s.LocalPath;
 			//SharedBox.Text = s.SharedPath;
 			//ReserveSize = s.ReserveSpace;
 			//SimCheckBox.Checked = s.Simulate;

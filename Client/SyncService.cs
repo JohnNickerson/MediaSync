@@ -19,7 +19,7 @@ namespace AssimilationSoftware.MediaSync.Core
     public class SyncService
     {
         #region Fields
-        public string SourcePath;
+        public string LocalPath;
         public string WatchPath;
         private int NumPeers;
         private Dictionary<string, int> FileCounts;
@@ -65,7 +65,7 @@ namespace AssimilationSoftware.MediaSync.Core
         [Obsolete]
 		public SyncService(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
         {
-            SourcePath = source;
+            LocalPath = source;
             WatchPath = watch;
             NumPeers = 0;
             FileCounts = new Dictionary<string, int>();
@@ -80,7 +80,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public SyncService(SyncProfile opts, IOutputView view, IIndexService indexer, IFileManager filemanager)
         {
-            SourcePath = opts.SourcePath;
+            LocalPath = opts.LocalPath;
             WatchPath = opts.SharedPath;
             NumPeers = 0;
             FileCounts = new Dictionary<string, int>();
@@ -194,7 +194,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // If the file is missing from somewhere
                 if (FileCounts[filename] < NumPeers
                     // ...and exists locally
-                    && File.Exists(PathCombine(SourcePath, filename_local))
+                    && File.Exists(PathCombine(LocalPath, filename_local))
                     // ...and is not in shared storage
                     && !File.Exists(targetfile)
                     // ...and it doesn't match an exclusion pattern
@@ -205,7 +205,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     string targetdir = Path.GetDirectoryName(targetfile);
                     _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
                     _copyq.EnsureFolder(targetdir);
-					string fullpathlocal = PathCombine(SourcePath, filename_local);
+					string fullpathlocal = PathCombine(LocalPath, filename_local);
 					_copyq.CopyFile(fullpathlocal, targetfile);
 					// Update size cache.
 					_sizecache += (ulong)new FileInfo(fullpathlocal).Length;
@@ -224,7 +224,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // These paths might need some more processing.
                 // Remove the watch path.
                 string relativepath = incoming.Substring(WatchPath.Length + 1);
-                string targetfile = PathCombine(SourcePath, relativepath);
+                string targetfile = PathCombine(LocalPath, relativepath);
                 string targetdir = Path.GetDirectoryName(targetfile);
                 _copyq.EnsureFolder(targetdir);
                 if (!incoming.Equals(targetfile))

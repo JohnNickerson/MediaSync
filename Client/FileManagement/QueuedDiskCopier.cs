@@ -147,7 +147,7 @@ namespace AssimilationSoftware.MediaSync.Core
         void IFileManager.CreateIndex(IIndexService indexer)
         {
             Queue<string> queue = new Queue<string>();
-            queue.Enqueue(_profile.SourcePath);
+            queue.Enqueue(_profile.LocalPath);
             // While the queue is not empty,
             while (queue.Count > 0)
             {
@@ -164,7 +164,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (!((IFileManager)this).Exclude(file))
                     {
                         // Remove the base path.
-                        string trunc_file = file.Remove(0, _profile.SourcePath.Length + 1).Replace("/", "\\");
+                        string trunc_file = file.Remove(0, _profile.LocalPath.Length + 1).Replace("/", "\\");
                         _indexer.Add(trunc_file);
                     }
                 }
@@ -181,7 +181,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 ulong total = 0;
 
-                foreach (string filename in Directory.GetFiles(_profile.SourcePath, "*.*", SearchOption.AllDirectories))
+                foreach (string filename in Directory.GetFiles(_profile.LocalPath, "*.*", SearchOption.AllDirectories))
                 {
                     total += (ulong)new FileInfo(filename).Length;
                 }

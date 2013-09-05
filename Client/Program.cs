@@ -27,6 +27,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.Consumer = true;
                 profile.Contributor = true;
                 profile.Simulate = false;
+                profile.ExcludePatterns = new string[] { "Thumbs.db" };
                 profileManager.Save(Environment.MachineName, profile);
             }
             else

@@ -27,7 +27,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.Consumer = true;
                 profile.Contributor = true;
                 profile.Simulate = false;
-                profile.ExcludePatterns = new string[] { "Thumbs.db" };
+                profile.SearchPattern = "*.jpg";
                 profileManager.Save(Environment.MachineName, profile);
             }
             else

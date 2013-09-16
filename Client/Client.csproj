@@ -40,6 +40,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\..\..\Program Files\Microsoft Sync Framework\2.1\Runtime\x86\Microsoft.Synchronization.Files.dll</HintPath>
     </Reference>
+    <Reference Include="Polenter.SharpSerializer">
+      <HintPath>..\Library\Polenter.SharpSerializer.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">

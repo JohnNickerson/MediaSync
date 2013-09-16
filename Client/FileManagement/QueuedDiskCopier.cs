@@ -82,18 +82,6 @@ namespace AssimilationSoftware.MediaSync.Core
         bool IFileManager.Exclude(string file)
         {
             bool result = false;
-            string testfile = Path.GetFileName(file);
-
-            foreach (string x in _profile.ExcludePatterns)
-            {
-                Regex r = new Regex(x);
-                if (r.IsMatch(testfile))
-                {
-                    result = true;
-                    break;
-                }
-            }
-
             return result;
         }
         /// <summary>
@@ -161,12 +149,10 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Add all image files to the index.
                 foreach (string file in Directory.GetFiles(folder, "*.*"))
                 {
-                    if (!((IFileManager)this).Exclude(file))
-                    {
-                        // Remove the base path.
-                        string trunc_file = file.Remove(0, _profile.LocalPath.Length + 1).Replace("/", "\\");
-                        _indexer.Add(trunc_file);
-                    }
+                    // Remove the base path.
+                    // TODO: Use FileInfo.
+                    string trunc_file = file.Remove(0, _profile.LocalPath.Length + 1).Replace("/", "\\");
+                    _indexer.Add(trunc_file);
                 }
             }
         }

@@ -20,7 +20,13 @@ namespace AssimilationSoftware.MediaSync.Core
 		public bool Contributor;
 		public bool Consumer;
         public ulong ReserveSpace;
+        [Obsolete("Use SearchPattern for positive inclusion instead.")]
         public string[] ExcludePatterns;
+
+        /// <summary>
+        /// A search pattern for files to include.
+        /// </summary>
+        public string SearchPattern;
 		public string ProfileName;
         #endregion
 
@@ -31,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
 		public SyncProfile(DataRow row)
 		{
-			this.ExcludePatterns = new string[] { @"Thumbs\.db", @"desktop\.ini", @".*_index\.txt" };
+            this.SearchPattern = (string)row["SearchPattern"];
 			this.ReserveSpace = (ulong)(long)row["SharedSpace"];
 			this.SharedPath = (string)row["SharedPath"];
 			this.Simulate = false;

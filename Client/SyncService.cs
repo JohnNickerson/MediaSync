@@ -39,11 +39,12 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         private IOutputView _view;
 
-        private string filesearch = "*.*";
+        public string FileSearch = "*.*";
 
         /// <summary>
         /// A list of file name patterns to exclude from synchronisation.
         /// </summary>
+        [Obsolete]
         public List<Regex> Exclusions;
 
 		/// <summary>
@@ -86,11 +87,7 @@ namespace AssimilationSoftware.MediaSync.Core
             FileCounts = new Dictionary<string, int>();
             SizeLimit = opts.ReserveSpace;
             Simulate = opts.Simulate;
-            Exclusions = new List<Regex>();
-            foreach (string r in opts.ExcludePatterns)
-            {
-                Exclusions.Add(new Regex(r));
-            }
+            FileSearch = opts.SearchPattern;
             _view = view;
             _sizecache = 0;
 			_options = opts;
@@ -127,6 +124,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         /// <param name="paths">A list of paths to combine.</param>
         /// <returns>One path value, combined into an environment-appropriate string.</returns>
+        [Obsolete("Path.Combine can take a params array.")]
         public static string PathCombine(params string[] paths)
         {
             Stack<string> stack = new Stack<string>();
@@ -189,23 +187,21 @@ namespace AssimilationSoftware.MediaSync.Core
                     break;
                 }
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
-                string targetfile = PathCombine(WatchPath, filename);
+                string targetfile = Path.Combine(WatchPath, filename);
 
                 // If the file is missing from somewhere
                 if (FileCounts[filename] < NumPeers
                     // ...and exists locally
-                    && File.Exists(PathCombine(LocalPath, filename_local))
+                    && File.Exists(Path.Combine(LocalPath, filename_local))
                     // ...and is not in shared storage
                     && !File.Exists(targetfile)
-                    // ...and it doesn't match an exclusion pattern
-                    && !_copyq.Exclude(filename)
                     && _copyq.ShouldCopy(filename))
                 {
                     // ...copy it to shared storage.
                     string targetdir = Path.GetDirectoryName(targetfile);
                     _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
                     _copyq.EnsureFolder(targetdir);
-					string fullpathlocal = PathCombine(LocalPath, filename_local);
+					string fullpathlocal = Path.Combine(LocalPath, filename_local);
 					_copyq.CopyFile(fullpathlocal, targetfile);
 					// Update size cache.
 					_sizecache += (ulong)new FileInfo(fullpathlocal).Length;
@@ -219,12 +215,12 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         internal void PullFiles()
         {
-            foreach (string incoming in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
+            foreach (string incoming in Directory.GetFiles(WatchPath, FileSearch, SearchOption.AllDirectories))
             {
                 // These paths might need some more processing.
                 // Remove the watch path.
                 string relativepath = incoming.Substring(WatchPath.Length + 1);
-                string targetfile = PathCombine(LocalPath, relativepath);
+                string targetfile = Path.Combine(LocalPath, relativepath);
                 string targetdir = Path.GetDirectoryName(targetfile);
                 _copyq.EnsureFolder(targetdir);
                 if (!incoming.Equals(targetfile))
@@ -232,11 +228,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     try
                     {
                         _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
-                        if (!_copyq.Exclude(incoming))
-                        {
-                            // Linux Bug: Source and target locations the same. Probably a slash problem.
-                            _copyq.CopyFile(incoming, targetfile);
-                        }
+                        // Linux Bug: Source and target locations the same. Probably a slash problem.
+                        _copyq.CopyFile(incoming, targetfile);
                     }
                     catch (Exception)
                     {
@@ -258,7 +251,7 @@ namespace AssimilationSoftware.MediaSync.Core
         internal void PruneFiles()
         {
             // For each file in the watch path
-            foreach (string filename in Directory.GetFiles(WatchPath, filesearch, SearchOption.AllDirectories))
+            foreach (string filename in Directory.GetFiles(WatchPath, FileSearch, SearchOption.AllDirectories))
             {
                 // If the file exists in all peers
                 string relativefile = filename.Remove(0, WatchPath.Length + 1);

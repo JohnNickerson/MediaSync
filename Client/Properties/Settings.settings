@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Client.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AssimilationSoftware.MediaSync.Core.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="MediaSyncConnectionString" Type="(Connection string)" Scope="Application">
@@ -9,6 +9,12 @@
   &lt;ProviderName&gt;Microsoft.SqlServerCe.Client.3.5&lt;/ProviderName&gt;
 &lt;/SerializableConnectionString&gt;</DesignTimeValue>
       <Value Profile="(Default)">Data Source=|DataDirectory|\MediaSync.sdf</Value>
+    </Setting>
+    <Setting Name="Configured" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ProfilesLocation" Type="System.String" Scope="User">
+      <Value Profile="(Default)">{MachineName}-Profiles.xml</Value>
     </Setting>
   </Settings>
 </SettingsFile>

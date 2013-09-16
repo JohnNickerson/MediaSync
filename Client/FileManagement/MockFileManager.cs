@@ -23,11 +23,6 @@ namespace AssimilationSoftware.MediaSync.Core
         {
         }
 
-        bool IFileManager.Exclude(string incoming)
-        {
-            return false;
-        }
-
         List<Exception> IFileManager.Errors
         {
             get

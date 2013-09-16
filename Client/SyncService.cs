@@ -41,12 +41,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public string FileSearch = "*.*";
 
-        /// <summary>
-        /// A list of file name patterns to exclude from synchronisation.
-        /// </summary>
-        [Obsolete]
-        public List<Regex> Exclusions;
-
 		/// <summary>
 		/// An asynchronous file copier.
 		/// </summary>
@@ -58,27 +52,6 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Constructors
-        /// <summary>
-        /// Constructs a new photo sync service instance.
-        /// </summary>
-        /// <param name="source">The photo folder location.</param>
-        /// <param name="watch">The sync folder, where requests are made and fulfilled.</param>
-        [Obsolete]
-		public SyncService(string source, string watch, ulong reservesize, bool simulate, IOutputView view)
-        {
-            LocalPath = source;
-            WatchPath = watch;
-            NumPeers = 0;
-            FileCounts = new Dictionary<string, int>();
-            SizeLimit = reservesize;
-            Simulate = simulate;
-            Exclusions = new List<Regex>();
-            Exclusions.Add(new Regex(".*_index.txt"));
-            _view = view;
-            _sizecache = 0;
-			_copyq = new QueuedDiskCopier(null, null);
-        }
-
         public SyncService(SyncProfile opts, IOutputView view, IIndexService indexer, IFileManager filemanager)
         {
             LocalPath = opts.LocalPath;
@@ -117,28 +90,6 @@ namespace AssimilationSoftware.MediaSync.Core
             // Compare this index with others.
             NumPeers = _indexer.PeerCount;
             FileCounts = _indexer.CompareCounts();
-        }
-
-        /// <summary>
-        /// Combines multiple paths into one string according to environment settings.
-        /// </summary>
-        /// <param name="paths">A list of paths to combine.</param>
-        /// <returns>One path value, combined into an environment-appropriate string.</returns>
-        [Obsolete("Path.Combine can take a params array.")]
-        public static string PathCombine(params string[] paths)
-        {
-            Stack<string> stack = new Stack<string>();
-            for (int x = 0; x < paths.Length; x++)
-            {
-                stack.Push(paths[x]);
-            }
-            while (stack.Count > 1)
-            {
-                string path2 = stack.Pop();
-                string path1 = stack.Pop();
-                stack.Push(Path.Combine(path1, path2));
-            }
-            return stack.Pop();
         }
 
         /// <summary>

@@ -13,6 +13,7 @@ using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.Views;
 using AssimilationSoftware.MediaSync.Core.Indexing;
 using AssimilationSoftware.MediaSync.Core.Profile;
+using AssimilationSoftware.MediaSync.Properties;
 
 namespace AssimilationSoftware.MediaSync.WinForms
 {
@@ -195,7 +196,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
             s.Simulate = SimCheckBox.Checked;
             s.ReserveSpace = ReserveSize;
 
-            IProfileManager profileManager = new DiskProfileManager();
+            IProfileManager profileManager = new DiskProfileManager(Settings.Default.ProfilesLocation);
             profileManager.Save(Environment.MachineName, s);
         }
 

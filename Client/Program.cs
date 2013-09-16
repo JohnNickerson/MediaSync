@@ -9,6 +9,7 @@ using System.IO;
 using AssimilationSoftware.MediaSync.Core.Indexing;
 using AssimilationSoftware.MediaSync.Core.Views;
 using AssimilationSoftware.MediaSync.Core.Profile;
+using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -16,25 +17,43 @@ namespace AssimilationSoftware.MediaSync.Core
     {
         static void Main(string[] args)
         {
-            IProfileManager profileManager = new DiskProfileManager();
+            #region Configuration
+            if (args.Contains("reconfigure"))
+            {
+                Settings.Default.Configured = false;
+            }
+            if (!Settings.Default.Configured)
+            {
+                Settings.Default.ProfilesLocation = ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
+                Settings.Default.Configured = true;
+
+                Settings.Default.Save();
+            }
+            #endregion
+
+            IProfileManager profileManager = new DiskProfileManager(Settings.Default.ProfilesLocation);
             if (args.Contains("addprofile"))
             {
+                var profiles = profileManager.Load();
+
                 var profile = new SyncProfile();
-                profile.ProfileName = "NewProfile";
-                profile.LocalPath = @"D:\Src\MediaSync\TestData\SharedSpace";
-                profile.SharedPath = @"D:\Src\MediaSync\TestData\Pictures";
+                profile.ProfileName = ConfigureString("NewProfile", "Profile name");
+                profile.LocalPath = ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Local path");
+                profile.SharedPath = ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Path to shared space");
                 profile.ReserveSpace = 50000;
                 profile.Consumer = true;
                 profile.Contributor = true;
                 profile.Simulate = false;
-                profile.SearchPattern = "*.jpg";
-                profileManager.Save(Environment.MachineName, profile);
+                profile.SearchPattern = ConfigureString("*.jpg", "File search pattern");
+
+                profiles.Add(profile);
+                profileManager.Save(profiles);
             }
             else
             {
                 try
                 {
-                    foreach (SyncProfile opts in profileManager.Load(Environment.MachineName))
+                    foreach (SyncProfile opts in profileManager.Load())
                     {
                         IOutputView view = new ConsoleView();
                         IIndexService indexer = new TextIndexer(opts);
@@ -93,5 +112,49 @@ namespace AssimilationSoftware.MediaSync.Core
 			connection.Close();
 		}
 
+        /// <summary>
+        /// Prompts to configure a path based on an existing value.
+        /// </summary>
+        /// <param name="path">The path as it exists. May include "{MyDocs}" as a placeholder.</param>
+        /// <param name="prompt">The human-friendly name of the folder to be used as a cue.</param>
+        /// <returns>The correct path as provided by the user.</returns>
+        private static string ConfigurePath(string path, string prompt)
+        {
+            // Special folder replacements.
+            path = path.Replace("{MyDocs}", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            path = path.Replace("{MyPictures}", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
+            path = path.Replace("{MachineName}", Environment.MachineName);
+
+            Console.WriteLine("Configure path to {0}:", prompt);
+            Console.WriteLine("Type correct value or [Enter] to accept default.");
+            Console.WriteLine(path);
+            var response = Console.ReadLine();
+            if (response.Trim().Length > 0)
+            {
+                path = response;
+                Console.WriteLine();
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Prompts to configure a string value, or accept a default.
+        /// </summary>
+        /// <param name="value">The initial default value.</param>
+        /// <param name="prompt">A prompt for the user.</param>
+        /// <returns>The configured value as entered or accepted by the user.</returns>
+        private static string ConfigureString(string value, string prompt)
+        {
+            Console.WriteLine("Configure string value for {0}:", prompt);
+            Console.WriteLine("Type correct value or [Enter] to accept default.");
+            Console.WriteLine(value);
+            var response = Console.ReadLine();
+            if (response.Trim().Length > 0)
+            {
+                value = response;
+                Console.WriteLine();
+            }
+            return value;
+        }
     }
 }

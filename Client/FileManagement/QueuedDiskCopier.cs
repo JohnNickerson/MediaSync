@@ -75,16 +75,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
 		#region Methods
         /// <summary>
-        /// Checks whether a file name matches any exclusion pattern.
-        /// </summary>
-        /// <param name="file">The file name to test.</param>
-        /// <returns>True if any of the exclusion patterns match the given file name, false otherwise.</returns>
-        bool IFileManager.Exclude(string file)
-        {
-            bool result = false;
-            return result;
-        }
-        /// <summary>
 		/// Starts an asynchronous file copy operation.
 		/// </summary>
 		/// <param name="source">The source file to copy.</param>

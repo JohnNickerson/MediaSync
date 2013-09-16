@@ -25,9 +25,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
         void CreateIndex(Indexing.IIndexService _indexer);
 
-        [Obsolete]
-        bool Exclude(string incoming);
-
         List<Exception> Errors { get; }
 
         ulong WatchPathSize();

@@ -4,11 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using System.IO;
+using Polenter.Serialization;
 
 namespace AssimilationSoftware.MediaSync.Core.Profile
 {
     public class DiskProfileManager : IProfileManager
     {
+        public string Filename;
+
+        public DiskProfileManager(string profileListFilename)
+        {
+            Filename = profileListFilename;
+        }
+
         void IProfileManager.Save(string machineName, SyncProfile saveobject)
         {
             string filename = String.Format("{0}_{1}.xml", machineName, saveobject.ProfileName);
@@ -34,13 +42,23 @@ namespace AssimilationSoftware.MediaSync.Core.Profile
 
         SyncProfile[] IProfileManager.Load(string machineName)
         {
-            List<SyncProfile> results = new List<SyncProfile>();
-            foreach (string filename in Directory.GetFiles(".", string.Format("{0}_*.xml", machineName)))
-            {
-                string profilename = new FileInfo(filename).Name.Remove(0, machineName.Length + 1).Replace(".xml", string.Empty);
-                results.Add(((IProfileManager)this).Load(machineName, profilename));
-            }
+            SharpSerializer s = new SharpSerializer(false);
+            List<SyncProfile> results = (List<SyncProfile>)s.Deserialize(Filename);
             return results.ToArray();
+        }
+
+
+        List<SyncProfile> IProfileManager.Load()
+        {
+            SharpSerializer s = new SharpSerializer(false);
+            List<SyncProfile> p = (List<SyncProfile>)s.Deserialize(Filename);
+            return p;
+        }
+
+        void IProfileManager.Save(List<SyncProfile> profiles)
+        {
+            SharpSerializer s = new SharpSerializer(false);
+            s.Serialize(profiles, Filename);
         }
     }
 }

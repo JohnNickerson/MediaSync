@@ -51,6 +51,10 @@ namespace AssimilationSoftware.MediaSync.Core.Profile
         List<SyncProfile> IProfileManager.Load()
         {
             SharpSerializer s = new SharpSerializer(false);
+            if (!File.Exists(Filename))
+            {
+                s.Serialize(new List<SyncProfile>(), Filename);
+            }
             List<SyncProfile> p = (List<SyncProfile>)s.Deserialize(Filename);
             return p;
         }

@@ -60,7 +60,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         Dictionary<string, int> IIndexService.CompareCounts()
         {
             var FileCounts = new Dictionary<string, int>();
-            foreach (string otherindex in Directory.GetFiles(_options.LocalPath, "*_index.txt"))
+            foreach (string otherindex in Directory.GetFiles(_options.SharedPath, "*_index.txt"))
             {
                 if (!otherindex.Equals(IndexFileName))
                 {
@@ -89,7 +89,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         {
             get
             {
-                return Directory.GetFiles(_options.LocalPath, "*_index.txt").Length;
+                return Directory.GetFiles(_options.SharedPath, "*_index.txt").Length;
             }
         }
 
@@ -100,7 +100,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         {
             get
             {
-                string indexfile = Path.Combine(_options.LocalPath, string.Format("{0}_index.txt", Environment.MachineName));
+                string indexfile = Path.Combine(_options.SharedPath, string.Format("{0}_index.txt", Environment.MachineName));
                 return indexfile;
             }
         }

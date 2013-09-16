@@ -35,6 +35,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>AssimilationSoftware.MediaSync.Core.Program</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Synchronization.Files, Version=2.1.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

@@ -38,8 +38,8 @@ namespace AssimilationSoftware.MediaSync.Core
 
                 var profile = new SyncProfile();
                 profile.ProfileName = ConfigureString("NewProfile", "Profile name");
-                profile.LocalPath = ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Local path");
-                profile.SharedPath = ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Path to shared space");
+                profile.LocalPath = ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
+                profile.SharedPath = ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
                 profile.ReserveSpace = 50000;
                 profile.Consumer = true;
                 profile.Contributor = true;

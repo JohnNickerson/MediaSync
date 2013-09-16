@@ -10,24 +10,21 @@ using System.Data;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
-    [Serializable]
     public class SyncProfile
     {
-        #region Fields
-        public string LocalPath;
-        public string SharedPath;
-        public bool Simulate;
-		public bool Contributor;
-		public bool Consumer;
-        public ulong ReserveSpace;
-        [Obsolete("Use SearchPattern for positive inclusion instead.")]
-        public string[] ExcludePatterns;
+        #region Properties
+        public string LocalPath { get; set; }
+        public string SharedPath { get; set; }
+        public bool Simulate { get; set; }
+        public bool Contributor { get; set; }
+        public bool Consumer { get; set; }
+        public ulong ReserveSpace { get; set; }
 
         /// <summary>
         /// A search pattern for files to include.
         /// </summary>
-        public string SearchPattern;
-		public string ProfileName;
+        public string SearchPattern { get; set; }
+        public string ProfileName { get; set; }
         #endregion
 
 		#region Constructors
@@ -47,10 +44,5 @@ namespace AssimilationSoftware.MediaSync.Core
 			this.ProfileName = (string)row["Profile"];
 		}
 		#endregion
-
-		#region Methods
-		//TODO: public static void Save(SyncProfile saveObject)
-        //TODO: move SyncProfile load/save methods to a ProfileManager class.
-        #endregion
     }
 }

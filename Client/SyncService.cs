@@ -157,10 +157,14 @@ namespace AssimilationSoftware.MediaSync.Core
                     string targetdir = Path.GetDirectoryName(targetfile);
                     _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
                     _copyq.EnsureFolder(targetdir);
-					string fullpathlocal = Path.Combine(LocalPath, filename_local);
-					_copyq.CopyFile(fullpathlocal, targetfile);
-					// Update size cache.
-					_sizecache += (ulong)new FileInfo(fullpathlocal).Length;
+                    string fullpathlocal = Path.Combine(LocalPath, filename_local);
+                    _copyq.CopyFile(fullpathlocal, targetfile);
+                    // Update size cache.
+                    _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
+                }
+                else
+                {
+                    _view.WriteLine("Excluding file {0} because of reasons.", filename);
                 }
             }
 			WaitForCopies();

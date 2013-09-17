@@ -232,7 +232,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
-			// TODO: Only pull files for consumer profiles.
 			if (_options.Consumer)
 			{
 				PullFiles();
@@ -257,7 +256,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
-			// TODO: Only push files for contributor profiles.
 			if (_options.Contributor)
 			{
 				PushFiles();

@@ -24,8 +24,8 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             if (!Settings.Default.Configured)
             {
-                Settings.Default.ProfilesLocation = ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
                 Settings.Default.MachineName = ConfigureString(Settings.Default.MachineName, "Machine name");
+                Settings.Default.ProfilesLocation = ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();
@@ -56,6 +56,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     foreach (SyncProfile opts in profileManager.Load())
                     {
+                        Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+
                         IOutputView view = new ConsoleView();
                         IIndexService indexer = new TextIndexer(opts);
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
@@ -124,7 +126,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // Special folder replacements.
             path = path.Replace("{MyDocs}", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
             path = path.Replace("{MyPictures}", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
-            path = path.Replace("{MachineName}", Environment.MachineName);
+            path = path.Replace("{MachineName}", Settings.Default.MachineName);
 
             Console.WriteLine("Configure path to {0}:", prompt);
             Console.WriteLine("Type correct value or [Enter] to accept default.");

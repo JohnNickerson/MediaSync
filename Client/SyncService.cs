@@ -177,7 +177,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
-                        _view.WriteLine("Excluding file {0} because it does not exist here.", filename);
+                        //_view.WriteLine("Excluding file {0} because it does not exist here.", filename);
                     }
                 }
                 else

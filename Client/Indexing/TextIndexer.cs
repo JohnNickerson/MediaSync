@@ -63,7 +63,8 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             var FileCounts = new Dictionary<string, int>();
             foreach (string otherindex in Directory.GetFiles(_options.SharedPath, "*_index.txt"))
             {
-                if (!otherindex.Equals(IndexFileName))
+                Console.WriteLine("Processing {0}", otherindex);
+                //if (!otherindex.Equals(IndexFileName))
                 {
                     foreach (string idxfilename in File.ReadAllLines(otherindex))
                     {

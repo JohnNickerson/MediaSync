@@ -137,7 +137,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     queue.Enqueue(subfolder);
                 }
                 // Add all image files to the index.
-                foreach (string file in Directory.GetFiles(folder, "*.*"))
+                foreach (string file in Directory.GetFiles(folder, _profile.SearchPattern))
                 {
                     // Remove the base path.
                     // TODO: Use FileInfo.
@@ -157,7 +157,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 ulong total = 0;
 
-                foreach (string filename in Directory.GetFiles(_profile.LocalPath, "*.*", SearchOption.AllDirectories))
+                foreach (string filename in Directory.GetFiles(_profile.LocalPath, _profile.SearchPattern, SearchOption.AllDirectories))
                 {
                     total += (ulong)new FileInfo(filename).Length;
                 }

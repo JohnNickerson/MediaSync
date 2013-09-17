@@ -146,6 +146,8 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <returns>The configured value as entered or accepted by the user.</returns>
         private static string ConfigureString(string value, string prompt)
         {
+            value = value.Replace("{MachineName}", Environment.MachineName);
+            
             Console.WriteLine("Configure string value for {0}:", prompt);
             Console.WriteLine("Type correct value or [Enter] to accept default.");
             Console.WriteLine(value);

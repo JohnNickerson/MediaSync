@@ -176,7 +176,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <returns>True if the file should be copied, false otherwise.</returns>
         bool IFileManager.ShouldCopy(string filename)
         {
-            throw new NotImplementedException();
+            return true;
         }
         /// <summary>
         /// Deletes a file or directory.

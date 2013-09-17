@@ -56,9 +56,10 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     foreach (SyncProfile opts in profileManager.Load())
                     {
-                        Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
-
                         IOutputView view = new ConsoleView();
+
+                        view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+
                         IIndexService indexer = new TextIndexer(opts);
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
                         SyncService s = new SyncService(opts, view, indexer, copier);

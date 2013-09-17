@@ -125,7 +125,11 @@ namespace AssimilationSoftware.MediaSync.Core
         internal void PushFiles()
         {
             // No point trying to push files when they'll all be ignored.
-            if (NumPeers == 1) return;
+            if (NumPeers == 1)
+            {
+                _view.WriteLine("No peers, no point.");
+                return;
+            }
 
             // TODO: Prioritise the least-common files.
             //var sortedfilelist = from f in FileCounts.Keys orderby FileCounts[f] select f;
@@ -135,6 +139,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // If the size allocation has been exceeded, stop.
                 if (_copyq.WatchPathSize() > SizeLimit)
                 {
+                    _view.WriteLine("Shared space exhausted. Stopping for now.");
                     break;
                 }
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
@@ -234,10 +239,12 @@ namespace AssimilationSoftware.MediaSync.Core
             // Doing this first ensures that any found everywhere can be removed early.
 			if (_options.Consumer)
 			{
+                _view.WriteLine("Pulling files from shared space.");
 				PullFiles();
 			}
 
             // Index local files.
+            _view.WriteLine("Indexing local files.");
             IndexFiles();
             // Compare this index to other indices.
             // For each index, including local,
@@ -250,6 +257,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			// TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
+            _view.WriteLine("Removing shared files that are in every client already.");
             PruneFiles();
 
             // TODO: Find delete operations to pass on?
@@ -258,6 +266,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // If storage is full, do not copy any further.
 			if (_options.Contributor)
 			{
+                _view.WriteLine("Pushing files.");
 				PushFiles();
 			}
 

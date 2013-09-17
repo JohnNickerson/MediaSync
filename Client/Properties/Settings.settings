@@ -16,5 +16,8 @@
     <Setting Name="ProfilesLocation" Type="System.String" Scope="User">
       <Value Profile="(Default)">{MachineName}-Profiles.xml</Value>
     </Setting>
+    <Setting Name="MachineName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">{MachineName}</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

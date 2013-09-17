@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
@@ -100,7 +101,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         {
             get
             {
-                string indexfile = Path.Combine(_options.SharedPath, string.Format("{0}_index.txt", Environment.MachineName));
+                string indexfile = Path.Combine(_options.SharedPath, string.Format("{0}_index.txt", Settings.Default.MachineName));
                 return indexfile;
             }
         }

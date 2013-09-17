@@ -6,6 +6,7 @@ using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
 using System.IO;
+using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core.Indexing
 {
@@ -47,7 +48,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             foreach (string filename in contents)
             {
                 adapter.InsertCommand.Parameters["@Timestamp"] = new SqlCeParameter("@Timestamp", indextime);
-                adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Environment.MachineName);
+                adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Settings.Default.MachineName);
                 adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
                 adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", filename);
                 adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", new FileInfo(Path.Combine(_options.LocalPath, filename)).Length);
@@ -60,7 +61,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             adapter.DeleteCommand = new SqlCeCommand("Delete From Indexes Where Timestamp Not In (Select Top 2 Timestamp From Indexes Where Machine = @Machine And Profile = @Profile) And Machine = @Machine And Profile = @Profile", connection);
             adapter.DeleteCommand.Parameters.Add("@Machine", SqlDbType.NVarChar);
             adapter.DeleteCommand.Parameters.Add("@Profile", SqlDbType.NVarChar);
-            adapter.DeleteCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Environment.MachineName);
+            adapter.DeleteCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Settings.Default.MachineName);
             adapter.DeleteCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
             adapter.DeleteCommand.ExecuteNonQuery();
             connection.Close();

@@ -25,6 +25,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (!Settings.Default.Configured)
             {
                 Settings.Default.ProfilesLocation = ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
+                Settings.Default.MachineName = ConfigureString(Settings.Default.MachineName, "Machine name");
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();

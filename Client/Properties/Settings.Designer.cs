@@ -56,5 +56,17 @@ namespace AssimilationSoftware.MediaSync.Core.Properties {
                 this["ProfilesLocation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("{MachineName}")]
+        public string MachineName {
+            get {
+                return ((string)(this["MachineName"]));
+            }
+            set {
+                this["MachineName"] = value;
+            }
+        }
     }
 }

@@ -146,25 +146,43 @@ namespace AssimilationSoftware.MediaSync.Core
                 string targetfile = Path.Combine(WatchPath, filename);
 
                 // If the file is missing from somewhere
-                if (FileCounts[filename] < NumPeers
-                    // ...and exists locally
-                    && File.Exists(Path.Combine(LocalPath, filename_local))
-                    // ...and is not in shared storage
-                    && !File.Exists(targetfile)
-                    && _copyq.ShouldCopy(filename))
+                if (FileCounts[filename] < NumPeers)
                 {
-                    // ...copy it to shared storage.
-                    string targetdir = Path.GetDirectoryName(targetfile);
-                    _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
-                    _copyq.EnsureFolder(targetdir);
-                    string fullpathlocal = Path.Combine(LocalPath, filename_local);
-                    _copyq.CopyFile(fullpathlocal, targetfile);
-                    // Update size cache.
-                    _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
+                    // ...and exists locally
+                    if (File.Exists(Path.Combine(LocalPath, filename_local)))
+                    {
+                        // ...and is not in shared storage
+                        if (!File.Exists(targetfile))
+                        {
+                            if (_copyq.ShouldCopy(filename))
+                            {
+                                // ...copy it to shared storage.
+                                string targetdir = Path.GetDirectoryName(targetfile);
+                                _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
+                                _copyq.EnsureFolder(targetdir);
+                                string fullpathlocal = Path.Combine(LocalPath, filename_local);
+                                _copyq.CopyFile(fullpathlocal, targetfile);
+                                // Update size cache.
+                                _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
+                            }
+                            else
+                            {
+                                _view.WriteLine("Excluding file {0} because the file copy manager says no.", filename);
+                            }
+                        }
+                        else
+                        {
+                            _view.WriteLine("Excluding file {0} because it is already in shared storage.", filename);
+                        }
+                    }
+                    else
+                    {
+                        _view.WriteLine("Excluding file {0} because it does not exist here.", filename);
+                    }
                 }
                 else
                 {
-                    _view.WriteLine("Excluding file {0} because of reasons.", filename);
+                    _view.WriteLine("Excluding file {0} because it is already everywhere.", filename);
                 }
             }
 			WaitForCopies();

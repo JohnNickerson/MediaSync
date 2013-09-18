@@ -172,7 +172,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                         else
                         {
-                            _view.WriteLine("Excluding file {0} because it is already in shared storage.", filename);
+                            //_view.WriteLine("Excluding file {0} because it is already in shared storage.", filename);
                         }
                     }
                     else
@@ -182,7 +182,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 else
                 {
-                    _view.WriteLine("Excluding file {0} because it is already everywhere.", filename);
+                    //_view.WriteLine("Excluding file {0} because it is already everywhere.", filename);
                 }
             }
 			WaitForCopies();

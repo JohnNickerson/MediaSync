@@ -157,7 +157,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 ulong total = 0;
 
-                foreach (string filename in Directory.GetFiles(_profile.LocalPath, _profile.SearchPattern, SearchOption.AllDirectories))
+                foreach (string filename in Directory.GetFiles(_profile.SharedPath, _profile.SearchPattern, SearchOption.AllDirectories))
                 {
                     total += (ulong)new FileInfo(filename).Length;
                 }

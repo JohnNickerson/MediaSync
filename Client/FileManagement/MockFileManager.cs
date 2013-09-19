@@ -31,7 +31,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        ulong IFileManager.WatchPathSize()
+        ulong IFileManager.SharedPathSize()
         {
             return 0;
         }

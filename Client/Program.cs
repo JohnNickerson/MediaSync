@@ -41,7 +41,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.ProfileName = ConfigureString("NewProfile", "Profile name");
                 profile.LocalPath = ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
                 profile.SharedPath = ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
-                profile.ReserveSpace = 50000;
+                profile.ReserveSpace = ConfigureInt(500, "Reserve space (MB)") * (ulong)Math.Pow(10, 6);
                 profile.Consumer = true;
                 profile.Contributor = true;
                 profile.Simulate = false;
@@ -76,6 +76,27 @@ namespace AssimilationSoftware.MediaSync.Core
 
             Console.WriteLine("Finished. Press a key to exit.");
             Console.ReadKey();
+        }
+
+        private static ulong ConfigureInt(ulong value, string prompt)
+        {
+            ulong configval = value;
+            Console.WriteLine("Configure value for {0}:", prompt);
+            Console.WriteLine("Type correct value or [Enter] to accept default.");
+            Console.WriteLine(value);
+            var response = Console.ReadLine();
+            if (response.Trim().Length > 0)
+            {
+                if (ulong.TryParse(response, out configval))
+                {
+                    // Everything is fine.
+                }
+                else
+                {
+                    Console.WriteLine("Could not parse value. Using default.");
+                }
+            }
+            return configval;
         }
 
 		public void ConnectListAndSaveSQLCompactExample()

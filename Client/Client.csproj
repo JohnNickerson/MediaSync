@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="Indexing\MockIndexer.cs" />
     <Compile Include="FileManagement\MockFileManager.cs" />
+    <Compile Include="Profile\DbProfileManager.cs" />
     <Compile Include="Profile\DiskProfileManager.cs" />
     <Compile Include="Profile\IProfileManager.cs" />
     <Compile Include="Properties\Settings.Designer.cs">

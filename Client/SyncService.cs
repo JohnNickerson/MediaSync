@@ -137,9 +137,9 @@ namespace AssimilationSoftware.MediaSync.Core
             foreach (string filename in FileCounts.Keys)
             {
                 // If the size allocation has been exceeded, stop.
-                if (_copyq.WatchPathSize() > SizeLimit)
+                if (_copyq.SharedPathSize() > SizeLimit)
                 {
-                    _view.WriteLine("Shared space exhausted ({0}B). Stopping for now.", _copyq.WatchPathSize());
+                    _view.WriteLine("Shared space exhausted ({0}MB). Stopping for now.", _copyq.SharedPathSize() / Math.Pow(10, 6));
                     break;
                 }
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);

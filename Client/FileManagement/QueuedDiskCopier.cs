@@ -54,7 +54,6 @@ namespace AssimilationSoftware.MediaSync.Core
         private SyncProfile _profile;
 
         private IIndexService _indexer;
-        private ulong _sizecache;
 		#endregion
 
 		#region Constructors
@@ -151,24 +150,22 @@ namespace AssimilationSoftware.MediaSync.Core
         /// Gets the size of all files in the watch path combined.
         /// </summary>
         /// <returns>A size, in bytes, representing all files combined.</returns>
-        ulong IFileManager.WatchPathSize()
+        ulong IFileManager.SharedPathSize()
         {
-            if (_sizecache == 0)
+            // Calculate the actual size of the shared path, plus the anticipated size of files yet to be copied in.
+            ulong total = 0;
+            foreach (string filename in Directory.GetFiles(_profile.SharedPath, _profile.SearchPattern, SearchOption.AllDirectories))
             {
-                ulong total = 0;
+                total += (ulong)new FileInfo(filename).Length;
+            }
+            foreach (string filename in from op in PendingActions select op.SourceFile)
+            {
+                total += (ulong)new FileInfo(filename).Length;
+            }
 
-                foreach (string filename in Directory.GetFiles(_profile.SharedPath, _profile.SearchPattern, SearchOption.AllDirectories))
-                {
-                    total += (ulong)new FileInfo(filename).Length;
-                }
-                _sizecache = total;
-                return total;
-            }
-            else
-            {
-                return _sizecache;
-            }
+            return total;
         }
+
         /// <summary>
         /// Determines whether the given file should be copied, according to the exclusion filter rules.
         /// </summary>

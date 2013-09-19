@@ -27,7 +27,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         List<Exception> Errors { get; }
 
-        ulong WatchPathSize();
+        ulong SharedPathSize();
 
         bool ShouldCopy(string filename);
 

@@ -17,6 +17,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
     {
         private List<string> contents = new List<string>();
         private SyncProfile _options;
+        private string _connString = ConfigurationManager.ConnectionStrings["database"].ConnectionString;
 
         public DbIndexer(SyncProfile options)
         {
@@ -33,7 +34,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         /// </summary>
         void IIndexService.WriteIndex()
         {
-            SqlCeConnection connection = new SqlCeConnection(ConfigurationManager.ConnectionStrings["database"].ConnectionString);
+            SqlCeConnection connection = new SqlCeConnection(_connString);
             SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
             adapter.InsertCommand = new SqlCeCommand("Insert Into Indexes (Timestamp, Machine, Profile, RelPath, Size, Hash) Values (@Timestamp, @Machine, @Profile, @RelPath, @Size, @Hash)", connection);
             adapter.InsertCommand.Parameters.Add("@Timestamp", SqlDbType.DateTime);
@@ -53,6 +54,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
                 adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", filename);
                 adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", new FileInfo(Path.Combine(_options.LocalPath, filename)).Length);
                 // TODO: Include file hash value. Will require reading the entire file.
+                // Steal Snowden SHA512 code? It probably uses something else anyway.
                 adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", DBNull.Value);
                 adapter.InsertCommand.ExecuteNonQuery();
             }
@@ -70,7 +72,18 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
 
         int IIndexService.PeerCount
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                // Select Count(Machine) From Profiles Where Profile = _options.ProfileName
+                SqlCeConnection connection = new SqlCeConnection(_connString);
+                SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
+                adapter.SelectCommand = new SqlCeCommand("Select Count(Machine) From Indexes Where Profile = @ProfileName", connection);
+                adapter.SelectCommand.Parameters.AddWithValue("@ProfileName", _options.ProfileName);
+                connection.Open();
+                int result = (int)adapter.SelectCommand.ExecuteScalar();
+                connection.Close();
+                return result;
+            }
         }
 
         Dictionary<string, int> IIndexService.CompareCounts()

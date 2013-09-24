@@ -154,11 +154,9 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             // Calculate the actual size of the shared path, plus the anticipated size of files yet to be copied in.
             ulong total = 0;
+            // TODO: Search for all files, not just matching ones?
+            // If some other files get mixed in, it could overrun the reserve space.
             foreach (string filename in Directory.GetFiles(_profile.SharedPath, _profile.SearchPattern, SearchOption.AllDirectories))
-            {
-                total += (ulong)new FileInfo(filename).Length;
-            }
-            foreach (string filename in from op in PendingActions select op.SourceFile)
             {
                 total += (ulong)new FileInfo(filename).Length;
             }

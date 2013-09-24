@@ -20,7 +20,7 @@ namespace AssimilationSoftware.MediaSync.Core
     {
         #region Fields
         public string LocalPath;
-        public string WatchPath;
+        public string SharedPath;
         private int NumPeers;
         private Dictionary<string, int> FileCounts;
         public ulong SizeLimit;
@@ -55,7 +55,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public SyncService(SyncProfile opts, IOutputView view, IIndexService indexer, IFileManager filemanager)
         {
             LocalPath = opts.LocalPath;
-            WatchPath = opts.SharedPath;
+            SharedPath = opts.SharedPath;
             NumPeers = 0;
             FileCounts = new Dictionary<string, int>();
             SizeLimit = opts.ReserveSpace;
@@ -97,7 +97,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         internal void ClearEmptyFolders()
         {
-            string inbox = WatchPath;
+            string inbox = SharedPath;
             // Sort by descending length to get leaf nodes first.
             foreach (string dir in from s in Directory.GetDirectories(inbox, "*", SearchOption.AllDirectories)
                                        orderby s.Length descending
@@ -131,19 +131,20 @@ namespace AssimilationSoftware.MediaSync.Core
                 return;
             }
 
+            _sizecache = _copyq.SharedPathSize();
             // TODO: Prioritise the least-common files.
             //var sortedfilelist = from f in FileCounts.Keys orderby FileCounts[f] select f;
             // For every file in the index
             foreach (string filename in FileCounts.Keys)
             {
                 // If the size allocation has been exceeded, stop.
-                if (_copyq.SharedPathSize() > SizeLimit)
+                if (_sizecache > SizeLimit)
                 {
-                    _view.WriteLine("Shared space exhausted ({0}MB). Stopping for now.", _copyq.SharedPathSize() / Math.Pow(10, 6));
+                    _view.WriteLine("Shared space exhausted ({0}MB). Stopping for now.", _sizecache / Math.Pow(10, 6));
                     break;
                 }
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
-                string targetfile = Path.Combine(WatchPath, filename);
+                string targetfile = Path.Combine(SharedPath, filename);
 
                 // If the file is missing from somewhere
                 if (FileCounts[filename] < NumPeers)
@@ -193,25 +194,32 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         internal void PullFiles()
         {
-            foreach (string incoming in Directory.GetFiles(WatchPath, FileSearch, SearchOption.AllDirectories))
+            foreach (string incoming in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
             {
                 // These paths might need some more processing.
                 // Remove the watch path.
-                string relativepath = incoming.Substring(WatchPath.Length + 1);
+                string relativepath = incoming.Substring(SharedPath.Length + 1);
                 string targetfile = Path.Combine(LocalPath, relativepath);
                 string targetdir = Path.GetDirectoryName(targetfile);
                 _copyq.EnsureFolder(targetdir);
                 if (!incoming.Equals(targetfile))
                 {
-                    try
+                    if (!File.Exists(targetfile))
                     {
-                        _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
-                        // Linux Bug: Source and target locations the same. Probably a slash problem.
-                        _copyq.CopyFile(incoming, targetfile);
+                        try
+                        {
+                            _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                            // Linux Bug: Source and target locations the same. Probably a slash problem.
+                            _copyq.CopyFile(incoming, targetfile);
+                        }
+                        catch (Exception)
+                        {
+                            _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                        }
                     }
-                    catch (Exception)
+                    else
                     {
-                        _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                        _view.WriteLine("Skipping file {0}, already exists.", relativepath);
                     }
                 }
                 else
@@ -229,10 +237,10 @@ namespace AssimilationSoftware.MediaSync.Core
         internal void PruneFiles()
         {
             // For each file in the watch path
-            foreach (string filename in Directory.GetFiles(WatchPath, FileSearch, SearchOption.AllDirectories))
+            foreach (string filename in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
             {
                 // If the file exists in all peers
-                string relativefile = filename.Remove(0, WatchPath.Length + 1);
+                string relativefile = filename.Remove(0, SharedPath.Length + 1);
                 if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
                 {
                     _view.Report(new SyncOperation(filename));
@@ -249,9 +257,9 @@ namespace AssimilationSoftware.MediaSync.Core
         public void Sync()
         {
             // Setup, just in case.
-            if (!Directory.Exists(WatchPath))
+            if (!Directory.Exists(SharedPath))
             {
-                _view.WriteLine("Shared storage not available ({0}). Aborting.", WatchPath);
+                _view.WriteLine("Shared storage not available ({0}). Aborting.", SharedPath);
                 return;
             }
             // Reset size cache in case this is a multiple-run and other changes have been made.

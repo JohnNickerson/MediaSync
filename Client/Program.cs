@@ -52,12 +52,12 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
+                IOutputView view = new ConsoleView();
                 try
                 {
                     foreach (SyncProfile opts in profileManager.Load())
                     {
-                        IOutputView view = new ConsoleView();
-
+                        view.WriteLine(string.Empty);
                         view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
                         IIndexService indexer = new TextIndexer(opts);
@@ -68,8 +68,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Could not sync.");
-                    Console.WriteLine(e.Message);
+                    view.WriteLine("Could not sync.");
+                    view.WriteLine(e.Message);
                     File.WriteAllText("error.log", e.StackTrace);
                 }
             }

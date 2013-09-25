@@ -19,8 +19,9 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        void IFileManager.CreateIndex(Indexing.IIndexService _indexer)
+        string[] IFileManager.ListLocalFiles()
         {
+            return new string[] { };
         }
 
         List<Exception> IFileManager.Errors
@@ -48,6 +49,11 @@ namespace AssimilationSoftware.MediaSync.Core
 
 
         void IFileManager.EnsureFolder(string targetdir)
+        {
+        }
+
+
+        void IFileManager.SetNormalAttributes()
         {
         }
     }

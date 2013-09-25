@@ -69,6 +69,10 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             connection.Close();
         }
 
+        void IIndexService.CreateIndex(IFileManager file_manager)
+        {
+            throw new NotImplementedException();
+        }
 
         int IIndexService.PeerCount
         {

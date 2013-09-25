@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AssimilationSoftware.MediaSync.Core.Indexing;
+using AssimilationSoftware.MediaSync.Core;
 
 namespace UnitTests.Mocks
 {
@@ -38,6 +39,12 @@ namespace UnitTests.Mocks
             }
 
             return result;
+        }
+
+
+        void IIndexService.CreateIndex(IFileManager file_manager)
+        {
+            throw new NotImplementedException();
         }
     }
 }

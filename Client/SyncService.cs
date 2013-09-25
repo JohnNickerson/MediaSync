@@ -83,9 +83,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         public void IndexFiles()
         {
-            _copyq.CreateIndex(_indexer);
-            // Overwrite any old index that exists.
-            _indexer.WriteIndex();
+            _indexer.CreateIndex(_copyq);
 
             // Compare this index with others.
             NumPeers = _indexer.PeerCount;
@@ -140,7 +138,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // If the size allocation has been exceeded, stop.
                 if (_sizecache > SizeLimit)
                 {
-                    _view.WriteLine("Shared space exhausted ({0}MB). Stopping for now.", _sizecache / Math.Pow(10, 6));
+                    _view.WriteLine("Shared space exhausted ({0}). Stopping for now.", VerbaliseBytes(_sizecache));
                     break;
                 }
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
@@ -187,7 +185,37 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 			WaitForCopies();
+            _copyq.SetNormalAttributes();
 		}
+
+        /// <summary>
+        /// Turns a number of bytes into a more human-friendly reading.
+        /// </summary>
+        /// <param name="bytes">The number of bytes to represent.</param>
+        /// <returns>The number of bytes represented as B, KB, MB, GB or TB, whatever is most appropriate.</returns>
+        private string VerbaliseBytes(ulong bytes)
+        {
+            if (bytes < 1000)
+            {
+                return string.Format("{0}B", bytes);
+            }
+            else if (bytes < Math.Pow(10, 6))
+            {
+                return string.Format("{0:0}KB", bytes / Math.Pow(10, 3));
+            }
+            else if (bytes < Math.Pow(10, 9))
+            {
+                return string.Format("{0:0}MB", bytes / Math.Pow(10, 6));
+            }
+            else if (bytes < Math.Pow(10, 12))
+            {
+                return string.Format("{0:0}GB", bytes / Math.Pow(10, 9));
+            }
+            else
+            {
+                return string.Format("{0:0}TB", bytes / Math.Pow(10, 12));
+            }
+        }
 
         /// <summary>
         /// Copies files from shared storage if they are not present locally.
@@ -245,7 +273,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     _view.Report(new SyncOperation(filename));
                     // Remove it from shared storage.
-                    _copyq.Delete(filename);
+                    try
+                    {
+                        _copyq.Delete(filename);
+                    }
+                    catch (Exception e)
+                    {
+                        _view.WriteLine("Error deleting file: {0}", e.Message);
+                    }
                 }
             }
             ClearEmptyFolders();

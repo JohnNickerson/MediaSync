@@ -77,6 +77,13 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             }
             return FileCounts;
         }
+
+        void IIndexService.CreateIndex(IFileManager file_manager)
+        {
+            _fileList = new List<string>();
+            _fileList.AddRange(file_manager.ListLocalFiles());
+            ((IIndexService)this).WriteIndex();
+        }
         #endregion
 
         #region Properties

@@ -121,8 +121,10 @@ namespace AssimilationSoftware.MediaSync.Core
 				_errors.Add(e);
 			}
 		}
-        void IFileManager.CreateIndex(IIndexService indexer)
+
+        string[] IFileManager.ListLocalFiles()
         {
+            List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
             queue.Enqueue(_profile.LocalPath);
             // While the queue is not empty,
@@ -139,11 +141,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (string file in Directory.GetFiles(folder, _profile.SearchPattern))
                 {
                     // Remove the base path.
-                    // TODO: Use FileInfo.
                     string trunc_file = file.Remove(0, _profile.LocalPath.Length + 1).Replace("/", "\\");
-                    _indexer.Add(trunc_file);
+                    result.Add(trunc_file);
                 }
             }
+            return result.ToArray();
         }
 
         /// <summary>
@@ -197,6 +199,20 @@ namespace AssimilationSoftware.MediaSync.Core
             if (!Directory.Exists(targetdir))
             {
                 Directory.CreateDirectory(targetdir);
+            }
+        }
+
+        /// <summary>
+        /// Sets normal attributes on all shared files.
+        /// </summary>
+        /// <remarks>
+        /// I don't like this much, but I get a lot of errors when a read-only file gets into the mix.
+        /// </remarks>
+        void IFileManager.SetNormalAttributes()
+        {
+            foreach (string file in Directory.GetFiles(_profile.SharedPath, "*.*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
             }
         }
         #endregion

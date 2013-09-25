@@ -15,17 +15,21 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         {
         }
 
+        Dictionary<string, int> IIndexService.CompareCounts()
+        {
+            return new Dictionary<string, int>();
+        }
+
+        public void CreateIndex(IFileManager file_manager)
+        {
+        }
+
         int IIndexService.PeerCount
         {
             get
             {
                 return 1;
             }
-        }
-
-        Dictionary<string, int> IIndexService.CompareCounts()
-        {
-            return new Dictionary<string, int>();
         }
     }
 }

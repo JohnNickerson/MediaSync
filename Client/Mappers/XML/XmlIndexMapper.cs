@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Polenter.Serialization;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Core.Indexing
+namespace AssimilationSoftware.MediaSync.Mappers.Xml
 {
-    public class XmlHistoryIndexer : IIndexService
+    public class XmlIndexMapper : IIndexMapper
     {
         #region Fields
         private SharpSerializer serialiser;
@@ -14,7 +16,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         #endregion
 
         #region Constructors
-        public XmlHistoryIndexer(SyncProfile options)
+        public XmlIndexMapper(SyncProfile options)
         {
             serialiser = new SharpSerializer(false);
             _profile = options;
@@ -49,6 +51,21 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
         public Dictionary<string, int> CompareCounts()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Save(FileIndex index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FileIndex LoadLatest(string machine, string profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int NumPeers(string profile)
         {
             throw new NotImplementedException();
         }

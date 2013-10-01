@@ -62,12 +62,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Indexing\MockIndexer.cs" />
+    <Compile Include="Model\FileHeader.cs" />
+    <Compile Include="Model\FileIndex.cs" />
+    <Compile Include="Mappers\Mock\MockIndexMapper.cs" />
     <Compile Include="FileManagement\MockFileManager.cs" />
-    <Compile Include="Indexing\XmlHistoryIndexer.cs" />
-    <Compile Include="Profile\DbProfileManager.cs" />
-    <Compile Include="Profile\DiskProfileManager.cs" />
-    <Compile Include="Profile\IProfileManager.cs" />
+    <Compile Include="Mappers\XML\XmlIndexMapper.cs" />
+    <Compile Include="Mappers\Database\DbProfileMapper.cs" />
+    <Compile Include="Mappers\XML\XmlProfileMapper.cs" />
+    <Compile Include="Interfaces\IProfileMapper.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -75,16 +77,16 @@
     </Compile>
     <Compile Include="Views\ConsoleView.cs" />
     <Compile Include="FileManagement\QueuedDiskCopier.cs" />
-    <Compile Include="FileManagement\IFileManager.cs" />
-    <Compile Include="Indexing\DbIndexer.cs" />
-    <Compile Include="Indexing\IIndexService.cs" />
-    <Compile Include="Indexing\TextIndexer.cs" />
-    <Compile Include="Views\IOutputView.cs" />
+    <Compile Include="Interfaces\IFileManager.cs" />
+    <Compile Include="Mappers\Database\DbIndexMapper.cs" />
+    <Compile Include="Interfaces\IIndexMapper.cs" />
+    <Compile Include="Mappers\PlainText\TextIndexMapper.cs" />
+    <Compile Include="Interfaces\IOutputView.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SyncService.cs" />
-    <Compile Include="SyncOperation.cs" />
-    <Compile Include="Profile\SyncProfile.cs" />
+    <Compile Include="Model\SyncOperation.cs" />
+    <Compile Include="Model\SyncProfile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

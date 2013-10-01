@@ -5,19 +5,21 @@ using System.Text;
 using System.Xml.Serialization;
 using System.IO;
 using Polenter.Serialization;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Core.Profile
+namespace AssimilationSoftware.MediaSync.Mappers.Xml
 {
-    public class DiskProfileManager : IProfileManager
+    public class XmlProfileMapper : IProfileMapper
     {
         public string Filename;
 
-        public DiskProfileManager(string profileListFilename)
+        public XmlProfileMapper(string profileListFilename)
         {
             Filename = profileListFilename;
         }
 
-        void IProfileManager.Save(string machineName, SyncProfile saveobject)
+        void IProfileMapper.Save(string machineName, SyncProfile saveobject)
         {
             string filename = String.Format("{0}_{1}.xml", machineName, saveobject.ProfileName);
             XmlSerializer formatter = new XmlSerializer(typeof(SyncProfile));
@@ -28,7 +30,7 @@ namespace AssimilationSoftware.MediaSync.Core.Profile
             stream.Close();
         }
 
-        SyncProfile IProfileManager.Load(string machineName, string profile)
+        SyncProfile IProfileMapper.Load(string machineName, string profile)
         {
             string filename = String.Format("{0}_{1}.xml", machineName, profile);
             XmlSerializer formatter = new XmlSerializer(typeof(SyncProfile));
@@ -40,7 +42,7 @@ namespace AssimilationSoftware.MediaSync.Core.Profile
             return result;
         }
 
-        SyncProfile[] IProfileManager.Load(string machineName)
+        SyncProfile[] IProfileMapper.Load(string machineName)
         {
             SharpSerializer s = new SharpSerializer(false);
             List<SyncProfile> results = (List<SyncProfile>)s.Deserialize(Filename);
@@ -48,7 +50,7 @@ namespace AssimilationSoftware.MediaSync.Core.Profile
         }
 
 
-        List<SyncProfile> IProfileManager.Load()
+        List<SyncProfile> IProfileMapper.Load()
         {
             List<SyncProfile> p;
             if (File.Exists(Filename))
@@ -63,7 +65,7 @@ namespace AssimilationSoftware.MediaSync.Core.Profile
             return p;
         }
 
-        void IProfileManager.Save(List<SyncProfile> profiles)
+        void IProfileMapper.Save(List<SyncProfile> profiles)
         {
             SharpSerializer s = new SharpSerializer();
             s.Serialize(profiles, Filename);

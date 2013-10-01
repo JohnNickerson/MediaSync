@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Core.Profile
+namespace AssimilationSoftware.MediaSync.Mappers.Database
 {
     /// <summary>
     /// A sync profile manager that stores its data in a database.
     /// </summary>
-    public class DbProfileManager : IProfileManager
+    public class DbProfileMapper : IProfileMapper
     {
         public void Save(string machineName, SyncProfile saveobject)
         {

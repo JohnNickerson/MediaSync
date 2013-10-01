@@ -2,11 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AssimilationSoftware.MediaSync.Model;
 
-namespace AssimilationSoftware.MediaSync.Core.Indexing
+namespace AssimilationSoftware.MediaSync.Interfaces
 {
-    public interface IIndexService
+    public interface IIndexMapper
     {
+        void Save(FileIndex index);
+
+        FileIndex LoadLatest(string machine, string profile);
+
+        int NumPeers(string profile);
+
         /// <summary>
         /// Adds a file to the index.
         /// </summary>

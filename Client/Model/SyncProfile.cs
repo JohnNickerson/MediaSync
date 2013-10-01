@@ -8,7 +8,7 @@ using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
 
-namespace AssimilationSoftware.MediaSync.Core
+namespace AssimilationSoftware.MediaSync.Model
 {
     public class SyncProfile
     {

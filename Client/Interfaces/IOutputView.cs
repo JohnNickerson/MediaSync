@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AssimilationSoftware.MediaSync.Model;
 
-namespace AssimilationSoftware.MediaSync.Core.Views
+namespace AssimilationSoftware.MediaSync.Interfaces
 {
     /// <summary>
     /// A generic interface for sync operation output.

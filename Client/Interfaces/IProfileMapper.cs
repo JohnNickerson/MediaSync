@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AssimilationSoftware.MediaSync.Model;
 
-namespace AssimilationSoftware.MediaSync.Core.Profile
+namespace AssimilationSoftware.MediaSync.Interfaces
 {
-    public interface IProfileManager
+    public interface IProfileMapper
     {
         #region Methods
         [Obsolete]

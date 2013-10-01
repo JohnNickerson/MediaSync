@@ -6,10 +6,12 @@ using System.Configuration;
 using System.Data.SqlServerCe;
 using System.Data;
 using System.IO;
-using AssimilationSoftware.MediaSync.Core.Indexing;
 using AssimilationSoftware.MediaSync.Core.Views;
-using AssimilationSoftware.MediaSync.Core.Profile;
 using AssimilationSoftware.MediaSync.Core.Properties;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Mappers.PlainText;
+using AssimilationSoftware.MediaSync.Mappers.Xml;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -32,7 +34,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             #endregion
 
-            IProfileManager profileManager = new DiskProfileManager(Settings.Default.ProfilesLocation);
+            IProfileMapper profileManager = new XmlProfileMapper(Settings.Default.ProfilesLocation);
             if (args.Contains("addprofile"))
             {
                 var profiles = profileManager.Load();
@@ -60,7 +62,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         view.WriteLine(string.Empty);
                         view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
-                        IIndexService indexer = new TextIndexer(opts);
+                        IIndexMapper indexer = new TextIndexMapper(opts);
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
                         SyncService s = new SyncService(opts, view, indexer, copier);
                         s.Sync();

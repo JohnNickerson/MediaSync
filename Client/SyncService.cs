@@ -8,8 +8,10 @@ using System.Threading;
 using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
-using AssimilationSoftware.MediaSync.Core.Indexing;
 using AssimilationSoftware.MediaSync.Core.Views;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Mappers.Mock;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -48,11 +50,11 @@ namespace AssimilationSoftware.MediaSync.Core
 
 		private SyncProfile _options;
 
-        private IIndexService _indexer;
+        private IIndexMapper _indexer;
         #endregion
 
         #region Constructors
-        public SyncService(SyncProfile opts, IOutputView view, IIndexService indexer, IFileManager filemanager)
+        public SyncService(SyncProfile opts, IOutputView view, IIndexMapper indexer, IFileManager filemanager)
         {
             LocalPath = opts.LocalPath;
             SharedPath = opts.SharedPath;
@@ -67,7 +69,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (opts.Simulate)
             {
                 _copyq = new MockFileManager();
-                _indexer = new MockIndexer();
+                _indexer = new MockIndexMapper();
             }
             else
             {
@@ -88,6 +90,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // Compare this index with others.
             NumPeers = _indexer.PeerCount;
             FileCounts = _indexer.CompareCounts();
+            // TODO: Construct or load an action queue.
         }
 
         /// <summary>

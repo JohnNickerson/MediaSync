@@ -7,24 +7,26 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core.Properties;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Core.Indexing
+namespace AssimilationSoftware.MediaSync.Mappers.Database
 {
     /// <summary>
     /// Stores file indexes in a database.
     /// </summary>
-    class DbIndexer : IIndexService
+    class DbIndexMapper : IIndexMapper
     {
         private List<string> contents = new List<string>();
         private SyncProfile _options;
         private string _connString = ConfigurationManager.ConnectionStrings["database"].ConnectionString;
 
-        public DbIndexer(SyncProfile options)
+        public DbIndexMapper(SyncProfile options)
         {
             this._options = options;
         }
 
-        void IIndexService.Add(string trunc_file)
+        void IIndexMapper.Add(string trunc_file)
         {
             contents.Add(trunc_file);
         }
@@ -32,7 +34,7 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
         /// <summary>
         /// Writes a file index to the database.
         /// </summary>
-        void IIndexService.WriteIndex()
+        void IIndexMapper.WriteIndex()
         {
             SqlCeConnection connection = new SqlCeConnection(_connString);
             SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
@@ -69,12 +71,12 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             connection.Close();
         }
 
-        void IIndexService.CreateIndex(IFileManager file_manager)
+        void IIndexMapper.CreateIndex(IFileManager file_manager)
         {
             throw new NotImplementedException();
         }
 
-        int IIndexService.PeerCount
+        int IIndexMapper.PeerCount
         {
             get
             {
@@ -90,7 +92,22 @@ namespace AssimilationSoftware.MediaSync.Core.Indexing
             }
         }
 
-        Dictionary<string, int> IIndexService.CompareCounts()
+        Dictionary<string, int> IIndexMapper.CompareCounts()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Save(FileIndex index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FileIndex LoadLatest(string machine, string profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int NumPeers(string profile)
         {
             throw new NotImplementedException();
         }

@@ -11,9 +11,11 @@ using System.Xml.Serialization;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.Views;
-using AssimilationSoftware.MediaSync.Core.Indexing;
-using AssimilationSoftware.MediaSync.Core.Profile;
 using AssimilationSoftware.MediaSync.Properties;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Mappers.PlainText;
+using AssimilationSoftware.MediaSync.Mappers.Xml;
 
 namespace AssimilationSoftware.MediaSync.WinForms
 {
@@ -100,7 +102,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
             profile.Simulate = SimCheckBox.Checked;
             profile.ReserveSpace = sharesize;
 
-            IIndexService indexer = new Core.Indexing.TextIndexer(profile);
+            IIndexMapper indexer = new TextIndexMapper(profile);
             var syncer = new SyncService(profile, this, indexer, new QueuedDiskCopier(profile, indexer));
             syncer.Sync();
             toolStripStatusLabel1.Text = "Done";
@@ -196,7 +198,7 @@ namespace AssimilationSoftware.MediaSync.WinForms
             s.Simulate = SimCheckBox.Checked;
             s.ReserveSpace = ReserveSize;
 
-            IProfileManager profileManager = new DiskProfileManager(Settings.Default.ProfilesLocation);
+            IProfileMapper profileManager = new XmlProfileMapper(Settings.Default.ProfilesLocation);
             profileManager.Save(Environment.MachineName, s);
         }
 

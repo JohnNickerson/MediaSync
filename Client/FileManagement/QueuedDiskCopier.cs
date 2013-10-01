@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using AssimilationSoftware.MediaSync.Core.Indexing;
 using System.Text.RegularExpressions;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -53,14 +54,14 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private SyncProfile _profile;
 
-        private IIndexService _indexer;
+        private IIndexMapper _indexer;
 		#endregion
 
 		#region Constructors
 		/// <summary>
 		/// Constructs a new asynchronous file copy service.
 		/// </summary>
-		public QueuedDiskCopier(SyncProfile profile, IIndexService indexer)
+		public QueuedDiskCopier(SyncProfile profile, IIndexMapper indexer)
 		{
 			CopyActions = new List<IAsyncResult>();
 			PendingActions = new Queue<SyncOperation>();

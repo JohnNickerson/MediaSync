@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -53,6 +54,7 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
         private SyncProfile _profile;
+        private ProfileParticipant _localSettings;
 
         private IIndexMapper _indexer;
 		#endregion
@@ -69,6 +71,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			_errors = new List<Exception>();
 
             _profile = profile;
+            _localSettings = profile.GetParticipant(Settings.Default.MachineName);
             _indexer = indexer;
 		}
 		#endregion
@@ -127,7 +130,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
-            queue.Enqueue(_profile.LocalPath);
+            queue.Enqueue(_localSettings.LocalPath);
             // While the queue is not empty,
             while (queue.Count > 0)
             {
@@ -139,11 +142,14 @@ namespace AssimilationSoftware.MediaSync.Core
                     queue.Enqueue(subfolder);
                 }
                 // Add all image files to the index.
-                foreach (string file in Directory.GetFiles(folder, _profile.SearchPattern))
+                foreach (string search in _profile.SearchPatterns)
                 {
-                    // Remove the base path.
-                    string trunc_file = file.Remove(0, _profile.LocalPath.Length + 1).Replace("/", "\\");
-                    result.Add(trunc_file);
+                    foreach (string file in Directory.GetFiles(folder, search))
+                    {
+                        // Remove the base path.
+                        string trunc_file = file.Remove(0, _localSettings.LocalPath.Length + 1).Replace("/", "\\");
+                        result.Add(trunc_file);
+                    }
                 }
             }
             return result.ToArray();
@@ -159,9 +165,12 @@ namespace AssimilationSoftware.MediaSync.Core
             ulong total = 0;
             // TODO: Search for all files, not just matching ones?
             // If some other files get mixed in, it could overrun the reserve space.
-            foreach (string filename in Directory.GetFiles(_profile.SharedPath, _profile.SearchPattern, SearchOption.AllDirectories))
+            foreach (string search in _profile.SearchPatterns)
             {
-                total += (ulong)new FileInfo(filename).Length;
+                foreach (string filename in Directory.GetFiles(_localSettings.SharedPath, search, SearchOption.AllDirectories))
+                {
+                    total += (ulong)new FileInfo(filename).Length;
+                }
             }
 
             return total;
@@ -211,7 +220,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </remarks>
         void IFileManager.SetNormalAttributes()
         {
-            foreach (string file in Directory.GetFiles(_profile.SharedPath, "*.*", SearchOption.AllDirectories))
+            foreach (string file in Directory.GetFiles(_localSettings.SharedPath, "*.*", SearchOption.AllDirectories))
             {
                 File.SetAttributes(file, FileAttributes.Normal);
             }

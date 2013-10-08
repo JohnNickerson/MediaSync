@@ -20,6 +20,8 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         /// </summary>
         private SyncProfile _options;
 
+        private ProfileParticipant _localSettings;
+
         /// <summary>
         /// The current list of files.
         /// </summary>
@@ -34,6 +36,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         public TextIndexMapper(SyncProfile _options)
         {
             this._options = _options;
+            _localSettings = _options.GetParticipant(Settings.Default.MachineName);
             _fileList = new List<string>();
         }
         #endregion
@@ -63,7 +66,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         Dictionary<string, int> IIndexMapper.CompareCounts()
         {
             var FileCounts = new Dictionary<string, int>();
-            foreach (string otherindex in Directory.GetFiles(_options.SharedPath, "*_index.txt"))
+            foreach (string otherindex in Directory.GetFiles(_options.GetParticipant(Settings.Default.MachineName).SharedPath, "*_index.txt"))
             {
                 foreach (string idxfilename in File.ReadAllLines(otherindex))
                 {
@@ -112,7 +115,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         {
             get
             {
-                return Directory.GetFiles(_options.SharedPath, "*_index.txt").Length;
+                return Directory.GetFiles(_localSettings.SharedPath, "*_index.txt").Length;
             }
         }
 
@@ -123,7 +126,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         {
             get
             {
-                string indexfile = Path.Combine(_options.SharedPath, string.Format("{0}_index.txt", Settings.Default.MachineName));
+                string indexfile = Path.Combine(_localSettings.SharedPath, string.Format("{0}_index.txt", Settings.Default.MachineName));
                 return indexfile;
             }
         }

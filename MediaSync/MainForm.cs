@@ -97,13 +97,13 @@ namespace AssimilationSoftware.MediaSync.WinForms
 
             // Create an ad-hoc profile to run.
             SyncProfile profile = new SyncProfile();
-            profile.LocalPath = SourceBox.Text;
-            profile.SharedPath = SharedBox.Text;
-            profile.Simulate = SimCheckBox.Checked;
+            ProfileParticipant localSettings = new ProfileParticipant();
+            localSettings.LocalPath = SourceBox.Text;
+            localSettings.SharedPath = SharedBox.Text;
             profile.ReserveSpace = sharesize;
 
             IIndexMapper indexer = new TextIndexMapper(profile);
-            var syncer = new SyncService(profile, this, indexer, new QueuedDiskCopier(profile, indexer));
+            var syncer = new SyncService(profile, this, indexer, new QueuedDiskCopier(profile, indexer), SimCheckBox.Checked);
             syncer.Sync();
             toolStripStatusLabel1.Text = "Done";
         }
@@ -193,10 +193,11 @@ namespace AssimilationSoftware.MediaSync.WinForms
         private void SaveOptions()
         {
             SyncProfile s = new SyncProfile();
-            s.LocalPath = SourceBox.Text;
-            s.SharedPath = SharedBox.Text;
-            s.Simulate = SimCheckBox.Checked;
+            ProfileParticipant p = new ProfileParticipant();
+            p.LocalPath = SourceBox.Text;
+            p.SharedPath = SharedBox.Text;
             s.ReserveSpace = ReserveSize;
+            s.Participants.Add(p);
 
             IProfileMapper profileManager = new XmlProfileMapper(Settings.Default.ProfilesLocation);
             profileManager.Save(Environment.MachineName, s);

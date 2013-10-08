@@ -19,6 +19,9 @@ namespace AssimilationSoftware.MediaSync.Core
     {
         static void Main(string[] args)
         {
+            IOutputView view = new ConsoleView();
+            IInputView configurator = (IInputView)view;
+
             #region Configuration
             if (args.Contains("reconfigure"))
             {
@@ -26,8 +29,8 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             if (!Settings.Default.Configured)
             {
-                Settings.Default.MachineName = ConfigureString(Settings.Default.MachineName, "Machine name");
-                Settings.Default.ProfilesLocation = ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
+                Settings.Default.MachineName = configurator.ConfigureString(Settings.Default.MachineName, "Machine name");
+                Settings.Default.ProfilesLocation = configurator.ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();
@@ -40,32 +43,63 @@ namespace AssimilationSoftware.MediaSync.Core
                 var profiles = profileManager.Load();
 
                 var profile = new SyncProfile();
-                profile.ProfileName = ConfigureString("NewProfile", "Profile name");
-                profile.LocalPath = ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
-                profile.SharedPath = ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
-                profile.ReserveSpace = ConfigureInt(500, "Reserve space (MB)") * (ulong)Math.Pow(10, 6);
-                profile.Consumer = true;
-                profile.Contributor = true;
-                profile.Simulate = false;
-                profile.SearchPattern = ConfigureString("*.jpg", "File search pattern");
+                profile.ProfileName = configurator.ConfigureString("NewProfile", "Profile name");
+                var participant = new ProfileParticipant();
+                participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
+                participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
+                profile.ReserveSpace = configurator.ConfigureULong(500, "Reserve space (MB)") * (ulong)Math.Pow(10, 6);
+                participant.Consumer = true;
+                participant.Contributor = true;
+                participant.MachineName = Settings.Default.MachineName;
+                profile.SearchPatterns.Add(configurator.ConfigureString("*.jpg", "File search pattern"));
 
+                profile.Participants.Add(participant);
                 profiles.Add(profile);
                 profileManager.Save(profiles);
             }
+            else if (args.Contains("joinprofile"))
+            {
+                var profiles = profileManager.Load();
+                foreach (SyncProfile p in profiles)
+                {
+                    view.WriteLine(p.ProfileName);
+                }
+                string profilename = configurator.ConfigureString("", "Profile to join");
+                if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
+                {
+                    var profile = (from p in profiles select p).First();
+                    var participant = new ProfileParticipant();
+                    participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
+                    participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
+                    participant.Consumer = true;
+                    participant.Contributor = true;
+                    participant.MachineName = Settings.Default.MachineName;
+                    profile.Participants.Add(participant);
+                    // TODO: Test that the updated profile is updated in the collection.
+                    profileManager.Save(profiles);
+                }
+            }
             else
             {
-                IOutputView view = new ConsoleView();
                 try
                 {
                     foreach (SyncProfile opts in profileManager.Load())
                     {
-                        view.WriteLine(string.Empty);
-                        view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+                        if (opts.ContainsParticipant(Settings.Default.MachineName))
+                        {
+                            view.WriteLine(string.Empty);
+                            view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
-                        IIndexMapper indexer = new TextIndexMapper(opts);
-                        IFileManager copier = new QueuedDiskCopier(opts, indexer);
-                        SyncService s = new SyncService(opts, view, indexer, copier);
-                        s.Sync();
+                            IIndexMapper indexer = new TextIndexMapper(opts);
+                            IFileManager copier = new QueuedDiskCopier(opts, indexer);
+                            SyncService s = new SyncService(opts, view, indexer, copier, false);
+                            s.Sync();
+                        }
+                        else
+                        {
+                            view.WriteLine(string.Empty);
+                            view.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -76,29 +110,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
-            Console.WriteLine("Finished. Press a key to exit.");
-            Console.ReadKey();
-        }
-
-        private static ulong ConfigureInt(ulong value, string prompt)
-        {
-            ulong configval = value;
-            Console.WriteLine("Configure value for {0}:", prompt);
-            Console.WriteLine("Type correct value or [Enter] to accept default.");
-            Console.WriteLine(value);
-            var response = Console.ReadLine();
-            if (response.Trim().Length > 0)
-            {
-                if (ulong.TryParse(response, out configval))
-                {
-                    // Everything is fine.
-                }
-                else
-                {
-                    Console.WriteLine("Could not parse value. Using default.");
-                }
-            }
-            return configval;
+            view.WriteLine("Finished. Press a key to exit.");
+            configurator.WaitForKey();
         }
 
 		public void ConnectListAndSaveSQLCompactExample()
@@ -138,52 +151,5 @@ namespace AssimilationSoftware.MediaSync.Core
 			// Close 
 			connection.Close();
 		}
-
-        /// <summary>
-        /// Prompts to configure a path based on an existing value.
-        /// </summary>
-        /// <param name="path">The path as it exists. May include "{MyDocs}" as a placeholder.</param>
-        /// <param name="prompt">The human-friendly name of the folder to be used as a cue.</param>
-        /// <returns>The correct path as provided by the user.</returns>
-        private static string ConfigurePath(string path, string prompt)
-        {
-            // Special folder replacements.
-            path = path.Replace("{MyDocs}", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-            path = path.Replace("{MyPictures}", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
-            path = path.Replace("{MachineName}", Settings.Default.MachineName);
-
-            Console.WriteLine("Configure path to {0}:", prompt);
-            Console.WriteLine("Type correct value or [Enter] to accept default.");
-            Console.WriteLine(path);
-            var response = Console.ReadLine();
-            if (response.Trim().Length > 0)
-            {
-                path = response;
-                Console.WriteLine();
-            }
-            return path;
-        }
-
-        /// <summary>
-        /// Prompts to configure a string value, or accept a default.
-        /// </summary>
-        /// <param name="value">The initial default value.</param>
-        /// <param name="prompt">A prompt for the user.</param>
-        /// <returns>The configured value as entered or accepted by the user.</returns>
-        private static string ConfigureString(string value, string prompt)
-        {
-            value = value.Replace("{MachineName}", Environment.MachineName);
-            
-            Console.WriteLine("Configure string value for {0}:", prompt);
-            Console.WriteLine("Type correct value or [Enter] to accept default.");
-            Console.WriteLine(value);
-            var response = Console.ReadLine();
-            if (response.Trim().Length > 0)
-            {
-                value = response;
-                Console.WriteLine();
-            }
-            return value;
-        }
     }
 }

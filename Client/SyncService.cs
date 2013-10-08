@@ -12,6 +12,7 @@ using AssimilationSoftware.MediaSync.Core.Views;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Mappers.Mock;
+using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -41,7 +42,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         private IOutputView _view;
 
-        public string FileSearch = "*.*";
+        public List<string> FileSearches = new List<string>();
 
 		/// <summary>
 		/// An asynchronous file copier.
@@ -49,24 +50,30 @@ namespace AssimilationSoftware.MediaSync.Core
 		public IFileManager _copyq;
 
 		private SyncProfile _options;
+        private ProfileParticipant _localSettings;
 
         private IIndexMapper _indexer;
         #endregion
 
         #region Constructors
-        public SyncService(SyncProfile opts, IOutputView view, IIndexMapper indexer, IFileManager filemanager)
+        public SyncService(SyncProfile opts, IOutputView view, IIndexMapper indexer, IFileManager filemanager, bool simulate)
         {
-            LocalPath = opts.LocalPath;
-            SharedPath = opts.SharedPath;
+            _localSettings = opts.GetParticipant(Settings.Default.MachineName);
+            LocalPath = _localSettings.LocalPath;
+            SharedPath = _localSettings.SharedPath;
             NumPeers = 0;
             FileCounts = new Dictionary<string, int>();
             SizeLimit = opts.ReserveSpace;
-            Simulate = opts.Simulate;
-            FileSearch = opts.SearchPattern;
+            Simulate = simulate;
+            FileSearches = opts.SearchPatterns;
+            if (FileSearches.Count == 0)
+            {
+                FileSearches.Add("*.*");
+            }
             _view = view;
             _sizecache = 0;
 			_options = opts;
-            if (opts.Simulate)
+            if (Simulate)
             {
                 _copyq = new MockFileManager();
                 _indexer = new MockIndexMapper();
@@ -225,37 +232,40 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         internal void PullFiles()
         {
-            foreach (string incoming in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
+            foreach (string FileSearch in FileSearches)
             {
-                // These paths might need some more processing.
-                // Remove the watch path.
-                string relativepath = incoming.Substring(SharedPath.Length + 1);
-                string targetfile = Path.Combine(LocalPath, relativepath);
-                string targetdir = Path.GetDirectoryName(targetfile);
-                _copyq.EnsureFolder(targetdir);
-                if (!incoming.Equals(targetfile))
+                foreach (string incoming in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
                 {
-                    if (!File.Exists(targetfile))
+                    // These paths might need some more processing.
+                    // Remove the watch path.
+                    string relativepath = incoming.Substring(SharedPath.Length + 1);
+                    string targetfile = Path.Combine(LocalPath, relativepath);
+                    string targetdir = Path.GetDirectoryName(targetfile);
+                    _copyq.EnsureFolder(targetdir);
+                    if (!incoming.Equals(targetfile))
                     {
-                        try
+                        if (!File.Exists(targetfile))
                         {
-                            _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
-                            // Linux Bug: Source and target locations the same. Probably a slash problem.
-                            _copyq.CopyFile(incoming, targetfile);
+                            try
+                            {
+                                _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                                // Linux Bug: Source and target locations the same. Probably a slash problem.
+                                _copyq.CopyFile(incoming, targetfile);
+                            }
+                            catch (Exception)
+                            {
+                                _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                            }
                         }
-                        catch (Exception)
+                        else
                         {
-                            _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                            _view.WriteLine("Skipping file {0}, already exists.", relativepath);
                         }
                     }
                     else
                     {
-                        _view.WriteLine("Skipping file {0}, already exists.", relativepath);
+                        _view.WriteLine("Error: source file location for move is target location.");
                     }
-                }
-                else
-                {
-                    _view.WriteLine("Error: source file location for move is target location.");
                 }
             }
 			WaitForCopies();
@@ -267,22 +277,25 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         internal void PruneFiles()
         {
-            // For each file in the watch path
-            foreach (string filename in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
+            foreach (string FileSearch in FileSearches)
             {
-                // If the file exists in all peers
-                string relativefile = filename.Remove(0, SharedPath.Length + 1);
-                if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
+                // For each file in the watch path
+                foreach (string filename in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
                 {
-                    _view.Report(new SyncOperation(filename));
-                    // Remove it from shared storage.
-                    try
+                    // If the file exists in all peers
+                    string relativefile = filename.Remove(0, SharedPath.Length + 1);
+                    if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
                     {
-                        _copyq.Delete(filename);
-                    }
-                    catch (Exception e)
-                    {
-                        _view.WriteLine("Error deleting file: {0}", e.Message);
+                        _view.Report(new SyncOperation(filename));
+                        // Remove it from shared storage.
+                        try
+                        {
+                            _copyq.Delete(filename);
+                        }
+                        catch (Exception e)
+                        {
+                            _view.WriteLine("Error deleting file: {0}", e.Message);
+                        }
                     }
                 }
             }
@@ -305,7 +318,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
-			if (_options.Consumer)
+            if (_localSettings.Consumer)
 			{
                 _view.WriteLine("Pulling files from shared space.");
 				PullFiles();
@@ -332,7 +345,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
-			if (_options.Contributor)
+			if (_localSettings.Contributor)
 			{
                 _view.WriteLine("Pushing files.");
 				PushFiles();

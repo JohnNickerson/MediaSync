@@ -47,7 +47,7 @@ namespace AssimilationSoftware.MediaSync.Core.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{MachineName}-Profiles.xml")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Profiles.xml")]
         public string ProfilesLocation {
             get {
                 return ((string)(this["ProfilesLocation"]));

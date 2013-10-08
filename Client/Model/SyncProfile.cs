@@ -13,36 +13,41 @@ namespace AssimilationSoftware.MediaSync.Model
     public class SyncProfile
     {
         #region Properties
-        public string LocalPath { get; set; }
-        public string SharedPath { get; set; }
-        public bool Simulate { get; set; }
-        public bool Contributor { get; set; }
-        public bool Consumer { get; set; }
         public ulong ReserveSpace { get; set; }
 
         /// <summary>
         /// A search pattern for files to include.
         /// </summary>
-        public string SearchPattern { get; set; }
+        public List<string> SearchPatterns { get; set; }
         public string ProfileName { get; set; }
+
+        public List<ProfileParticipant> Participants { get; set; }
         #endregion
 
 		#region Constructors
 		public SyncProfile()
 		{
-		}
-
-		public SyncProfile(DataRow row)
-		{
-            this.SearchPattern = (string)row["SearchPattern"];
-			this.ReserveSpace = (ulong)(long)row["SharedSpace"];
-			this.SharedPath = (string)row["SharedPath"];
-			this.Simulate = false;
-			this.Consumer = (bool)row["Consumer"];
-			this.Contributor = (bool)row["Contributor"];
-			this.LocalPath = (string)row["MediaPath"];
-			this.ProfileName = (string)row["Profile"];
+            SearchPatterns = new List<string>();
+            Participants = new List<ProfileParticipant>();
 		}
 		#endregion
+
+        internal ProfileParticipant GetParticipant(string machine)
+        {
+            var localsettings = from p in Participants where p.MachineName == machine select p;
+            if (localsettings.Count() > 0)
+            {
+                return localsettings.First();
+            }
+            else
+            {
+                throw new Exception(string.Format("Participant not found: {0}", machine));
+            }
+        }
+
+        internal bool ContainsParticipant(string machine)
+        {
+            return (from p in Participants where p.MachineName == machine select p).Count() > 0;
+        }
     }
 }

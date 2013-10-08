@@ -54,7 +54,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
                 adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Settings.Default.MachineName);
                 adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
                 adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", filename);
-                adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", new FileInfo(Path.Combine(_options.LocalPath, filename)).Length);
+                //adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", new FileInfo(Path.Combine(_options.LocalPath, filename)).Length);
                 // TODO: Include file hash value. Will require reading the entire file.
                 // Steal Snowden SHA512 code? It probably uses something else anyway.
                 adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", DBNull.Value);

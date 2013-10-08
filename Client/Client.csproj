@@ -62,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IInputView.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
     <Compile Include="Mappers\Mock\MockIndexMapper.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Mappers\Database\DbProfileMapper.cs" />
     <Compile Include="Mappers\XML\XmlProfileMapper.cs" />
     <Compile Include="Interfaces\IProfileMapper.cs" />
+    <Compile Include="Model\ProfileParticipant.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

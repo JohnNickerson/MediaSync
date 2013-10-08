@@ -67,15 +67,16 @@ namespace AssimilationSoftware.MediaSync.Core
                 string profilename = configurator.ConfigureString("", "Profile to join");
                 if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
                 {
-                    var profile = (from p in profiles select p).First();
+                    var profile = (from p in profiles where p.ProfileName == profilename select p).First();
+
                     var participant = new ProfileParticipant();
                     participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
                     participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
                     participant.Consumer = true;
                     participant.Contributor = true;
                     participant.MachineName = Settings.Default.MachineName;
+                    
                     profile.Participants.Add(participant);
-                    // TODO: Test that the updated profile is updated in the collection.
                     profileManager.Save(profiles);
                 }
             }

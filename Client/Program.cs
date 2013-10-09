@@ -80,6 +80,50 @@ namespace AssimilationSoftware.MediaSync.Core
                     profileManager.Save(profiles);
                 }
             }
+            else if (args.Contains("leaveprofile"))
+            {
+                var profiles = profileManager.Load();
+                foreach (SyncProfile p in profiles)
+                {
+                    view.WriteLine(p.ProfileName);
+                }
+                string profilename = configurator.ConfigureString("", "Profile to leave");
+                if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
+                {
+                    var profile = (from p in profiles where p.ProfileName == profilename select p).First();
+
+                    if (profile.ContainsParticipant(Settings.Default.MachineName))
+                    {
+                        var participant = profile.GetParticipant(Settings.Default.MachineName);
+
+                        profile.Participants.Remove(participant);
+                        profileManager.Save(profiles);
+                    }
+                }
+            }
+            else if (args.Contains("list"))
+            {
+                // Print a summary of profiles.
+                view.WriteLine(string.Empty);
+                view.WriteLine("Current profiles ('*' indicates this machine is participating)");
+                view.WriteLine(string.Empty);
+                var profiles = profileManager.Load();
+                foreach (SyncProfile p in profiles)
+                {
+                    // TODO: Indicate producer/consumer status.
+                    var star = p.ContainsParticipant(Settings.Default.MachineName);
+                    view.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
+                    // TODO: Show participating paths if detailed view is selected.
+                    if (args.Contains("/d") && star)
+                    {
+                        var party = p.GetParticipant(Settings.Default.MachineName);
+                        view.WriteLine("\t\t{0}", party.LocalPath);
+                        view.WriteLine("\t\t{0}", party.SharedPath);
+                        view.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
+                    }
+                }
+                view.WriteLine(string.Empty);
+            }
             else
             {
                 try

@@ -12,6 +12,7 @@ using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Mappers.PlainText;
 using AssimilationSoftware.MediaSync.Mappers.Xml;
+using System.Diagnostics;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -21,6 +22,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             IOutputView view = new ConsoleView();
             IInputView configurator = (IInputView)view;
+            Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
             #region Configuration
             if (args.Contains("reconfigure"))
@@ -38,7 +40,25 @@ namespace AssimilationSoftware.MediaSync.Core
             #endregion
 
             IProfileMapper profileManager = new XmlProfileMapper(Settings.Default.ProfilesLocation);
-            if (args.Contains("addprofile"))
+            if (args.Contains("/?"))
+            {
+                // Display help text.
+                view.WriteLine();
+                view.WriteLine("Usage:");
+                view.WriteLine("client.exe [addprofile|joinprofile|leaveprofile|list] [/d]");
+                view.WriteLine();
+                view.WriteLine("\taddprofile\tAdd a new sync profile. Also adds this machine");
+                view.WriteLine("\t\t\tas a participant.");
+                view.WriteLine("\tjoinprofile\tJoins an existing profile as a participant.");
+                view.WriteLine("\tleaveprofile\tStops participating in an existing profile.");
+                view.WriteLine("\tlist\t\tLists active profiles by name, indicating whether this");
+                view.WriteLine("\t\t\tmachine is participating.");
+                view.WriteLine("\t\t\tCan also be used with the '/d' switch to see directory");
+                view.WriteLine("\t\t\tconfiguration and contributor/consumer status.");
+
+                view.WriteLine();
+            }
+            else if (args.Contains("addprofile"))
             {
                 var profiles = profileManager.Load();
 
@@ -110,15 +130,15 @@ namespace AssimilationSoftware.MediaSync.Core
                 var profiles = profileManager.Load();
                 foreach (SyncProfile p in profiles)
                 {
-                    // TODO: Indicate producer/consumer status.
                     var star = p.ContainsParticipant(Settings.Default.MachineName);
                     view.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
-                    // TODO: Show participating paths if detailed view is selected.
+                    // Show participating paths if detailed view is selected.
                     if (args.Contains("/d") && star)
                     {
                         var party = p.GetParticipant(Settings.Default.MachineName);
                         view.WriteLine("\t\t{0}", party.LocalPath);
                         view.WriteLine("\t\t{0}", party.SharedPath);
+                        // Indicate producer/consumer status.
                         view.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
                     }
                 }
@@ -126,37 +146,38 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
-                try
+                foreach (SyncProfile opts in profileManager.Load())
                 {
-                    foreach (SyncProfile opts in profileManager.Load())
+                    if (opts.ContainsParticipant(Settings.Default.MachineName))
                     {
-                        if (opts.ContainsParticipant(Settings.Default.MachineName))
-                        {
-                            view.WriteLine(string.Empty);
-                            view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+                        view.WriteLine();
+                        view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
-                            IIndexMapper indexer = new TextIndexMapper(opts);
-                            IFileManager copier = new QueuedDiskCopier(opts, indexer);
-                            SyncService s = new SyncService(opts, view, indexer, copier, false);
+                        IIndexMapper indexer = new TextIndexMapper(opts);
+                        IFileManager copier = new QueuedDiskCopier(opts, indexer);
+                        SyncService s = new SyncService(opts, view, indexer, copier, false);
+                        try
+                        {
                             s.Sync();
                         }
-                        else
+                        catch (Exception e)
                         {
-                            view.WriteLine(string.Empty);
-                            view.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                            view.WriteLine("Could not sync.");
+                            view.WriteLine(e.Message);
+                            Debug.WriteLine(e.StackTrace);
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    view.WriteLine("Could not sync.");
-                    view.WriteLine(e.Message);
-                    File.WriteAllText("error.log", e.StackTrace);
+                    else
+                    {
+                        view.WriteLine(string.Empty);
+                        view.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                    }
                 }
             }
 
             view.WriteLine("Finished. Press a key to exit.");
             configurator.WaitForKey();
+            Debug.Flush();
         }
 
 		public void ConnectListAndSaveSQLCompactExample()

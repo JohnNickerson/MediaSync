@@ -23,6 +23,12 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         {
             Console.WriteLine(format, args);
         }
+
+        void IOutputView.WriteLine()
+        {
+            Console.WriteLine();
+        }
+
         /// <summary>
         /// Reports a single file sync operation via console output.
         /// </summary>

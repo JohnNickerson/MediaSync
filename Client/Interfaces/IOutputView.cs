@@ -19,5 +19,7 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         {
             set;
         }
+
+        void WriteLine();
     }
 }

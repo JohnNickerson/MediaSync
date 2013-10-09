@@ -72,6 +72,11 @@ namespace AssimilationSoftware.MediaSync.WinForms
             OutputBox.AppendText(Environment.NewLine);
         }
 
+        void IOutputView.WriteLine()
+        {
+            OutputBox.AppendText(Environment.NewLine);
+        }
+
         void IOutputView.Report(SyncOperation op)
         {
             switch (op.Action)

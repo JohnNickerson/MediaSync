@@ -156,6 +156,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         IIndexMapper indexer = new TextIndexMapper(opts);
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
                         SyncService s = new SyncService(opts, view, indexer, copier, false);
+                        s.VerboseMode = args.Contains("/d");
                         try
                         {
                             s.Sync();
@@ -175,8 +176,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
-            view.WriteLine("Finished. Press a key to exit.");
-            configurator.WaitForKey();
+            view.WriteLine("Finished.");
             Debug.Flush();
         }
 

@@ -76,22 +76,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             throw new NotImplementedException();
         }
 
-        int IIndexMapper.PeerCount
-        {
-            get
-            {
-                // Select Count(Machine) From Profiles Where Profile = _options.ProfileName
-                SqlCeConnection connection = new SqlCeConnection(_connString);
-                SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
-                adapter.SelectCommand = new SqlCeCommand("Select Count(Machine) From Indexes Where Profile = @ProfileName", connection);
-                adapter.SelectCommand.Parameters.AddWithValue("@ProfileName", _options.ProfileName);
-                connection.Open();
-                int result = (int)adapter.SelectCommand.ExecuteScalar();
-                connection.Close();
-                return result;
-            }
-        }
-
         Dictionary<string, int> IIndexMapper.CompareCounts()
         {
             throw new NotImplementedException();

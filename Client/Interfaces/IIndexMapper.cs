@@ -12,8 +12,6 @@ namespace AssimilationSoftware.MediaSync.Interfaces
 
         FileIndex LoadLatest(string machine, string profile);
 
-        int NumPeers(string profile);
-
         /// <summary>
         /// Adds a file to the index.
         /// </summary>
@@ -23,6 +21,7 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         /// <summary>
         /// Persists the index in storage.
         /// </summary>
+        [Obsolete("Use Save() instead.")]
         void WriteIndex();
 
         /// <summary>
@@ -32,10 +31,5 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         Dictionary<string, int> CompareCounts();
 
         void CreateIndex(IFileManager file_manager);
-
-        /// <summary>
-        /// Gets the number of peers participating in this sync profile.
-        /// </summary>
-        int PeerCount { get; }
     }
 }

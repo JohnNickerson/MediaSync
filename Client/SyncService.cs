@@ -37,6 +37,8 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </remarks>
         private bool Simulate;
 
+        public bool VerboseMode;
+
         /// <summary>
         /// A view to show output from operations.
         /// </summary>
@@ -95,7 +97,7 @@ namespace AssimilationSoftware.MediaSync.Core
             _indexer.CreateIndex(_copyq);
 
             // Compare this index with others.
-            NumPeers = _indexer.PeerCount;
+            NumPeers = _options.Participants.Count;
             FileCounts = _indexer.CompareCounts();
             // TODO: Construct or load an action queue.
         }
@@ -116,7 +118,10 @@ namespace AssimilationSoftware.MediaSync.Core
                     // Empty folder. Remove it.
                     try
                     {
-                        _view.Report(new SyncOperation(dir));
+                        if (VerboseMode)
+                        {
+                            _view.Report(new SyncOperation(dir));
+                        }
                         _copyq.Delete(dir);
                     }
                     catch
@@ -130,16 +135,17 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Pushes files to shared storage where they are found wanting in other peers.
         /// </summary>
-        internal void PushFiles()
+        internal int PushFiles()
         {
             // No point trying to push files when they'll all be ignored.
             if (NumPeers == 1)
             {
                 _view.WriteLine("No peers, no point.");
-                return;
+                return 0;
             }
 
             _sizecache = _copyq.SharedPathSize();
+            int pushcount = 0;
             // TODO: Prioritise the least-common files.
             //var sortedfilelist = from f in FileCounts.Keys orderby FileCounts[f] select f;
             // For every file in the index
@@ -167,12 +173,16 @@ namespace AssimilationSoftware.MediaSync.Core
                             {
                                 // ...copy it to shared storage.
                                 string targetdir = Path.GetDirectoryName(targetfile);
-                                _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
+                                if (VerboseMode)
+                                {
+                                    _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
+                                }
                                 _copyq.EnsureFolder(targetdir);
                                 string fullpathlocal = Path.Combine(LocalPath, filename_local);
                                 _copyq.CopyFile(fullpathlocal, targetfile);
                                 // Update size cache.
                                 _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
+                                pushcount++;
                             }
                             else
                             {
@@ -196,6 +206,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
 			WaitForCopies();
             _copyq.SetNormalAttributes();
+            return pushcount;
 		}
 
         /// <summary>
@@ -230,8 +241,9 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Copies files from shared storage if they are not present locally.
         /// </summary>
-        internal void PullFiles()
+        internal int PullFiles()
         {
+            int pullcount = 0;
             foreach (string FileSearch in FileSearches)
             {
                 foreach (string incoming in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
@@ -248,16 +260,20 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             try
                             {
-                                _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                                if (VerboseMode)
+                                {
+                                    _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                                }
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
                                 _copyq.CopyFile(incoming, targetfile);
+                                pullcount++;
                             }
                             catch (Exception)
                             {
                                 _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
                             }
                         }
-                        else
+                        else if (VerboseMode)
                         {
                             _view.WriteLine("Skipping file {0}, already exists.", relativepath);
                         }
@@ -269,14 +285,16 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 			WaitForCopies();
+            return pullcount;
 		}
 
         /// <summary>
         /// Checks for files in shared storage that are now present everywhere and removes them from shared
         /// storage to make more room.
         /// </summary>
-        internal void PruneFiles()
+        internal int PruneFiles()
         {
+            int prunecount = 0;
             foreach (string FileSearch in FileSearches)
             {
                 // For each file in the watch path
@@ -290,7 +308,11 @@ namespace AssimilationSoftware.MediaSync.Core
                         // Remove it from shared storage.
                         try
                         {
-                            _copyq.Delete(filename);
+                            if (VerboseMode)
+                            {
+                                _copyq.Delete(filename);
+                            }
+                            prunecount++;
                         }
                         catch (Exception e)
                         {
@@ -300,6 +322,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             ClearEmptyFolders();
+            return prunecount;
         }
 
         /// <summary>
@@ -318,10 +341,11 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
+            int pulledCount = 0;
             if (_localSettings.Consumer)
 			{
                 _view.WriteLine("Pulling files from shared space.");
-				PullFiles();
+				pulledCount = PullFiles();
 			}
 
             // Index local files.
@@ -339,17 +363,24 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Check for files found in all indexes and in storage, and remove them.
             _view.WriteLine("Removing shared files that are in every client already.");
-            PruneFiles();
+            int prunedCount = PruneFiles();
 
             // TODO: Find delete operations to pass on?
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
+            int pushedCount = 0;
 			if (_localSettings.Contributor)
 			{
                 _view.WriteLine("Pushing files.");
-				PushFiles();
+				pushedCount = PushFiles();
 			}
+
+            if (!VerboseMode)
+            {
+                // Report a summary of actions taken.
+                _view.WriteLine("Pulled: {0}\tPushed: {1}\tPruned: {2}", pulledCount, pushedCount, prunedCount);
+            }
 
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)

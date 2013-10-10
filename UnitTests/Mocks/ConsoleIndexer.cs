@@ -25,11 +25,6 @@ namespace UnitTests.Mocks
             }
         }
 
-        int IIndexMapper.PeerCount
-        {
-            get { return 5; }
-        }
-
         Dictionary<string, int> IIndexMapper.CompareCounts()
         {
             var result = new Dictionary<string, int>();
@@ -53,11 +48,6 @@ namespace UnitTests.Mocks
         }
 
         FileIndex IIndexMapper.LoadLatest(string machine, string profile)
-        {
-            throw new NotImplementedException();
-        }
-
-        int IIndexMapper.NumPeers(string profile)
         {
             throw new NotImplementedException();
         }

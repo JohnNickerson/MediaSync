@@ -26,25 +26,12 @@ namespace AssimilationSoftware.MediaSync.Mappers.Mock
         {
         }
 
-        int IIndexMapper.PeerCount
-        {
-            get
-            {
-                return 1;
-            }
-        }
-
         void IIndexMapper.Save(FileIndex index)
         {
             throw new NotImplementedException();
         }
 
         FileIndex IIndexMapper.LoadLatest(string machine, string profile)
-        {
-            throw new NotImplementedException();
-        }
-
-        int IIndexMapper.NumPeers(string profile)
         {
             throw new NotImplementedException();
         }

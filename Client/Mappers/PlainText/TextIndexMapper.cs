@@ -109,17 +109,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
 
         #region Properties
         /// <summary>
-        /// Gets the number of peers participating in this sync profile, based on index files on disk.
-        /// </summary>
-        int IIndexMapper.PeerCount
-        {
-            get
-            {
-                return Directory.GetFiles(_localSettings.SharedPath, "*_index.txt").Length;
-            }
-        }
-
-        /// <summary>
         /// Gets the name of the file to which the index will be written.
         /// </summary>
         private string IndexFileName

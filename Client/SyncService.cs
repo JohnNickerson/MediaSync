@@ -304,14 +304,14 @@ namespace AssimilationSoftware.MediaSync.Core
                     string relativefile = filename.Remove(0, SharedPath.Length + 1);
                     if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
                     {
-                        _view.Report(new SyncOperation(filename));
+                        if (VerboseMode)
+                        {
+                            _view.Report(new SyncOperation(filename));
+                        }
                         // Remove it from shared storage.
                         try
                         {
-                            if (VerboseMode)
-                            {
                                 _copyq.Delete(filename);
-                            }
                             prunecount++;
                         }
                         catch (Exception e)
@@ -344,12 +344,18 @@ namespace AssimilationSoftware.MediaSync.Core
             int pulledCount = 0;
             if (_localSettings.Consumer)
 			{
-                _view.WriteLine("Pulling files from shared space.");
+                if (VerboseMode)
+                {
+                    _view.WriteLine("Pulling files from shared space.");
+                }
 				pulledCount = PullFiles();
 			}
 
             // Index local files.
-            _view.WriteLine("Indexing local files.");
+            if (VerboseMode)
+            {
+                _view.WriteLine("Indexing local files.");
+            }
             IndexFiles();
             // Compare this index to other indices.
             // For each index, including local,
@@ -362,7 +368,10 @@ namespace AssimilationSoftware.MediaSync.Core
 			// TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
-            _view.WriteLine("Removing shared files that are in every client already.");
+            if (VerboseMode)
+            {
+                _view.WriteLine("Removing shared files that are in every client already.");
+            }
             int prunedCount = PruneFiles();
 
             // TODO: Find delete operations to pass on?
@@ -372,7 +381,10 @@ namespace AssimilationSoftware.MediaSync.Core
             int pushedCount = 0;
 			if (_localSettings.Contributor)
 			{
-                _view.WriteLine("Pushing files.");
+                if (VerboseMode)
+                {
+                    _view.WriteLine("Pushing files.");
+                }
 				pushedCount = PushFiles();
 			}
 

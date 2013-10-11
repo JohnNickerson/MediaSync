@@ -388,11 +388,8 @@ namespace AssimilationSoftware.MediaSync.Core
 				pushedCount = PushFiles();
 			}
 
-            if (!VerboseMode)
-            {
-                // Report a summary of actions taken.
-                _view.WriteLine("Pulled: {0}\tPushed: {1}\tPruned: {2}", pulledCount, pushedCount, prunedCount);
-            }
+            // Report a summary of actions taken.
+            _view.WriteLine("Pulled: {0}\tPushed: {1}\tPruned: {2}", pulledCount, pushedCount, prunedCount);
 
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)

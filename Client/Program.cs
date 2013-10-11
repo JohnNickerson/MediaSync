@@ -45,7 +45,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Display help text.
                 view.WriteLine();
                 view.WriteLine("Usage:");
-                view.WriteLine("client.exe [addprofile|joinprofile|leaveprofile|list] [/d]");
+                view.WriteLine("client.exe [addprofile|joinprofile|leaveprofile|list|reconfigure] [/d] [/?]");
                 view.WriteLine();
                 view.WriteLine("\taddprofile\tAdd a new sync profile. Also adds this machine");
                 view.WriteLine("\t\t\tas a participant.");
@@ -55,6 +55,10 @@ namespace AssimilationSoftware.MediaSync.Core
                 view.WriteLine("\t\t\tmachine is participating.");
                 view.WriteLine("\t\t\tCan also be used with the '/d' switch to see directory");
                 view.WriteLine("\t\t\tconfiguration and contributor/consumer status.");
+                view.WriteLine("\treconfigure\tAllows reconfiguration of machine name and profile");
+                view.WriteLine("\t\t\tstorage location.");
+                view.WriteLine("\t/d\t\tShow detailed activity reports or configuration.");
+                view.WriteLine("\t/?\t\tShows this help text.");
 
                 view.WriteLine();
             }

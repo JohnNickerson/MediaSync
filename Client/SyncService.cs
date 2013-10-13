@@ -344,10 +344,7 @@ namespace AssimilationSoftware.MediaSync.Core
             int pulledCount = 0;
             if (_localSettings.Consumer)
 			{
-                if (VerboseMode)
-                {
-                    _view.WriteLine("Pulling files from shared space.");
-                }
+                _view.WriteLine("Pulling files from shared space.");
 				pulledCount = PullFiles();
 			}
 
@@ -368,10 +365,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			// TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
-            if (VerboseMode)
-            {
-                _view.WriteLine("Removing shared files that are in every client already.");
-            }
+            _view.WriteLine("Removing shared files that are in every client already.");
             int prunedCount = PruneFiles();
 
             // TODO: Find delete operations to pass on?
@@ -381,10 +375,7 @@ namespace AssimilationSoftware.MediaSync.Core
             int pushedCount = 0;
 			if (_localSettings.Contributor)
 			{
-                if (VerboseMode)
-                {
-                    _view.WriteLine("Pushing files.");
-                }
+                _view.WriteLine("Pushing files.");
 				pushedCount = PushFiles();
 			}
 

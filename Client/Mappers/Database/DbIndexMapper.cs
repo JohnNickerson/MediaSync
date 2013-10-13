@@ -90,10 +90,5 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
         {
             throw new NotImplementedException();
         }
-
-        public int NumPeers(string profile)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

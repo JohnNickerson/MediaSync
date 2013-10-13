@@ -66,17 +66,22 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         Dictionary<string, int> IIndexMapper.CompareCounts()
         {
             var FileCounts = new Dictionary<string, int>();
-            foreach (string otherindex in Directory.GetFiles(_options.GetParticipant(Settings.Default.MachineName).SharedPath, "*_index.txt"))
+            string basepath = _options.GetParticipant(Settings.Default.MachineName).SharedPath;
+            foreach (var participant in _options.Participants)
             {
-                foreach (string idxfilename in File.ReadAllLines(otherindex))
+                string otherindex = Path.Combine(basepath, string.Format("{0}_index.txt", participant.MachineName));
+                if (File.Exists(otherindex))
                 {
-                    if (FileCounts.ContainsKey(idxfilename))
+                    foreach (string idxfilename in File.ReadAllLines(otherindex))
                     {
-                        FileCounts[idxfilename]++;
-                    }
-                    else
-                    {
-                        FileCounts[idxfilename] = 1;
+                        if (FileCounts.ContainsKey(idxfilename))
+                        {
+                            FileCounts[idxfilename]++;
+                        }
+                        else
+                        {
+                            FileCounts[idxfilename] = 1;
+                        }
                     }
                 }
             }
@@ -97,11 +102,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         }
 
         public FileIndex LoadLatest(string machine, string profile)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int NumPeers(string profile)
         {
             throw new NotImplementedException();
         }

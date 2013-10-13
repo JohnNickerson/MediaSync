@@ -64,11 +64,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         {
             throw new NotImplementedException();
         }
-
-        public int NumPeers(string profile)
-        {
-            throw new NotImplementedException();
-        }
         #endregion
 
         #region Properties

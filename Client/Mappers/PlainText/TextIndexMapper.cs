@@ -45,7 +45,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         /// <summary>
         /// Adds a file to the index.
         /// </summary>
-        /// <param name="trunc_file">The file name to add to the index.</param>
+        /// <param name="filename">The file name to add to the index.</param>
         void IIndexMapper.Add(string trunc_file)
         {
             _fileList.Add(trunc_file);

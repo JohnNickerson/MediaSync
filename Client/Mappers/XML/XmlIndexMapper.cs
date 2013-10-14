@@ -5,6 +5,8 @@ using System.Text;
 using Polenter.Serialization;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Properties;
+using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Mappers.Xml
 {
@@ -13,6 +15,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         #region Fields
         private SharpSerializer serialiser;
         private SyncProfile _profile;
+        private FileIndex _index;
         #endregion
 
         #region Constructors
@@ -20,6 +23,10 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         {
             serialiser = new SharpSerializer(false);
             _profile = options;
+            _index = new FileIndex();
+            _index.MachineName = Settings.Default.MachineName;
+            _index.ProfileName = _profile.ProfileName;
+            _index.LocalBasePath = _profile.GetParticipant(Settings.Default.MachineName).LocalPath;
         }
         #endregion
 
@@ -27,10 +34,10 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         /// <summary>
         /// Adds a file to the index.
         /// </summary>
-        /// <param name="trunc_file">The file name to add to the index.</param>
+        /// <param name="filename">The file name to add to the index.</param>
         public void Add(string trunc_file)
         {
-            throw new NotImplementedException();
+            _index.Files.Add(new FileHeader(trunc_file));
         }
 
         /// <summary>
@@ -38,12 +45,17 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         /// </summary>
         public void WriteIndex()
         {
-            throw new NotImplementedException();
+            Save(_index);
         }
 
         public void CreateIndex(IFileManager file_manager)
         {
-            throw new NotImplementedException();
+            _index.TimeStamp = DateTime.Now;
+            foreach (var f in file_manager.ListLocalFiles())
+            {
+                _index.Files.Add(new FileHeader(f));
+            }
+            WriteIndex();
         }
 
         /// <summary>
@@ -52,12 +64,33 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         /// <returns>A dictionary of file names to index membership counts.</returns>
         public Dictionary<string, int> CompareCounts()
         {
-            throw new NotImplementedException();
+            var FileCounts = new Dictionary<string, int>();
+            string basepath = _profile.GetParticipant(Settings.Default.MachineName).SharedPath;
+            foreach (var participant in _profile.Participants)
+            {
+                string otherindex = Path.Combine(basepath, string.Format("{0}_index.xml", participant.MachineName));
+                if (File.Exists(otherindex))
+                {
+                    FileIndex idx = (FileIndex)serialiser.Deserialize(otherindex);
+                    foreach (var idxfilename in idx.Files)
+                    {
+                        if (FileCounts.ContainsKey(idxfilename.RelativePath))
+                        {
+                            FileCounts[idxfilename.RelativePath]++;
+                        }
+                        else
+                        {
+                            FileCounts[idxfilename.RelativePath] = 1;
+                        }
+                    }
+                }
+            }
+            return FileCounts;
         }
 
         public void Save(FileIndex index)
         {
-            throw new NotImplementedException();
+            serialiser.Serialize(index, Path.Combine(_profile.GetParticipant(Settings.Default.MachineName).SharedPath, string.Format("{0}_index.xml", Settings.Default.MachineName)));
         }
 
         public FileIndex LoadLatest(string machine, string profile)

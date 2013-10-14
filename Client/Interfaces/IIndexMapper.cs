@@ -15,7 +15,7 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         /// <summary>
         /// Adds a file to the index.
         /// </summary>
-        /// <param name="trunc_file">The file name to add to the index.</param>
+        /// <param name="filename">The file name to add to the index.</param>
         void Add(string trunc_file);
 
         /// <summary>

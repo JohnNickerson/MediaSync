@@ -157,7 +157,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         view.WriteLine();
                         view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
-                        IIndexMapper indexer = new TextIndexMapper(opts);
+                        IIndexMapper indexer = new XmlIndexMapper(opts);
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
                         SyncService s = new SyncService(opts, view, indexer, copier, false);
                         s.VerboseMode = args.Contains("/d");

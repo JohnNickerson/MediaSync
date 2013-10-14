@@ -17,6 +17,10 @@ namespace AssimilationSoftware.MediaSync.Model
             this.RelativePath = filename.Substring(0, filename.Length - fileinfo.Name.Length);
         }
 
+        public FileHeader()
+        {
+        }
+
         public string RelativePath { get; set; }
         public string FileName { get; set; }
         public long FileSize { get; set; }

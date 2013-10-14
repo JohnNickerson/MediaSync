@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AssimilationSoftware.MediaSync.Mappers.Xml;
+using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core;
 
 namespace UnitTests
 {
@@ -16,6 +19,12 @@ namespace UnitTests
             // Test the database indexer.
             
             // Test the file manager.
+            var o = new SyncProfile { ProfileName = "TestProfile", SearchPatterns = new List<string>(new string[] { "*.*" }) };
+            SyncProfile.SetLocalMachineName("UnitTests");
+            o.Participants.Add(new ProfileParticipant { MachineName = "UnitTests", LocalPath = @"C:\Temp", SharedPath = @"D:\Temp" });
+            var x = new XmlIndexMapper(o);
+            var q = new QueuedDiskCopier(o, x);
+            x.CreateIndex(q);
         }
     }
 }

@@ -7,6 +7,7 @@ using System.IO;
 using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
+using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Model
 {
@@ -51,5 +52,10 @@ namespace AssimilationSoftware.MediaSync.Model
             return (from p in Participants where p.MachineName == machine select p).Count() > 0;
         }
         #endregion
+
+        public static void SetLocalMachineName(string name)
+        {
+            Settings.Default.MachineName = name;
+        }
     }
 }

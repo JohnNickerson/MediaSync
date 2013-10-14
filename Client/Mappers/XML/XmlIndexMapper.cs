@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         /// <param name="filename">The file name to add to the index.</param>
         public void Add(string trunc_file)
         {
-            _index.Files.Add(new FileHeader(trunc_file));
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
             _index.TimeStamp = DateTime.Now;
             foreach (var f in file_manager.ListLocalFiles())
             {
-                _index.Files.Add(new FileHeader(f));
+                _index.Files.Add(new FileHeader(f, _index.LocalBasePath));
             }
             WriteIndex();
         }
@@ -72,15 +72,16 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
                 if (File.Exists(otherindex))
                 {
                     FileIndex idx = (FileIndex)serialiser.Deserialize(otherindex);
-                    foreach (var idxfilename in idx.Files)
+                    foreach (var idxfile in idx.Files)
                     {
-                        if (FileCounts.ContainsKey(idxfilename.RelativePath))
+                        var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
+                        if (FileCounts.ContainsKey(relfile))
                         {
-                            FileCounts[idxfilename.RelativePath]++;
+                            FileCounts[relfile]++;
                         }
                         else
                         {
-                            FileCounts[idxfilename.RelativePath] = 1;
+                            FileCounts[relfile] = 1;
                         }
                     }
                 }

@@ -8,12 +8,13 @@ namespace AssimilationSoftware.MediaSync.Model
 {
     public class FileHeader
     {
-        public FileHeader(string filename)
+        public FileHeader(string filename, string basepath)
         {
-            var fileinfo = new FileInfo(filename);
+            var fileinfo = new FileInfo(Path.Combine(basepath, filename));
 
             this.FileName = fileinfo.Name;
             this.FileSize = fileinfo.Length;
+            this.RelativePath = filename.Substring(0, filename.Length - fileinfo.Name.Length);
         }
 
         public string RelativePath { get; set; }

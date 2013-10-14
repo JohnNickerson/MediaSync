@@ -169,7 +169,16 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             view.WriteLine("Could not sync.");
                             view.WriteLine(e.Message);
-                            Debug.WriteLine(e.StackTrace);
+                            var x = e;
+                            while (x != null)
+                            {
+                                Debug.WriteLine(DateTime.Now);
+                                Debug.WriteLine(x.Message);
+                                Debug.WriteLine(x.StackTrace);
+                                Debug.WriteLine("");
+
+                                x = x.InnerException;
+                            }
                         }
                     }
                     else

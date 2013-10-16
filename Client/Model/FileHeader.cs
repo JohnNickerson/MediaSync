@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace AssimilationSoftware.MediaSync.Model
 {
@@ -15,6 +16,10 @@ namespace AssimilationSoftware.MediaSync.Model
             this.FileName = fileinfo.Name;
             this.FileSize = fileinfo.Length;
             this.RelativePath = filename.Substring(0, filename.Length - fileinfo.Name.Length);
+            using (var cryptoProvider = new SHA1CryptoServiceProvider())
+            {
+                this.ContentsHash = BitConverter.ToString(cryptoProvider.ComputeHash(fileinfo.OpenRead()));
+            }
         }
 
         public FileHeader()

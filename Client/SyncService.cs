@@ -404,7 +404,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			{
 				if (_copyq.Count != lastcount)
 				{
-					_view.Status = string.Format("Waiting on {0} copies...", _copyq.Count);
+                    _view.Status = string.Format("Waiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
 					lastcount = _copyq.Count;
 				}
 				Thread.Sleep(1000);

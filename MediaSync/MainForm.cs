@@ -202,10 +202,13 @@ namespace AssimilationSoftware.MediaSync.WinForms
             p.LocalPath = SourceBox.Text;
             p.SharedPath = SharedBox.Text;
             s.ReserveSpace = ReserveSize;
+            p.MachineName = Environment.MachineName;
             s.Participants.Add(p);
 
             IProfileMapper profileManager = new XmlProfileMapper(Settings.Default.ProfilesLocation);
-            profileManager.Save(Environment.MachineName, s);
+            var profiles = profileManager.Load();
+            profiles.Add(s);
+            profileManager.Save(profiles);
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)

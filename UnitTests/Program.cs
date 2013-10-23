@@ -24,7 +24,7 @@ namespace UnitTests
             o.Participants.Add(new ProfileParticipant { MachineName = "UnitTests", LocalPath = @"C:\Temp", SharedPath = @"D:\Temp" });
             var x = new XmlIndexMapper(o);
             var q = new QueuedDiskCopier(o, x);
-            x.CreateIndex(q);
+            x.Save(q.CreateIndex());
         }
     }
 }

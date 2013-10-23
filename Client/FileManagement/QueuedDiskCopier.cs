@@ -126,7 +126,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			}
 		}
 
-        string[] IFileManager.ListLocalFiles()
+        public string[] ListLocalFiles()
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
@@ -179,7 +179,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Determines whether the given file should be copied, according to the exclusion filter rules.
         /// </summary>
-        /// <param name="filename">The file name to check.</param>
+        /// <param name="file">The file name to check.</param>
         /// <returns>True if the file should be copied, false otherwise.</returns>
         bool IFileManager.ShouldCopy(string filename)
         {
@@ -225,6 +225,21 @@ namespace AssimilationSoftware.MediaSync.Core
                 File.SetAttributes(file, FileAttributes.Normal);
             }
         }
+
+        public FileIndex CreateIndex()
+        {
+            FileIndex index = new FileIndex();
+            index.MachineName = Settings.Default.MachineName;
+            index.ProfileName = _profile.ProfileName;
+            index.TimeStamp = DateTime.Now;
+            index.LocalBasePath = _profile.GetParticipant(Settings.Default.MachineName).LocalPath;
+
+            foreach (string file in ListLocalFiles())
+            {
+                index.Files.Add(new FileHeader(file, index.LocalBasePath));
+            }
+            return index;
+        }
         #endregion
 
 		#region Properties
@@ -239,5 +254,6 @@ namespace AssimilationSoftware.MediaSync.Core
 			}
 		}
 		#endregion
+
     }
 }

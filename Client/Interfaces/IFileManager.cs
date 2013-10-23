@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AssimilationSoftware.MediaSync.Model;
 namespace AssimilationSoftware.MediaSync.Interfaces
 {
 	/// <summary>
@@ -26,6 +27,8 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         void SetNormalAttributes();
 
         string[] ListLocalFiles();
+
+        FileIndex CreateIndex();
 		#endregion
 
 		#region Properties

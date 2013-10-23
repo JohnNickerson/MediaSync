@@ -26,15 +26,12 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             this._options = options;
         }
 
-        void IIndexMapper.Add(string trunc_file)
+        Dictionary<string, int> IIndexMapper.CompareCounts()
         {
-            contents.Add(trunc_file);
+            throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Writes a file index to the database.
-        /// </summary>
-        void IIndexMapper.WriteIndex()
+        public void Save(FileIndex index)
         {
             SqlCeConnection connection = new SqlCeConnection(_connString);
             SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Indexes", connection);
@@ -48,16 +45,14 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             // A static timestamp to share among all records.
             DateTime indextime = DateTime.Now;
             connection.Open();
-            foreach (string filename in contents)
+            foreach (FileHeader file in index.Files)
             {
                 adapter.InsertCommand.Parameters["@Timestamp"] = new SqlCeParameter("@Timestamp", indextime);
                 adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Settings.Default.MachineName);
                 adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
-                adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", filename);
-                //adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", new FileInfo(Path.Combine(_options.LocalPath, filename)).Length);
-                // TODO: Include file hash value. Will require reading the entire file.
-                // Steal Snowden SHA512 code? It probably uses something else anyway.
-                adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", DBNull.Value);
+                adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", Path.Combine(file.RelativePath, file.FileName));
+                adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", file.FileSize);
+                adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", file.ContentsHash);
                 adapter.InsertCommand.ExecuteNonQuery();
             }
 
@@ -71,22 +66,28 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             connection.Close();
         }
 
-        void IIndexMapper.CreateIndex(IFileManager file_manager)
-        {
-            throw new NotImplementedException();
-        }
-
-        Dictionary<string, int> IIndexMapper.CompareCounts()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Save(FileIndex index)
-        {
-            throw new NotImplementedException();
-        }
-
         public FileIndex LoadLatest(string machine, string profile)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public List<FileIndex> LoadAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(SyncProfile profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine, SyncProfile profile)
         {
             throw new NotImplementedException();
         }

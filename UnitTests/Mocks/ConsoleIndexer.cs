@@ -12,19 +12,6 @@ namespace UnitTests.Mocks
     {
         private List<string> _files = new List<string>();
 
-        void IIndexMapper.Add(string trunc_file)
-        {
-            _files.Add(trunc_file);
-        }
-
-        void IIndexMapper.WriteIndex()
-        {
-            foreach (string file in _files)
-            {
-                Console.WriteLine(file);
-            }
-        }
-
         Dictionary<string, int> IIndexMapper.CompareCounts()
         {
             var result = new Dictionary<string, int>();
@@ -37,17 +24,36 @@ namespace UnitTests.Mocks
             return result;
         }
 
-        void IIndexMapper.CreateIndex(IFileManager file_manager)
-        {
-            throw new NotImplementedException();
-        }
-
         void IIndexMapper.Save(FileIndex index)
         {
-            throw new NotImplementedException();
+            foreach (FileHeader file in index.Files)
+            {
+                Console.WriteLine(file.FileName);
+            }
         }
 
         FileIndex IIndexMapper.LoadLatest(string machine, string profile)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public List<FileIndex> LoadAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(SyncProfile profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine, SyncProfile profile)
         {
             throw new NotImplementedException();
         }

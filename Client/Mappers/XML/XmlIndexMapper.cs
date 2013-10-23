@@ -32,30 +32,11 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         #region Methods
         /// <summary>
-        /// Adds a file to the index.
-        /// </summary>
-        /// <param name="filename">The file name to add to the index.</param>
-        public void Add(string trunc_file)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Persists the index in storage.
         /// </summary>
         public void WriteIndex()
         {
             Save(_index);
-        }
-
-        public void CreateIndex(IFileManager file_manager)
-        {
-            _index.TimeStamp = DateTime.Now;
-            foreach (var f in file_manager.ListLocalFiles())
-            {
-                _index.Files.Add(new FileHeader(f, _index.LocalBasePath));
-            }
-            WriteIndex();
         }
 
         /// <summary>
@@ -98,6 +79,26 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         {
             throw new NotImplementedException();
         }
+
+        public List<FileIndex> LoadAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(SyncProfile profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine, SyncProfile profile)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
 
         #region Properties
@@ -110,5 +111,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         }
 
         #endregion
+
     }
 }

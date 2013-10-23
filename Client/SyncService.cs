@@ -94,7 +94,8 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         public void IndexFiles()
         {
-            _indexer.CreateIndex(_copyq);
+            var index = _copyq.CreateIndex();
+            _indexer.Save(index);
 
             // Compare this index with others.
             NumPeers = _options.Participants.Count;
@@ -191,17 +192,17 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                         else
                         {
-                            //_view.WriteLine("Excluding file {0} because it is already in shared storage.", filename);
+                            //_view.WriteLine("Excluding file {0} because it is already in shared storage.", file);
                         }
                     }
                     else
                     {
-                        //_view.WriteLine("Excluding file {0} because it does not exist here.", filename);
+                        //_view.WriteLine("Excluding file {0} because it does not exist here.", file);
                     }
                 }
                 else
                 {
-                    //_view.WriteLine("Excluding file {0} because it is already everywhere.", filename);
+                    //_view.WriteLine("Excluding file {0} because it is already everywhere.", file);
                 }
             }
 			WaitForCopies();

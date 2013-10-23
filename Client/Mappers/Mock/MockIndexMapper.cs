@@ -9,14 +9,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Mock
 {
     public class MockIndexMapper : IIndexMapper
     {
-        void IIndexMapper.Add(string trunc_file)
-        {
-        }
-
-        void IIndexMapper.WriteIndex()
-        {
-        }
-
         Dictionary<string, int> IIndexMapper.CompareCounts()
         {
             return new Dictionary<string, int>();
@@ -36,7 +28,23 @@ namespace AssimilationSoftware.MediaSync.Mappers.Mock
             throw new NotImplementedException();
         }
 
-        void IIndexMapper.CreateIndex(IFileManager file_manager)
+
+        public List<FileIndex> LoadAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(SyncProfile profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine, SyncProfile profile)
         {
             throw new NotImplementedException();
         }

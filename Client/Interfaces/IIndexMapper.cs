@@ -13,23 +13,21 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         FileIndex LoadLatest(string machine, string profile);
 
         /// <summary>
-        /// Adds a file to the index.
-        /// </summary>
-        /// <param name="filename">The file name to add to the index.</param>
-        void Add(string trunc_file);
-
-        /// <summary>
-        /// Persists the index in storage.
-        /// </summary>
-        [Obsolete("Use Save() instead.")]
-        void WriteIndex();
-
-        /// <summary>
         /// Compares this index to all the other indices on record.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
         Dictionary<string, int> CompareCounts();
 
-        void CreateIndex(IFileManager file_manager);
+        /// <summary>
+        /// Loads all indexes for all profiles and all machines.
+        /// </summary>
+        /// <returns></returns>
+        List<FileIndex> LoadAll();
+
+        List<FileIndex> Load(SyncProfile profile);
+
+        List<FileIndex> Load(string machine);
+
+        List<FileIndex> Load(string machine, SyncProfile profile);
     }
 }

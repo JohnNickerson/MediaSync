@@ -57,5 +57,11 @@ namespace AssimilationSoftware.MediaSync.Core
         void IFileManager.SetNormalAttributes()
         {
         }
+
+
+        public Model.FileIndex CreateIndex()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

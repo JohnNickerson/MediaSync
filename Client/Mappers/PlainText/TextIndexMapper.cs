@@ -43,23 +43,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
 
         #region Methods
         /// <summary>
-        /// Adds a file to the index.
-        /// </summary>
-        /// <param name="filename">The file name to add to the index.</param>
-        void IIndexMapper.Add(string trunc_file)
-        {
-            _fileList.Add(trunc_file);
-        }
-
-        /// <summary>
-        /// Writes the index out to a file.
-        /// </summary>
-        void IIndexMapper.WriteIndex()
-        {
-            File.WriteAllLines(IndexFileName, _fileList.ToArray());
-        }
-
-        /// <summary>
         /// Compares this index to all the other indices on disk.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
@@ -88,13 +71,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
             return FileCounts;
         }
 
-        void IIndexMapper.CreateIndex(IFileManager file_manager)
-        {
-            _fileList = new List<string>();
-            _fileList.AddRange(file_manager.ListLocalFiles());
-            ((IIndexMapper)this).WriteIndex();
-        }
-
         public void Save(FileIndex index)
         {
             var files = from f in index.Files select Path.Combine(f.RelativePath, f.FileName);
@@ -102,6 +78,26 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         }
 
         public FileIndex LoadLatest(string machine, string profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> LoadAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(SyncProfile profile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<FileIndex> Load(string machine, SyncProfile profile)
         {
             throw new NotImplementedException();
         }
@@ -120,5 +116,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
             }
         }
         #endregion
+
     }
 }

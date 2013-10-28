@@ -236,7 +236,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
             foreach (string file in ListLocalFiles())
             {
-                index.Files.Add(new FileHeader(file, index.LocalBasePath));
+                index.Files.Add(new FileHeader(file, index.LocalBasePath, false));
             }
             return index;
         }

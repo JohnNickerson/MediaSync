@@ -5,6 +5,7 @@ using System.Text;
 using AssimilationSoftware.MediaSync.Mappers.Xml;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Core;
+using System.IO;
 
 namespace UnitTests
 {
@@ -18,13 +19,15 @@ namespace UnitTests
             // Test the text indexer.
             // Test the database indexer.
             
-            // Test the file manager.
-            var o = new SyncProfile { ProfileName = "TestProfile", SearchPatterns = new List<string>(new string[] { "*.*" }) };
-            SyncProfile.SetLocalMachineName("UnitTests");
-            o.Participants.Add(new ProfileParticipant { MachineName = "UnitTests", LocalPath = @"C:\Temp", SharedPath = @"D:\Temp" });
-            var x = new XmlIndexMapper(o);
-            var q = new QueuedDiskCopier(o, x);
-            x.Save(q.CreateIndex());
+            // Test the hash calculation.
+            var starttime = DateTime.Now;
+            foreach (string file in Directory.GetFiles(@"J:\Public\TV\Doctor Who", "*.*", SearchOption.AllDirectories))
+            {
+                var f = new FileHeader(file, string.Empty, false);
+            }
+            var endtime = DateTime.Now;
+            Console.WriteLine(endtime - starttime);
+            Console.ReadKey();
         }
     }
 }

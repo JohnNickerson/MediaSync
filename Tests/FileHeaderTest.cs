@@ -1,6 +1,8 @@
 ﻿using AssimilationSoftware.MediaSync.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 
 namespace Tests
 {
@@ -82,7 +84,8 @@ namespace Tests
         {
             string filename = string.Empty; // TODO: Initialize to an appropriate value
             string basepath = string.Empty; // TODO: Initialize to an appropriate value
-            FileHeader target = new FileHeader(filename, basepath, true);
+            IFileHashProvider hash = new MockHasher();
+            FileHeader target = new FileHeader(filename, basepath, hash);
             Assert.Inconclusive("TODO: Implement code to verify target");
         }
 

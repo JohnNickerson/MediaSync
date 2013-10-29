@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Properties;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -237,10 +239,11 @@ namespace AssimilationSoftware.MediaSync.Core
             index.ProfileName = _profile.ProfileName;
             index.TimeStamp = DateTime.Now;
             index.LocalBasePath = _profile.GetParticipant(Settings.Default.MachineName).LocalPath;
+            IFileHashProvider hasher = new Sha1Calculator();
 
             foreach (string file in ListLocalFiles())
             {
-                index.Files.Add(new FileHeader(file, index.LocalBasePath, false));
+                index.Files.Add(new FileHeader(file, index.LocalBasePath, hasher));
             }
             return index;
         }

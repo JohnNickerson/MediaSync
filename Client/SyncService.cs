@@ -350,10 +350,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			}
 
             // Index local files.
-            if (VerboseMode)
-            {
-                _view.WriteLine("Indexing local files.");
-            }
+            _view.WriteLine("Indexing local files.");
             IndexFiles();
             // Compare this index to other indices.
             // For each index, including local,

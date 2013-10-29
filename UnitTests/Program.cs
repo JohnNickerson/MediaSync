@@ -6,6 +6,8 @@ using AssimilationSoftware.MediaSync.Mappers.Xml;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Core;
 using System.IO;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 
 namespace UnitTests
 {
@@ -21,9 +23,10 @@ namespace UnitTests
             
             // Test the hash calculation.
             var starttime = DateTime.Now;
+            IFileHashProvider hash = new MockHasher();
             foreach (string file in Directory.GetFiles(@"J:\Public\TV\Doctor Who", "*.*", SearchOption.AllDirectories))
             {
-                var f = new FileHeader(file, string.Empty, true);
+                var f = new FileHeader(file, string.Empty, hash);
             }
             var endtime = DateTime.Now;
             Console.WriteLine(endtime - starttime);

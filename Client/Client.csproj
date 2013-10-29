@@ -66,8 +66,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileManagement\IntHelpers.cs" />
-    <Compile Include="FileManagement\MurMurHash3.cs" />
+    <Compile Include="FileManagement\Hashing\MockHasher.cs" />
+    <Compile Include="FileManagement\Hashing\MurMurHash3.cs" />
+    <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
+    <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Interfaces\IInputView.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />

@@ -18,6 +18,10 @@ namespace AssimilationSoftware.MediaSync.Model
             this.RelativePath = filename.Substring(0, filename.Length - fileinfo.Name.Length);
             if (calculateHash)
             {
+                // // MurMurHash3. Needs a buffered reader to improve performance.
+                //var hashmaker = new Murmur3();
+                //this.ContentsHash = BitConverter.ToString(hashmaker.ComputeHash(fileinfo.OpenRead()));
+
                 using (var cryptoProvider = new SHA1CryptoServiceProvider())
                 {
                     // Basic version.

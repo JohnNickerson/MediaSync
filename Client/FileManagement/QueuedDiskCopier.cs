@@ -139,7 +139,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Enqueue subfolders.
                 foreach (string subfolder in Directory.GetDirectories(folder))
                 {
-                    queue.Enqueue(subfolder);
+                    // Ignore .SyncArchive folders. They're like BitTorrent Sync recycle bins, and don't need to be copied.
+                    if (new DirectoryInfo(subfolder).Name != ".SyncArchive")
+                    {
+                        queue.Enqueue(subfolder);
+                    }
                 }
                 // Add all image files to the index.
                 foreach (string search in _profile.SearchPatterns)

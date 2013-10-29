@@ -23,7 +23,7 @@ namespace UnitTests
             var starttime = DateTime.Now;
             foreach (string file in Directory.GetFiles(@"J:\Public\TV\Doctor Who", "*.*", SearchOption.AllDirectories))
             {
-                var f = new FileHeader(file, string.Empty, false);
+                var f = new FileHeader(file, string.Empty, true);
             }
             var endtime = DateTime.Now;
             Console.WriteLine(endtime - starttime);

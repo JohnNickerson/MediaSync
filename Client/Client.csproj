@@ -26,6 +26,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -42,6 +43,9 @@
     <Reference Include="Microsoft.Synchronization.Files, Version=2.1.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\..\..\Program Files\Microsoft Sync Framework\2.1\Runtime\x86\Microsoft.Synchronization.Files.dll</HintPath>
+    </Reference>
+    <Reference Include="Ninject">
+      <HintPath>..\Library\Ninject.dll</HintPath>
     </Reference>
     <Reference Include="Polenter.SharpSerializer">
       <HintPath>..\Library\Polenter.SharpSerializer.dll</HintPath>
@@ -62,6 +66,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileManagement\IntHelpers.cs" />
+    <Compile Include="FileManagement\MurMurHash3.cs" />
     <Compile Include="Interfaces\IInputView.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />

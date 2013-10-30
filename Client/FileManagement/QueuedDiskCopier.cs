@@ -9,6 +9,7 @@ using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Properties;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
+using System.Diagnostics;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -35,12 +36,17 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// Sync operations waiting to go ahead.
 		/// </summary>
-		private Queue<SyncOperation> PendingActions;
+		private Queue<SyncOperation> PendingCopies;
 
 		/// <summary>
 		/// The maximum number of simultaneous copies to perform.
 		/// </summary>
 		private int MaxCopies;
+
+
+        private List<IAsyncResult> IndexActions;
+        private Queue<string> PendingIndexes;
+        private int MaxIndexes;
 
         private List<Exception> _errors;
 
@@ -68,8 +74,13 @@ namespace AssimilationSoftware.MediaSync.Core
 		public QueuedDiskCopier(SyncProfile profile, IIndexMapper indexer)
 		{
 			CopyActions = new List<IAsyncResult>();
-			PendingActions = new Queue<SyncOperation>();
+			PendingCopies = new Queue<SyncOperation>();
 			MaxCopies = 2;
+
+            IndexActions = new List<IAsyncResult>();
+            PendingIndexes = new Queue<string>();
+            MaxIndexes = 2;
+
 			_errors = new List<Exception>();
 
             _profile = profile;
@@ -97,7 +108,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
-                        PendingActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+                        PendingCopies.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
                     }
                 }
 			}
@@ -111,9 +122,9 @@ namespace AssimilationSoftware.MediaSync.Core
 			lock (CopyActions)
 			{
 				CopyActions.Remove(result);
-				while (CopyActions.Count < MaxCopies && PendingActions.Count > 0)
+				while (CopyActions.Count < MaxCopies && PendingCopies.Count > 0)
 				{
-					SyncOperation op = PendingActions.Dequeue();
+					SyncOperation op = PendingCopies.Dequeue();
 					((IFileManager)this).CopyFile(op.SourceFile, op.TargetFile);
 				}
 			}
@@ -243,7 +254,14 @@ namespace AssimilationSoftware.MediaSync.Core
 
             foreach (string file in ListLocalFiles())
             {
-                index.Files.Add(new FileHeader(file, index.LocalBasePath, hasher));
+                try
+                {
+                    index.Files.Add(new FileHeader(file, index.LocalBasePath, hasher));
+                }
+                catch (Exception e)
+                {
+                    _errors.Add(e);
+                }
             }
             return index;
         }
@@ -257,7 +275,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		{
 			get
 			{
-				return CopyActions.Count + PendingActions.Count;
+				return CopyActions.Count + PendingCopies.Count;
 			}
 		}
 		#endregion

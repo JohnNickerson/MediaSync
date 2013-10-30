@@ -250,7 +250,7 @@ namespace AssimilationSoftware.MediaSync.Core
             index.ProfileName = _profile.ProfileName;
             index.TimeStamp = DateTime.Now;
             index.LocalBasePath = _profile.GetParticipant(Settings.Default.MachineName).LocalPath;
-            IFileHashProvider hasher = new Sha1Calculator();
+            IFileHashProvider hasher = new MockHasher();
 
             foreach (string file in ListLocalFiles())
             {

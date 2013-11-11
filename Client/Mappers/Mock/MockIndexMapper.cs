@@ -9,7 +9,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Mock
 {
     public class MockIndexMapper : IIndexMapper
     {
-        Dictionary<string, int> IIndexMapper.CompareCounts()
+        Dictionary<string, int> IIndexMapper.CompareCounts(SyncProfile profile)
         {
             return new Dictionary<string, int>();
         }

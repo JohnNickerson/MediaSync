@@ -13,8 +13,8 @@
     <Setting Name="Configured" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ProfilesLocation" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Profiles.xml</Value>
+    <Setting Name="MetadataFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">.</Value>
     </Setting>
     <Setting Name="MachineName" Type="System.String" Scope="User">
       <Value Profile="(Default)">{MachineName}</Value>

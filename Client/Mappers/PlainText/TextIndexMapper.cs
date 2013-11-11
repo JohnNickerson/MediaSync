@@ -46,10 +46,10 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         /// Compares this index to all the other indices on disk.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
-        Dictionary<string, int> IIndexMapper.CompareCounts()
+        Dictionary<string, int> IIndexMapper.CompareCounts(SyncProfile profile)
         {
             var FileCounts = new Dictionary<string, int>();
-            string basepath = _options.GetParticipant(Settings.Default.MachineName).SharedPath;
+            string basepath = profile.GetParticipant(Settings.Default.MachineName).SharedPath;
             foreach (var participant in _options.Participants)
             {
                 string otherindex = Path.Combine(basepath, string.Format("{0}_index.txt", participant.MachineName));

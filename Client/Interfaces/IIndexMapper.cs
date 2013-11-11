@@ -16,7 +16,7 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         /// Compares this index to all the other indices on record.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
-        Dictionary<string, int> CompareCounts();
+        Dictionary<string, int> CompareCounts(SyncProfile profile);
 
         /// <summary>
         /// Loads all indexes for all profiles and all machines.

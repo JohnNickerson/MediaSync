@@ -14,19 +14,16 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
     {
         #region Fields
         private SharpSerializer serialiser;
-        private SyncProfile _profile;
-        private FileIndex _index;
+        private string _filename;
+        private List<FileIndex> _indexes;
         #endregion
 
         #region Constructors
-        public XmlIndexMapper(SyncProfile options)
+        public XmlIndexMapper(string filename)
         {
             serialiser = new SharpSerializer(false);
-            _profile = options;
-            _index = new FileIndex();
-            _index.MachineName = Settings.Default.MachineName;
-            _index.ProfileName = _profile.ProfileName;
-            _index.LocalBasePath = _profile.GetParticipant(Settings.Default.MachineName).LocalPath;
+            _filename = filename;
+            _indexes = new List<FileIndex>();
         }
         #endregion
 
@@ -36,34 +33,30 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         /// </summary>
         public void WriteIndex()
         {
-            Save(_index);
+            serialiser.Serialize(_indexes, _filename);
         }
 
         /// <summary>
         /// Compares this index to all the other indices on record.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
-        public Dictionary<string, int> CompareCounts()
+        public Dictionary<string, int> CompareCounts(SyncProfile options)
         {
             var FileCounts = new Dictionary<string, int>();
-            string basepath = _profile.GetParticipant(Settings.Default.MachineName).SharedPath;
-            foreach (var participant in _profile.Participants)
+
+            // For each other most recent index...
+            foreach (FileIndex f in Load(options))
             {
-                string otherindex = Path.Combine(basepath, string.Format("{0}_index.xml", participant.MachineName));
-                if (File.Exists(otherindex))
+                foreach (var idxfile in f.Files)
                 {
-                    FileIndex idx = (FileIndex)serialiser.Deserialize(otherindex);
-                    foreach (var idxfile in idx.Files)
+                    var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
+                    if (FileCounts.ContainsKey(relfile))
                     {
-                        var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
-                        if (FileCounts.ContainsKey(relfile))
-                        {
-                            FileCounts[relfile]++;
-                        }
-                        else
-                        {
-                            FileCounts[relfile] = 1;
-                        }
+                        FileCounts[relfile]++;
+                    }
+                    else
+                    {
+                        FileCounts[relfile] = 1;
                     }
                 }
             }
@@ -72,32 +65,41 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         public void Save(FileIndex index)
         {
-            serialiser.Serialize(index, Path.Combine(_profile.GetParticipant(Settings.Default.MachineName).SharedPath, string.Format("{0}_index.xml", Settings.Default.MachineName)));
+            _indexes.Add(index);
+            serialiser.Serialize(_indexes, _filename);
         }
 
         public FileIndex LoadLatest(string machine, string profile)
         {
-            throw new NotImplementedException();
+            var c = (from i in LoadAll() where i.MachineName == machine && i.ProfileName == profile orderby i.TimeStamp select i);
+            if (c.Count() > 0)
+            {
+                return c.Last();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public List<FileIndex> LoadAll()
         {
-            throw new NotImplementedException();
+            return (List<FileIndex>)serialiser.Deserialize(_filename);
         }
 
         public List<FileIndex> Load(SyncProfile profile)
         {
-            throw new NotImplementedException();
+            return (from i in LoadAll() where i.ProfileName == profile.ProfileName select i).ToList();
         }
 
         public List<FileIndex> Load(string machine)
         {
-            throw new NotImplementedException();
+            return (from i in LoadAll() where i.MachineName == machine select i).ToList();
         }
 
         public List<FileIndex> Load(string machine, SyncProfile profile)
         {
-            throw new NotImplementedException();
+            return (from i in LoadAll() where i.MachineName == machine && i.ProfileName == profile.ProfileName select i).ToList();
         }
         #endregion
 

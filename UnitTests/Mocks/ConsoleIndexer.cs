@@ -12,7 +12,7 @@ namespace UnitTests.Mocks
     {
         private List<string> _files = new List<string>();
 
-        Dictionary<string, int> IIndexMapper.CompareCounts()
+        Dictionary<string, int> IIndexMapper.CompareCounts(SyncProfile profile)
         {
             var result = new Dictionary<string, int>();
 

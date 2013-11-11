@@ -32,14 +32,14 @@ namespace AssimilationSoftware.MediaSync.Core
             if (!Settings.Default.Configured)
             {
                 Settings.Default.MachineName = configurator.ConfigureString(Settings.Default.MachineName, "Machine name");
-                Settings.Default.ProfilesLocation = configurator.ConfigurePath(Settings.Default.ProfilesLocation, "Profiles list");
+                Settings.Default.MetadataFolder = configurator.ConfigurePath(Settings.Default.MetadataFolder, "Metadata folder location");
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();
             }
             #endregion
 
-            IProfileMapper profileManager = new XmlProfileMapper(Settings.Default.ProfilesLocation);
+            IProfileMapper profileManager = new XmlProfileMapper(Path.Combine(Settings.Default.MetadataFolder, "Profiles.xml"));
             if (args.Contains("/?"))
             {
                 // Display help text.
@@ -157,7 +157,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         view.WriteLine();
                         view.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
-                        IIndexMapper indexer = new XmlIndexMapper(opts);
+                        IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
                         SyncService s = new SyncService(opts, view, indexer, copier, false);
                         s.VerboseMode = args.Contains("/d");

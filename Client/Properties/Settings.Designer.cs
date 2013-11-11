@@ -47,13 +47,13 @@ namespace AssimilationSoftware.MediaSync.Core.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Profiles.xml")]
-        public string ProfilesLocation {
+        [global::System.Configuration.DefaultSettingValueAttribute(".")]
+        public string MetadataFolder {
             get {
-                return ((string)(this["ProfilesLocation"]));
+                return ((string)(this["MetadataFolder"]));
             }
             set {
-                this["ProfilesLocation"] = value;
+                this["MetadataFolder"] = value;
             }
         }
         

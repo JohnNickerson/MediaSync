@@ -99,7 +99,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Compare this index with others.
             NumPeers = _options.Participants.Count;
-            FileCounts = _indexer.CompareCounts();
+            FileCounts = _indexer.CompareCounts(_options);
             // TODO: Construct or load an action queue.
         }
 

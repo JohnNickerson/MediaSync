@@ -23,7 +23,14 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         {
             serialiser = new SharpSerializer(false);
             _filename = filename;
-            _indexes = new List<FileIndex>();
+            if (File.Exists(_filename))
+            {
+                _indexes = LoadAll();
+            }
+            else
+            {
+                _indexes = new List<FileIndex>();
+            }
         }
         #endregion
 

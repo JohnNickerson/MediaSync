@@ -72,6 +72,18 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         public void Save(FileIndex index)
         {
+            // Replace any existing index for the same profile and machine.
+            for (int x = 0; x < _indexes.Count; )
+            {
+                if (_indexes[x].ProfileName == index.ProfileName && _indexes[x].MachineName == index.MachineName)
+                {
+                    _indexes.RemoveAt(x);
+                }
+                else
+                {
+                    x++;
+                }
+            }
             _indexes.Add(index);
             serialiser.Serialize(_indexes, _filename);
         }

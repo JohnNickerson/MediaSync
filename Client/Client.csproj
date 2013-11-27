@@ -70,6 +70,9 @@
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Interfaces\IInputView.cs" />
+    <Compile Include="Model\FileAction.cs" />
+    <Compile Include="Model\FileActionCopy.cs" />
+    <Compile Include="Model\FileActionPrune.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
     <Compile Include="Mappers\Mock\MockIndexMapper.cs" />

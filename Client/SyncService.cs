@@ -331,7 +331,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         public void Sync()
         {
-            // Setup, just in case.
+            // Check folders, just in case.
             if (!Directory.Exists(SharedPath))
             {
                 _view.WriteLine("Shared storage not available ({0}). Aborting.", SharedPath);
@@ -345,12 +345,12 @@ namespace AssimilationSoftware.MediaSync.Core
             int pulledCount = 0;
             if (_localSettings.Consumer)
 			{
-                _view.WriteLine("Pulling files from shared space.");
+                _view.WriteLine("\tPulling files from shared space.");
 				pulledCount = PullFiles();
 			}
 
             // Index local files.
-            _view.WriteLine("Indexing local files.");
+            _view.WriteLine("\tIndexing local files.");
             IndexFiles();
             // Compare this index to other indices.
             // For each index, including local,
@@ -363,7 +363,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			// TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
-            _view.WriteLine("Removing shared files that are in every client already.");
+            _view.WriteLine("\tRemoving shared files that are in every client already.");
             int prunedCount = PruneFiles();
 
             // TODO: Find delete operations to pass on?
@@ -373,7 +373,7 @@ namespace AssimilationSoftware.MediaSync.Core
             int pushedCount = 0;
 			if (_localSettings.Contributor)
 			{
-                _view.WriteLine("Pushing files.");
+                _view.WriteLine("\tPushing files.");
 				pushedCount = PushFiles();
 			}
 
@@ -391,6 +391,22 @@ namespace AssimilationSoftware.MediaSync.Core
 			}
 		}
 
+        /// <summary>
+        /// Compares indexes.
+        /// </summary>
+        internal void ShowIndexComparison()
+        {
+            // QAD way: Preserve consumer/give flags, call Sync.
+            // TODO: Count files in full sync, only here, and only elsewhere.
+            bool take = _localSettings.Consumer;
+            bool give = _localSettings.Contributor;
+
+            Sync();
+
+            _localSettings.Consumer = take;
+            _localSettings.Contributor = give;
+        }
+
 		/// <summary>
 		/// Spins until all async file copies are complete.
 		/// </summary>
@@ -402,7 +418,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			{
 				if (_copyq.Count != lastcount)
 				{
-                    _view.Status = string.Format("Waiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
+                    _view.Status = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
 					lastcount = _copyq.Count;
 				}
 				Thread.Sleep(1000);

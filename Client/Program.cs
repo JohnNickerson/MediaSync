@@ -42,6 +42,7 @@ namespace AssimilationSoftware.MediaSync.Core
             IProfileMapper profileManager = new XmlProfileMapper(Path.Combine(Settings.Default.MetadataFolder, "Profiles.xml"));
             if (args.Contains("/?"))
             {
+                #region Help text
                 // Display help text.
                 view.WriteLine();
                 view.WriteLine("Usage:");
@@ -61,9 +62,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 view.WriteLine("\t/?\t\tShows this help text.");
 
                 view.WriteLine();
+                #endregion
             }
             else if (args.Contains("addprofile"))
             {
+                #region Add profile
                 var profiles = profileManager.Load();
 
                 var profile = new SyncProfile();
@@ -80,9 +83,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.Participants.Add(participant);
                 profiles.Add(profile);
                 profileManager.Save(profiles);
+                #endregion
             }
             else if (args.Contains("joinprofile"))
             {
+                #region Join profile
                 var profiles = profileManager.Load();
                 foreach (SyncProfile p in profiles)
                 {
@@ -103,9 +108,11 @@ namespace AssimilationSoftware.MediaSync.Core
                     profile.Participants.Add(participant);
                     profileManager.Save(profiles);
                 }
+                #endregion
             }
             else if (args.Contains("leaveprofile"))
             {
+                #region Leave profile
                 var profiles = profileManager.Load();
                 foreach (SyncProfile p in profiles)
                 {
@@ -124,9 +131,11 @@ namespace AssimilationSoftware.MediaSync.Core
                         profileManager.Save(profiles);
                     }
                 }
+                #endregion
             }
             else if (args.Contains("list"))
             {
+                #region List profiles
                 // Print a summary of profiles.
                 view.WriteLine(string.Empty);
                 view.WriteLine("Current profiles ('*' indicates this machine is participating)");
@@ -142,11 +151,12 @@ namespace AssimilationSoftware.MediaSync.Core
                         var party = p.GetParticipant(Settings.Default.MachineName);
                         view.WriteLine("\t\t{0}", party.LocalPath);
                         view.WriteLine("\t\t{0}", party.SharedPath);
-                        // Indicate producer/consumer status.
+                        // Indicate give/consumer status.
                         view.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
                     }
                 }
                 view.WriteLine(string.Empty);
+                #endregion
             }
             else
             {
@@ -163,7 +173,14 @@ namespace AssimilationSoftware.MediaSync.Core
                         s.VerboseMode = args.Contains("/d");
                         try
                         {
-                            s.Sync();
+                            if (args.Contains("indexonly"))
+                            {
+                                s.ShowIndexComparison();
+                            }
+                            else
+                            {
+                                s.Sync();
+                            }
                         }
                         catch (Exception e)
                         {

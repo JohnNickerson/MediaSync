@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Model;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -59,7 +60,7 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
 
-        public Model.FileIndex CreateIndex()
+        public FileIndex CreateIndex()
         {
             throw new NotImplementedException();
         }

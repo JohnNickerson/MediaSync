@@ -342,11 +342,11 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
-            int pulledCount = 0;
+            PulledCount = 0;
             if (_localSettings.Consumer)
 			{
                 _view.WriteLine("\tPulling files from shared space.");
-				pulledCount = PullFiles();
+				PulledCount = PullFiles();
 			}
 
             // Index local files.
@@ -364,21 +364,21 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Check for files found in all indexes and in storage, and remove them.
             _view.WriteLine("\tRemoving shared files that are in every client already.");
-            int prunedCount = PruneFiles();
+            PrunedCount = PruneFiles();
 
             // TODO: Find delete operations to pass on?
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
-            int pushedCount = 0;
+            PushedCount = 0;
 			if (_localSettings.Contributor)
 			{
                 _view.WriteLine("\tPushing files.");
-				pushedCount = PushFiles();
+				PushedCount = PushFiles();
 			}
 
             // Report a summary of actions taken.
-            _view.WriteLine("Pulled: {0}\tPushed: {1}\tPruned: {2}", pulledCount, pushedCount, prunedCount);
+            _view.WriteLine("Pulled: {0}\tPushed: {1}\tPruned: {2}", PulledCount, PushedCount, PrunedCount);
 
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)
@@ -424,6 +424,12 @@ namespace AssimilationSoftware.MediaSync.Core
 				Thread.Sleep(1000);
 			}
 		}
+        #endregion
+
+        #region Properties
+        public int PulledCount { get; set; }
+        public int PushedCount { get; set; }
+        public int PrunedCount { get; set; }
         #endregion
     }
 }

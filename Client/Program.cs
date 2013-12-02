@@ -40,6 +40,7 @@ namespace AssimilationSoftware.MediaSync.Core
             #endregion
 
             IProfileMapper profileManager = new XmlProfileMapper(Path.Combine(Settings.Default.MetadataFolder, "Profiles.xml"));
+            int pulled = 0, pushed = 0, purged = 0, errors = 0;
             if (args.Contains("/?"))
             {
                 #region Help text
@@ -180,6 +181,10 @@ namespace AssimilationSoftware.MediaSync.Core
                             else
                             {
                                 s.Sync();
+                                pulled += s.PulledCount;
+                                pushed += s.PushedCount;
+                                purged += s.PrunedCount;
+                                errors += s._copyq.Errors.Count;
                             }
                         }
                         catch (Exception e)
@@ -207,6 +212,10 @@ namespace AssimilationSoftware.MediaSync.Core
             }
 
             view.WriteLine("Finished.");
+            view.WriteLine("\t{0} files pushed", pushed);
+            view.WriteLine("\t{0} files pulled", pulled);
+            view.WriteLine("\t{0} files purged", purged);
+            view.WriteLine("\t{0} errors encountered", errors);
             Debug.Flush();
         }
 

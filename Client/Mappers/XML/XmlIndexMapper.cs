@@ -35,38 +35,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         #endregion
 
         #region Methods
-        /// <summary>
-        /// Compares this index to all the other indices on record.
-        /// </summary>
-        /// <returns>A dictionary of file names to index membership counts.</returns>
-        public Dictionary<string, int> CompareCounts(SyncProfile options)
-        {
-            var FileCounts = new Dictionary<string, int>();
-
-            var indexes = Load(options);
-            // For each other most recent index...
-            foreach (var p in options.Participants)
-            {
-                var f = LoadLatest(p.MachineName, options.ProfileName);
-                if (f != null)
-                {
-                    foreach (var idxfile in f.Files)
-                    {
-                        var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
-                        if (FileCounts.ContainsKey(relfile))
-                        {
-                            FileCounts[relfile]++;
-                        }
-                        else
-                        {
-                            FileCounts[relfile] = 1;
-                        }
-                    }
-                }
-            }
-            return FileCounts;
-        }
-
         public void Save(FileIndex index)
         {
             _indexes.Add(index);

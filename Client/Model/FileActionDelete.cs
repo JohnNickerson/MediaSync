@@ -11,12 +11,12 @@ namespace AssimilationSoftware.MediaSync.Core.Model
     /// <summary>
     /// Prunes a file from shared storage after it has served its purpose.
     /// </summary>
-    public class FileActionPrune : FileAction
+    public class FileActionDelete : FileAction
     {
         public string SharedPath { get; set; }
         public string FileName { get; set; }
 
-        public FileActionPrune(SyncProfile profile, string filename) : base(profile)
+        public FileActionDelete(SyncProfile profile, string filename) : base(profile)
         {
             SharedPath = profile.GetParticipant(Settings.Default.MachineName).SharedPath;
             FileName = filename;

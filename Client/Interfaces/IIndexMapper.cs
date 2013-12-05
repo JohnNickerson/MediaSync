@@ -13,12 +13,6 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         FileIndex LoadLatest(string machine, string profile);
 
         /// <summary>
-        /// Compares this index to all the other indices on record.
-        /// </summary>
-        /// <returns>A dictionary of file names to index membership counts.</returns>
-        Dictionary<string, int> CompareCounts(SyncProfile profile);
-
-        /// <summary>
         /// Loads all indexes for all profiles and all machines.
         /// </summary>
         /// <returns></returns>

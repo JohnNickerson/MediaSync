@@ -12,18 +12,6 @@ namespace UnitTests.Mocks
     {
         private List<string> _files = new List<string>();
 
-        Dictionary<string, int> IIndexMapper.CompareCounts(SyncProfile profile)
-        {
-            var result = new Dictionary<string, int>();
-
-            for (int x = 1; x <= 10; x++)
-            {
-                result[string.Format("file{0}", x)] = x / 2;
-            }
-
-            return result;
-        }
-
         void IIndexMapper.Save(FileIndex index)
         {
             foreach (FileHeader file in index.Files)

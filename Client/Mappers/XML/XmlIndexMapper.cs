@@ -36,14 +36,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         #region Methods
         /// <summary>
-        /// Persists the index in storage.
-        /// </summary>
-        public void WriteIndex()
-        {
-            serialiser.Serialize(_indexes, _filename);
-        }
-
-        /// <summary>
         /// Compares this index to all the other indices on record.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
@@ -51,19 +43,24 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         {
             var FileCounts = new Dictionary<string, int>();
 
+            var indexes = Load(options);
             // For each other most recent index...
-            foreach (FileIndex f in Load(options))
+            foreach (var p in options.Participants)
             {
-                foreach (var idxfile in f.Files)
+                var f = LoadLatest(p.MachineName, options.ProfileName);
+                if (f != null)
                 {
-                    var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
-                    if (FileCounts.ContainsKey(relfile))
+                    foreach (var idxfile in f.Files)
                     {
-                        FileCounts[relfile]++;
-                    }
-                    else
-                    {
-                        FileCounts[relfile] = 1;
+                        var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
+                        if (FileCounts.ContainsKey(relfile))
+                        {
+                            FileCounts[relfile]++;
+                        }
+                        else
+                        {
+                            FileCounts[relfile] = 1;
+                        }
                     }
                 }
             }
@@ -72,18 +69,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         public void Save(FileIndex index)
         {
-            // Replace any existing index for the same profile and machine.
-            for (int x = 0; x < _indexes.Count; )
-            {
-                if (_indexes[x].ProfileName == index.ProfileName && _indexes[x].MachineName == index.MachineName)
-                {
-                    _indexes.RemoveAt(x);
-                }
-                else
-                {
-                    x++;
-                }
-            }
             _indexes.Add(index);
             serialiser.Serialize(_indexes, _filename);
         }
@@ -121,17 +106,5 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
             return (from i in LoadAll() where i.MachineName == machine && i.ProfileName == profile.ProfileName select i).ToList();
         }
         #endregion
-
-        #region Properties
-        /// <summary>
-        /// Gets the number of peers participating in this sync profile.
-        /// </summary>
-        public int PeerCount
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        #endregion
-
     }
 }

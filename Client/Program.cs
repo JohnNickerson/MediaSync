@@ -184,7 +184,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 pulled += s.PulledCount;
                                 pushed += s.PushedCount;
                                 purged += s.PrunedCount;
-                                errors += s._copyq.Errors.Count;
+                                errors += s.Errors.Count;
                             }
                         }
                         catch (Exception e)

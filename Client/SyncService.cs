@@ -49,7 +49,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// An asynchronous file copier.
 		/// </summary>
-		public IFileManager _copyq;
+		private IFileManager _copyq;
 
 		private SyncProfile _options;
         private ProfileParticipant _localSettings;
@@ -430,6 +430,13 @@ namespace AssimilationSoftware.MediaSync.Core
         public int PulledCount { get; set; }
         public int PushedCount { get; set; }
         public int PrunedCount { get; set; }
+        public List<Exception> Errors
+        {
+            get
+            {
+                return _copyq.Errors;
+            }
+        }
         #endregion
     }
 }

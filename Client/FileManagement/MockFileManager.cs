@@ -13,6 +13,10 @@ namespace AssimilationSoftware.MediaSync.Core
         {
         }
 
+        void IFileManager.MoveFile(string source, string target)
+        {
+        }
+
         int IFileManager.Count
         {
             get

@@ -32,7 +32,8 @@ namespace AssimilationSoftware.MediaSync.Model
         public enum SyncAction
         {
             Copy,
-            Delete
+            Delete,
+            Move
         }
         #endregion
 

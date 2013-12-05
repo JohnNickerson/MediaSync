@@ -37,6 +37,13 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         /// <param name="file">The path of the file to delete.</param>
         delegate void DeleteFileDelegate(string file);
+
+        /// <summary>
+        /// A delegate type for performing async file moves.
+        /// </summary>
+        /// <param name="source">The file to be copied.</param>
+        /// <param name="dest">The location to copy to.</param>
+        delegate void MoveFileDelegate(string source, string dest);
 		#endregion
 
 		#region Variables
@@ -96,16 +103,22 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <param name="source">The source file to copy.</param>
 		/// <param name="target">The destination where the file will be copied to.</param>
 		void IFileManager.CopyFile(string source, string target)
-		{
-			lock (InProgressActions)
-			{
-                if (!source.Equals(target) && !File.Exists(target))
-                {
-                    PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
-                    BeginThreads();
-                }
-			}
-		}
+        {
+            if (!source.Equals(target) && !File.Exists(target))
+            {
+                PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+                BeginThreads();
+            }
+        }
+
+        void IFileManager.MoveFile(string source, string target)
+        {
+            if (!source.Equals(target) && !File.Exists(target))
+            {
+                PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Move));
+                BeginThreads();
+            }
+        }
 
         private void BeginThreads()
         {
@@ -139,6 +152,13 @@ namespace AssimilationSoftware.MediaSync.Core
                             {
                                 InProgressActions.Add(df.BeginInvoke(op.SourceFile, FinishAction, df));
                             }
+                        }
+                        break;
+                    case SyncOperation.SyncAction.Move:
+                        MoveFileDelegate mf = new MoveFileDelegate(File.Move);
+                        lock (InProgressActions)
+                        {
+                            InProgressActions.Add(mf.BeginInvoke(op.SourceFile, op.TargetFile, FinishAction, mf));
                         }
                         break;
                     default:
@@ -175,6 +195,10 @@ namespace AssimilationSoftware.MediaSync.Core
                 else if (finished is DeleteDirectoryDelegate)
                 {
                     ((DeleteDirectoryDelegate)finished).EndInvoke(result);
+                }
+                else if (finished is MoveFileDelegate)
+                {
+                    ((MoveFileDelegate)finished).EndInvoke(result);
                 }
             }
             catch (Exception e)

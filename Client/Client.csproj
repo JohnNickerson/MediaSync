@@ -92,7 +92,6 @@
     <Compile Include="Mappers\Database\DbIndexMapper.cs" />
     <Compile Include="Interfaces\IIndexMapper.cs" />
     <Compile Include="Mappers\PlainText\TextIndexMapper.cs" />
-    <Compile Include="Interfaces\IOutputView.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SyncService.cs" />

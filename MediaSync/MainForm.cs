@@ -108,9 +108,15 @@ namespace AssimilationSoftware.MediaSync.WinForms
             profile.ReserveSpace = sharesize;
 
             IIndexMapper indexer = new TextIndexMapper(profile);
-            var syncer = new SyncService(profile, this, indexer, new QueuedDiskCopier(profile, indexer), SimCheckBox.Checked);
+            var syncer = new SyncService(profile, indexer, new QueuedDiskCopier(profile, indexer), SimCheckBox.Checked);
+            syncer.PropertyChanged += new PropertyChangedEventHandler(syncer_PropertyChanged);
             syncer.Sync();
             toolStripStatusLabel1.Text = "Done";
+        }
+
+        void syncer_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // TODO: Update view.
         }
 
         private ulong ReserveSize

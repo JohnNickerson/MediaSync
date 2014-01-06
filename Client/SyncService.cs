@@ -13,13 +13,14 @@ using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Mappers.Mock;
 using AssimilationSoftware.MediaSync.Core.Properties;
+using System.ComponentModel;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
     /// <summary>
     /// A photo synchronising service.
     /// </summary>
-    public class SyncService
+    public class SyncService : INotifyPropertyChanged
     {
         #region Fields
         public string LocalPath;
@@ -39,11 +40,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public bool VerboseMode;
 
-        /// <summary>
-        /// A view to show output from operations.
-        /// </summary>
-        private IOutputView _view;
-
         public List<string> FileSearches = new List<string>();
 
 		/// <summary>
@@ -55,10 +51,37 @@ namespace AssimilationSoftware.MediaSync.Core
         private ProfileParticipant _localSettings;
 
         private IIndexMapper _indexer;
+
+        private List<string> _log;
+
+        private string _status;
+        #endregion
+
+        #region Events
+        /// <summary>
+        /// An event that indicates a property has changed value.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Fires the PropertyChanged event with given arguments.
+        /// </summary>
+        /// <param name="e"></param>
+        public void RaisePropertyChanged(params string[] propnames)
+        {
+            foreach (string prop in propnames)
+            {
+                var e = new PropertyChangedEventArgs(prop);
+                if (PropertyChanged != null)
+                {
+                    PropertyChanged(this, e);
+                }
+            }
+        }
         #endregion
 
         #region Constructors
-        public SyncService(SyncProfile opts, IOutputView view, IIndexMapper indexer, IFileManager filemanager, bool simulate)
+        public SyncService(SyncProfile opts, IIndexMapper indexer, IFileManager filemanager, bool simulate)
         {
             _localSettings = opts.GetParticipant(Settings.Default.MachineName);
             LocalPath = _localSettings.LocalPath;
@@ -72,7 +95,6 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 FileSearches.Add("*.*");
             }
-            _view = view;
             _sizecache = 0;
 			_options = opts;
             if (Simulate)
@@ -85,6 +107,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 _copyq = filemanager;
                 _indexer = indexer;
             }
+            _log = new List<string>();
         }
         #endregion
 
@@ -121,16 +144,39 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         if (VerboseMode)
                         {
-                            _view.Report(new SyncOperation(dir));
+                            Report(new SyncOperation(dir));
                         }
                         _copyq.Delete(dir);
                     }
                     catch
                     {
-                        _view.WriteLine("Could not delete apparently empty folder: {0}", dir);
+                        ReportMessage("Could not delete apparently empty folder: {0}", dir);
                     }
                 }
             }
+        }
+
+        private void ReportMessage(string format, params object[] args)
+        {
+            _log.Add(string.Format(format, args));
+            RaisePropertyChanged("Log");
+        }
+
+        private void Report(SyncOperation op)
+        {
+            switch (op.Action)
+            {
+                case SyncOperation.SyncAction.Copy:
+                    _log.Add(string.Format("Copying:{2}\t{0}{2}\t->{2}\t{1}", op.SourceFile, op.TargetFile, Environment.NewLine));
+                    break;
+                case SyncOperation.SyncAction.Delete:
+                    _log.Add(string.Format("Deleting {0}", op.TargetFile));
+                    break;
+                default:
+                    _log.Add(string.Format("Unknown sync action: {0}", op.Action));
+                    break;
+            }
+            RaisePropertyChanged("Log");
         }
 
         /// <summary>
@@ -141,7 +187,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // No point trying to push files when they'll all be ignored.
             if (NumPeers == 1)
             {
-                _view.WriteLine("No peers, no point.");
+                ReportMessage("No peers, no point.");
                 return 0;
             }
 
@@ -155,7 +201,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // If the size allocation has been exceeded, stop.
                 if (_sizecache > SizeLimit)
                 {
-                    _view.WriteLine("Shared space exhausted ({0}). Stopping for now.", VerbaliseBytes(_sizecache));
+                    ReportMessage("Shared space exhausted ({0}). Stopping for now.", VerbaliseBytes(_sizecache));
                     break;
                 }
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
@@ -176,7 +222,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 string targetdir = Path.GetDirectoryName(targetfile);
                                 if (VerboseMode)
                                 {
-                                    _view.Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
+                                    Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
                                 }
                                 _copyq.EnsureFolder(targetdir);
                                 string fullpathlocal = Path.Combine(LocalPath, filename_local);
@@ -187,22 +233,22 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else
                             {
-                                _view.WriteLine("Excluding file {0} because the file copy manager says no.", filename);
+                                ReportMessage("Excluding file {0} because the file copy manager says no.", filename);
                             }
                         }
                         else
                         {
-                            //_view.WriteLine("Excluding file {0} because it is already in shared storage.", file);
+                            //ReportMessage("Excluding file {0} because it is already in shared storage.", file);
                         }
                     }
                     else
                     {
-                        //_view.WriteLine("Excluding file {0} because it does not exist here.", file);
+                        //ReportMessage("Excluding file {0} because it does not exist here.", file);
                     }
                 }
                 else
                 {
-                    //_view.WriteLine("Excluding file {0} because it is already everywhere.", file);
+                    //ReportMessage("Excluding file {0} because it is already everywhere.", file);
                 }
             }
 			WaitForCopies();
@@ -263,7 +309,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             {
                                 if (VerboseMode)
                                 {
-                                    _view.Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                                    Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
                                 }
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
                                 _copyq.CopyFile(incoming, targetfile);
@@ -271,17 +317,17 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             catch (Exception)
                             {
-                                _view.WriteLine("Could not copy file: {0}->{1}", incoming, targetfile);
+                                ReportMessage("Could not copy file: {0}->{1}", incoming, targetfile);
                             }
                         }
                         else if (VerboseMode)
                         {
-                            _view.WriteLine("Skipping file {0}, already exists.", relativepath);
+                            ReportMessage("Skipping file {0}, already exists.", relativepath);
                         }
                     }
                     else
                     {
-                        _view.WriteLine("Error: source file location for move is target location.");
+                        ReportMessage("Error: source file location for move is target location.");
                     }
                 }
             }
@@ -307,7 +353,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         if (VerboseMode)
                         {
-                            _view.Report(new SyncOperation(filename));
+                            Report(new SyncOperation(filename));
                         }
                         // Remove it from shared storage.
                         try
@@ -317,7 +363,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                         catch (Exception e)
                         {
-                            _view.WriteLine("Error deleting file: {0}", e.Message);
+                            ReportMessage("Error deleting file: {0}", e.Message);
                         }
                     }
                 }
@@ -334,7 +380,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // Check folders, just in case.
             if (!Directory.Exists(SharedPath))
             {
-                _view.WriteLine("Shared storage not available ({0}). Aborting.", SharedPath);
+                ReportMessage("Shared storage not available ({0}). Aborting.", SharedPath);
                 return;
             }
             // Reset size cache in case this is a multiple-run and other changes have been made.
@@ -345,12 +391,12 @@ namespace AssimilationSoftware.MediaSync.Core
             PulledCount = 0;
             if (_localSettings.Consumer)
 			{
-                _view.WriteLine("\tPulling files from shared space.");
+                ReportMessage("\tPulling files from shared space.");
 				PulledCount = PullFiles();
 			}
 
             // Index local files.
-            _view.WriteLine("\tIndexing local files.");
+            ReportMessage("\tIndexing local files.");
             IndexFiles();
             // Compare this index to other indices.
             // For each index, including local,
@@ -363,7 +409,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			// TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
-            _view.WriteLine("\tRemoving shared files that are in every client already.");
+            ReportMessage("\tRemoving shared files that are in every client already.");
             PrunedCount = PruneFiles();
 
             // TODO: Find delete operations to pass on?
@@ -373,20 +419,20 @@ namespace AssimilationSoftware.MediaSync.Core
             PushedCount = 0;
 			if (_localSettings.Contributor)
 			{
-                _view.WriteLine("\tPushing files.");
+                ReportMessage("\tPushing files.");
 				PushedCount = PushFiles();
 			}
 
             // Report a summary of actions taken.
-            _view.WriteLine("Pulled: {0}\tPushed: {1}\tPruned: {2}", PulledCount, PushedCount, PrunedCount);
+            ReportMessage("Pulled: {0}\tPushed: {1}\tPruned: {2}", PulledCount, PushedCount, PrunedCount);
 
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)
 			{
-				_view.Status = "Errors encountered:";
+				Status = "Errors encountered:";
 				for (int x = 0; x < _copyq.Errors.Count; x++)
 				{
-					_view.WriteLine(_copyq.Errors[x].Message);
+					ReportMessage(_copyq.Errors[x].Message);
 				}
 			}
 		}
@@ -418,7 +464,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			{
 				if (_copyq.Count != lastcount)
 				{
-                    _view.Status = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
+                    Status = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
 					lastcount = _copyq.Count;
 				}
 				Thread.Sleep(1000);
@@ -435,6 +481,31 @@ namespace AssimilationSoftware.MediaSync.Core
             get
             {
                 return _copyq.Errors;
+            }
+        }
+        public List<string> Log
+        {
+            get
+            {
+                return _log;
+            }
+            set
+            {
+                _log = value;
+                RaisePropertyChanged("Log");
+            }
+        }
+
+        public string Status
+        {
+            get
+            {
+                return _status;
+            }
+            set
+            {
+                _status = value;
+                RaisePropertyChanged("Status");
             }
         }
         #endregion

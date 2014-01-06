@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaSync", "MediaSync\MediaSync.csproj", "{54167779-6BAC-441C-BF93-5A6715DBEA60}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{139C4F27-D42E-4EE1-A420-5EC3BB83099C}"
 EndProject
 Global
@@ -30,16 +28,6 @@ Global
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}.Release|x86.ActiveCfg = Release|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|Any CPU.Build.0 = Release|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{54167779-6BAC-441C-BF93-5A6715DBEA60}.Release|x86.ActiveCfg = Release|Any CPU
 		{139C4F27-D42E-4EE1-A420-5EC3BB83099C}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{139C4F27-D42E-4EE1-A420-5EC3BB83099C}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{139C4F27-D42E-4EE1-A420-5EC3BB83099C}.Debug|Mixed Platforms.Build.0 = Debug|x86

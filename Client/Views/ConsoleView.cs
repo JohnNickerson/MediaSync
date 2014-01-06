@@ -11,7 +11,7 @@ namespace AssimilationSoftware.MediaSync.Core.Views
     /// <summary>
     /// A view that writes to the console.
     /// </summary>
-    class ConsoleView : IOutputView, IInputView
+    class ConsoleView : IInputView
     {
         #region Methods
         /// <summary>
@@ -19,12 +19,12 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         /// </summary>
         /// <param name="format">A string to output, optionally including format parameters.</param>
         /// <param name="args">Format parameters to fill in to the string.</param>
-        void IOutputView.WriteLine(string format, params object[] args)
+        void WriteLine(string format, params object[] args)
         {
             Console.WriteLine(format, args);
         }
 
-        void IOutputView.WriteLine()
+        void WriteLine()
         {
             Console.WriteLine();
         }
@@ -33,7 +33,7 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         /// Reports a single file sync operation via console output.
         /// </summary>
         /// <param name="op">The sync operation to report.</param>
-        void IOutputView.Report(SyncOperation op)
+        void Report(SyncOperation op)
         {
             switch (op.Action)
             {
@@ -133,7 +133,7 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         #endregion
 
         #region Properties
-        string IOutputView.Status
+        string Status
         {
             set
             {

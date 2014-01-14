@@ -2,19 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Configuration;
-using System.Data.SqlServerCe;
-using System.Data;
-using System.IO;
-using AssimilationSoftware.MediaSync.Core.Views;
-using AssimilationSoftware.MediaSync.Core.Properties;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Mappers.PlainText;
-using AssimilationSoftware.MediaSync.Mappers.Xml;
+using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
+using System.IO;
+using AssimilationSoftware.MediaSync.Console.Properties;
+using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Mappers.Xml;
+using AssimilationSoftware.MediaSync.Model;
 
-namespace AssimilationSoftware.MediaSync.Core
+namespace AssimilationSoftware.MediaSync.Console
 {
     class Program
     {
@@ -44,24 +40,24 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 #region Help text
                 // Display help text.
-                Console.WriteLine();
-                Console.WriteLine("Usage:");
-                Console.WriteLine("client.exe [addprofile|joinprofile|leaveprofile|list|reconfigure] [/d] [/?]");
-                Console.WriteLine();
-                Console.WriteLine("\taddprofile\tAdd a new sync profile. Also adds this machine");
-                Console.WriteLine("\t\t\tas a participant.");
-                Console.WriteLine("\tjoinprofile\tJoins an existing profile as a participant.");
-                Console.WriteLine("\tleaveprofile\tStops participating in an existing profile.");
-                Console.WriteLine("\tlist\t\tLists active profiles by name, indicating whether this");
-                Console.WriteLine("\t\t\tmachine is participating.");
-                Console.WriteLine("\t\t\tCan also be used with the '/d' switch to see directory");
-                Console.WriteLine("\t\t\tconfiguration and contributor/consumer status.");
-                Console.WriteLine("\treconfigure\tAllows reconfiguration of machine name and profile");
-                Console.WriteLine("\t\t\tstorage location.");
-                Console.WriteLine("\t/d\t\tShow detailed activity reports or configuration.");
-                Console.WriteLine("\t/?\t\tShows this help text.");
+                System.Console.WriteLine();
+                System.Console.WriteLine("Usage:");
+                System.Console.WriteLine("client.exe [addprofile|joinprofile|leaveprofile|list|reconfigure] [/d] [/?]");
+                System.Console.WriteLine();
+                System.Console.WriteLine("\taddprofile\tAdd a new sync profile. Also adds this machine");
+                System.Console.WriteLine("\t\t\tas a participant.");
+                System.Console.WriteLine("\tjoinprofile\tJoins an existing profile as a participant.");
+                System.Console.WriteLine("\tleaveprofile\tStops participating in an existing profile.");
+                System.Console.WriteLine("\tlist\t\tLists active profiles by name, indicating whether this");
+                System.Console.WriteLine("\t\t\tmachine is participating.");
+                System.Console.WriteLine("\t\t\tCan also be used with the '/d' switch to see directory");
+                System.Console.WriteLine("\t\t\tconfiguration and contributor/consumer status.");
+                System.Console.WriteLine("\treconfigure\tAllows reconfiguration of machine name and profile");
+                System.Console.WriteLine("\t\t\tstorage location.");
+                System.Console.WriteLine("\t/d\t\tShow detailed activity reports or configuration.");
+                System.Console.WriteLine("\t/?\t\tShows this help text.");
 
-                Console.WriteLine();
+                System.Console.WriteLine();
                 #endregion
             }
             else if (args.Contains("addprofile"))
@@ -91,7 +87,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 var profiles = profileManager.Load();
                 foreach (SyncProfile p in profiles)
                 {
-                    Console.WriteLine(p.ProfileName);
+                    System.Console.WriteLine(p.ProfileName);
                 }
                 string profilename = configurator.ConfigureString("", "Profile to join");
                 if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
@@ -104,7 +100,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     participant.Consumer = true;
                     participant.Contributor = true;
                     participant.MachineName = Settings.Default.MachineName;
-                    
+
                     profile.Participants.Add(participant);
                     profileManager.Save(profiles);
                 }
@@ -116,7 +112,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 var profiles = profileManager.Load();
                 foreach (SyncProfile p in profiles)
                 {
-                    Console.WriteLine(p.ProfileName);
+                    System.Console.WriteLine(p.ProfileName);
                 }
                 string profilename = configurator.ConfigureString("", "Profile to leave");
                 if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
@@ -137,25 +133,25 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 #region List profiles
                 // Print a summary of profiles.
-                Console.WriteLine(string.Empty);
-                Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
-                Console.WriteLine(string.Empty);
+                System.Console.WriteLine(string.Empty);
+                System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
+                System.Console.WriteLine(string.Empty);
                 var profiles = profileManager.Load();
                 foreach (SyncProfile p in profiles)
                 {
                     var star = p.ContainsParticipant(Settings.Default.MachineName);
-                    Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
+                    System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
                     // Show participating paths if detailed view is selected.
                     if (args.Contains("/d") && star)
                     {
                         var party = p.GetParticipant(Settings.Default.MachineName);
-                        Console.WriteLine("\t\t{0}", party.LocalPath);
-                        Console.WriteLine("\t\t{0}", party.SharedPath);
+                        System.Console.WriteLine("\t\t{0}", party.LocalPath);
+                        System.Console.WriteLine("\t\t{0}", party.SharedPath);
                         // Indicate give/consumer status.
-                        Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
+                        System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
                     }
                 }
-                Console.WriteLine(string.Empty);
+                System.Console.WriteLine(string.Empty);
                 #endregion
             }
             else
@@ -164,8 +160,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     if (opts.ContainsParticipant(Settings.Default.MachineName))
                     {
-                        Console.WriteLine();
-                        Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+                        System.Console.WriteLine();
+                        System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
                         IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
@@ -189,8 +185,8 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("Could not sync.");
-                            Console.WriteLine(e.Message);
+                            System.Console.WriteLine("Could not sync.");
+                            System.Console.WriteLine(e.Message);
                             var x = e;
                             while (x != null)
                             {
@@ -205,17 +201,17 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
-                        Console.WriteLine(string.Empty);
-                        Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                        System.Console.WriteLine(string.Empty);
+                        System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
                     }
                 }
             }
 
-            Console.WriteLine("Finished.");
-            Console.WriteLine("\t{0} files pushed", pushed);
-            Console.WriteLine("\t{0} files pulled", pulled);
-            Console.WriteLine("\t{0} files pruned", pruned);
-            Console.WriteLine("\t{0} errors encountered", errors);
+            System.Console.WriteLine("Finished.");
+            System.Console.WriteLine("\t{0} files pushed", pushed);
+            System.Console.WriteLine("\t{0} files pulled", pulled);
+            System.Console.WriteLine("\t{0} files pruned", pruned);
+            System.Console.WriteLine("\t{0} errors encountered", errors);
             Debug.Flush();
         }
 
@@ -225,50 +221,12 @@ namespace AssimilationSoftware.MediaSync.Core
             switch (e.PropertyName)
             {
                 case "Log":
-                    Console.WriteLine(s.Log.Last());
+                    System.Console.WriteLine(s.Log.Last());
                     break;
                 case "Status":
-                    Console.WriteLine(s.Status);
+                    System.Console.WriteLine(s.Status);
                     break;
             }
         }
-
-		public void ConnectListAndSaveSQLCompactExample()
-		{
-			// Create a connection to the file datafile.sdf in the program folder
-			string dbfile = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).DirectoryName + "\\index.sdf";
-			SqlCeConnection connection = new SqlCeConnection("datasource=" + dbfile);
-
-			// Read all rows from the table test_table into a dataset (note, the adapter automatically opens the connection)
-			SqlCeDataAdapter adapter = new SqlCeDataAdapter("select * from Profiles", connection);
-			DataSet data = new DataSet();
-			adapter.Fill(data);
-
-			// Add a row to the test_table (assume that table consists of a text column)
-			DataRow r = data.Tables[0].NewRow();
-			r["ID"] = 1;
-			r["Machine"] = Environment.MachineName;
-			r["Profile"] = "Music";
-			r["MediaPath"] = Environment.SpecialFolder.MyMusic;
-			r["SharedPath"] = "J:\\Music";
-			r["SharedSpace"] = 4000000000;
-			r["Contributor"] = true;
-			r["Consumer"] = true;
-			data.Tables[0].Rows.Add(r);
-			//data.Tables[0].Rows.Add(new object[] { "New row added by code" });
-
-			// Save data back to the database
-			//adapter.Update(data);
-			adapter.InsertCommand = new SqlCeCommand("Insert Into Profiles (Machine, Profile, MediaPath, SharedPath, SharedSpace, Contributor, Consumer) Values (@Machine, @Profile, @MediaPath, @SharedPath, @SharedSpace, @Contributor, @Consumer)", connection);
-			foreach (DataColumn col in r.Table.Columns)
-			{
-				adapter.InsertCommand.Parameters.AddWithValue(string.Format("@{0}", col.ColumnName), r[col]);
-			}
-			connection.Open();
-			adapter.InsertCommand.ExecuteNonQuery();
-
-			// Close 
-			connection.Close();
-		}
     }
 }

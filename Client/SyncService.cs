@@ -8,7 +8,6 @@ using System.Threading;
 using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
-using AssimilationSoftware.MediaSync.Core.Views;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Mappers.Mock;
@@ -440,7 +439,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Compares indexes.
         /// </summary>
-        internal void ShowIndexComparison()
+        public void ShowIndexComparison()
         {
             // QAD way: Preserve consumer/give flags, call Sync.
             // TODO: Count files in full sync, only here, and only elsewhere.

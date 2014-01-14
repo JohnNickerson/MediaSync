@@ -70,6 +70,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         public void Save(FileIndex index)
         {
             _indexes.Add(index);
+            // TODO: Prune all but the most recent two indexes for the same machine and profile.
             serialiser.Serialize(_indexes, _filename);
         }
 

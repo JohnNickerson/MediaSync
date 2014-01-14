@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Core.Properties;
+using AssimilationSoftware.MediaSync.Core;
+using AssimilationSoftware.MediaSync.Console.Properties;
 
-namespace AssimilationSoftware.MediaSync.Core.Views
+namespace AssimilationSoftware.MediaSync.Console
 {
     /// <summary>
     /// A view that writes to the console.
     /// </summary>
-    class ConsoleView : IInputView
+    public class ConsoleView : IInputView
     {
         #region Methods
         /// <summary>
@@ -21,12 +22,12 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         /// <param name="args">Format parameters to fill in to the string.</param>
         void WriteLine(string format, params object[] args)
         {
-            Console.WriteLine(format, args);
+            System.Console.WriteLine(format, args);
         }
 
         void WriteLine()
         {
-            Console.WriteLine();
+            System.Console.WriteLine();
         }
 
         /// <summary>
@@ -38,13 +39,13 @@ namespace AssimilationSoftware.MediaSync.Core.Views
             switch (op.Action)
             {
                 case SyncOperation.SyncAction.Copy:
-                    Console.WriteLine("Copying:{2}\t{0}{2}\t->{2}\t{1}", op.SourceFile, op.TargetFile, Environment.NewLine);
+                    System.Console.WriteLine("Copying:{2}\t{0}{2}\t->{2}\t{1}", op.SourceFile, op.TargetFile, Environment.NewLine);
                     break;
                 case SyncOperation.SyncAction.Delete:
-                    Console.WriteLine("Deleting {0}", op.TargetFile);
+                    System.Console.WriteLine("Deleting {0}", op.TargetFile);
                     break;
                 default:
-                    Console.WriteLine("Unknown sync action: {0}", op.Action);
+                    System.Console.WriteLine("Unknown sync action: {0}", op.Action);
                     break;
             }
         }
@@ -62,14 +63,14 @@ namespace AssimilationSoftware.MediaSync.Core.Views
             path = path.Replace("{MyPictures}", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
             path = path.Replace("{MachineName}", Settings.Default.MachineName);
 
-            Console.WriteLine("Configure path to {0}:", prompt);
-            Console.WriteLine("Type correct value or [Enter] to accept default.");
-            Console.WriteLine(path);
-            var response = Console.ReadLine();
+            System.Console.WriteLine("Configure path to {0}:", prompt);
+            System.Console.WriteLine("Type correct value or [Enter] to accept default.");
+            System.Console.WriteLine(path);
+            var response = System.Console.ReadLine();
             if (response.Trim().Length > 0)
             {
                 path = response;
-                Console.WriteLine();
+                System.Console.WriteLine();
             }
             return path;
         }
@@ -84,14 +85,14 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         {
             value = value.Replace("{MachineName}", Environment.MachineName);
 
-            Console.WriteLine("Configure string value for {0}:", prompt);
-            Console.WriteLine("Type correct value or [Enter] to accept default.");
-            Console.WriteLine(value);
-            var response = Console.ReadLine();
+            System.Console.WriteLine("Configure string value for {0}:", prompt);
+            System.Console.WriteLine("Type correct value or [Enter] to accept default.");
+            System.Console.WriteLine(value);
+            var response = System.Console.ReadLine();
             if (response.Trim().Length > 0)
             {
                 value = response;
-                Console.WriteLine();
+                System.Console.WriteLine();
             }
             return value;
         }
@@ -105,10 +106,10 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         public ulong ConfigureULong(ulong value, string prompt)
         {
             ulong configval = value;
-            Console.WriteLine("Configure value for {0}:", prompt);
-            Console.WriteLine("Type correct value or [Enter] to accept default.");
-            Console.WriteLine(value);
-            var response = Console.ReadLine();
+            System.Console.WriteLine("Configure value for {0}:", prompt);
+            System.Console.WriteLine("Type correct value or [Enter] to accept default.");
+            System.Console.WriteLine(value);
+            var response = System.Console.ReadLine();
             if (response.Trim().Length > 0)
             {
                 if (ulong.TryParse(response, out configval))
@@ -117,7 +118,7 @@ namespace AssimilationSoftware.MediaSync.Core.Views
                 }
                 else
                 {
-                    Console.WriteLine("Could not parse value. Using default.");
+                    System.Console.WriteLine("Could not parse value. Using default.");
                 }
             }
             return configval;
@@ -128,7 +129,7 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         /// </summary>
         public void WaitForKey()
         {
-            Console.ReadKey();
+            System.Console.ReadKey();
         }
         #endregion
 
@@ -137,7 +138,7 @@ namespace AssimilationSoftware.MediaSync.Core.Views
         {
             set
             {
-                Console.WriteLine(value);
+                System.Console.WriteLine(value);
             }
         }
         #endregion

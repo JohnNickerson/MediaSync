@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaSync.Core", "Client\MediaSync.Core.csproj", "{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{139C4F27-D42E-4EE1-A420-5EC3BB83099C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaSync.WpfGui", "MediaSync.WpfGui\MediaSync.WpfGui.csproj", "{2E9ED227-1781-4895-8DA1-4159F4A4F08D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaSync.Console", "MediaSync.Console\MediaSync.Console.csproj", "{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -38,6 +42,26 @@ Global
 		{139C4F27-D42E-4EE1-A420-5EC3BB83099C}.Release|Mixed Platforms.Build.0 = Release|x86
 		{139C4F27-D42E-4EE1-A420-5EC3BB83099C}.Release|x86.ActiveCfg = Release|x86
 		{139C4F27-D42E-4EE1-A420-5EC3BB83099C}.Release|x86.Build.0 = Release|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Debug|x86.ActiveCfg = Debug|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Debug|x86.Build.0 = Debug|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Release|Any CPU.ActiveCfg = Release|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Release|Mixed Platforms.Build.0 = Release|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Release|x86.ActiveCfg = Release|x86
+		{2E9ED227-1781-4895-8DA1-4159F4A4F08D}.Release|x86.Build.0 = Release|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Debug|x86.ActiveCfg = Debug|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Debug|x86.Build.0 = Debug|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Release|Any CPU.ActiveCfg = Release|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Release|Mixed Platforms.Build.0 = Release|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Release|x86.ActiveCfg = Release|x86
+		{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

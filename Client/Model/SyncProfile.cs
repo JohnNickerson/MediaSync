@@ -34,7 +34,7 @@ namespace AssimilationSoftware.MediaSync.Model
 		#endregion
 
         #region Methods
-        internal ProfileParticipant GetParticipant(string machine)
+        public ProfileParticipant GetParticipant(string machine)
         {
             var localsettings = from p in Participants where p.MachineName == machine select p;
             if (localsettings.Count() > 0)
@@ -47,7 +47,7 @@ namespace AssimilationSoftware.MediaSync.Model
             }
         }
 
-        internal bool ContainsParticipant(string machine)
+        public bool ContainsParticipant(string machine)
         {
             return (from p in Participants where p.MachineName == machine select p).Count() > 0;
         }

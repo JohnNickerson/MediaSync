@@ -4,7 +4,7 @@ namespace AssimilationSoftware.MediaSync.Core
     /// <summary>
     /// An interface for gathering input from the user.
     /// </summary>
-    interface IInputView
+    public interface IInputView
     {
 
         /// <summary>

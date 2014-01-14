@@ -104,7 +104,7 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
         /// <summary>
-        /// Compares this index to all the other indices on record.
+        /// Compares all index contents to get a count of file existences.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
         public Dictionary<string, int> CompareCounts(SyncProfile options)

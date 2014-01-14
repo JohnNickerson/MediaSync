@@ -26,11 +26,6 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             this._options = options;
         }
 
-        Dictionary<string, int> IIndexMapper.CompareCounts(SyncProfile profile)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Save(FileIndex index)
         {
             SqlCeConnection connection = new SqlCeConnection(_connString);

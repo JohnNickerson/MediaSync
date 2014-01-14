@@ -16,6 +16,8 @@ namespace AssimilationSoftware.MediaSync.Interfaces
 		/// <param name="target">The new location to copy to.</param>
 		void CopyFile(string source, string target);
 
+        void MoveFile(string source, string target);
+
         ulong SharedPathSize();
 
         bool ShouldCopy(string filename);

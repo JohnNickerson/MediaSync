@@ -8,16 +8,16 @@ using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    class FileActionCreate : FileAction
+    public class FileActionMove : FileAction
     {
         public string FileName { get; set; }
         private string sharedpath;
         private string localpath;
 
-        public FileActionCreate(SyncProfile profile, string filename) : base(profile)
+        public FileActionMove(SyncProfile profile, string filename) : base(profile)
         {
-            sharedpath = profile.GetParticipant(Settings.Default.MachineName).SharedPath;
-            localpath = profile.GetParticipant(Settings.Default.MachineName).LocalPath;
+            sharedpath = profile.GetParticipant(MachineName).SharedPath;
+            localpath = profile.GetParticipant(MachineName).LocalPath;
             FileName = filename;
         }
 

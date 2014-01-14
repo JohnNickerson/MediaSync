@@ -121,8 +121,39 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Compare this index with others.
             NumPeers = _options.Participants.Count;
-            FileCounts = _indexer.CompareCounts(_options);
+            FileCounts = CompareCounts(_options);
             // TODO: Construct or load an action queue.
+        }
+
+        /// <summary>
+        /// Compares all index contents to get a count of file existences.
+        /// </summary>
+        /// <returns>A dictionary of file names to index membership counts.</returns>
+        public Dictionary<string, int> CompareCounts(SyncProfile options)
+        {
+            var FileCounts = new Dictionary<string, int>();
+
+            // For each other most recent index...
+            foreach (var p in options.Participants)
+            {
+                var f = _indexer.LoadLatest(p.MachineName, options.ProfileName);
+                if (f != null)
+                {
+                    foreach (var idxfile in f.Files)
+                    {
+                        var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
+                        if (FileCounts.ContainsKey(relfile))
+                        {
+                            FileCounts[relfile]++;
+                        }
+                        else
+                        {
+                            FileCounts[relfile] = 1;
+                        }
+                    }
+                }
+            }
+            return FileCounts;
         }
 
         /// <summary>

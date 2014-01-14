@@ -25,28 +25,42 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <param name="source">The file to be copied.</param>
 		/// <param name="dest">The location to copy to.</param>
 		delegate void CopyFileDelegate(string source, string dest);
+
+        /// <summary>
+        /// A delegate type for performing asynchronous directory deletions.
+        /// </summary>
+        /// <param name="dir">The path of the directory to delete.</param>
+        delegate void DeleteDirectoryDelegate(string dir);
+
+        /// <summary>
+        /// A delegate type for performing asynchronous file deletions.
+        /// </summary>
+        /// <param name="file">The path of the file to delete.</param>
+        delegate void DeleteFileDelegate(string file);
+
+        /// <summary>
+        /// A delegate type for performing async file moves.
+        /// </summary>
+        /// <param name="source">The file to be copied.</param>
+        /// <param name="dest">The location to copy to.</param>
+        delegate void MoveFileDelegate(string source, string dest);
 		#endregion
 
 		#region Variables
 		/// <summary>
-		/// A list of asynchronous file copy results.
+		/// A list of in-progress file copy actions.
 		/// </summary>
-		private List<IAsyncResult> CopyActions;
+		private List<IAsyncResult> InProgressActions;
 
 		/// <summary>
 		/// Sync operations waiting to go ahead.
 		/// </summary>
-		private Queue<SyncOperation> PendingCopies;
+		private Queue<SyncOperation> PendingFileActions;
 
 		/// <summary>
 		/// The maximum number of simultaneous copies to perform.
 		/// </summary>
-		private int MaxCopies;
-
-
-        private List<IAsyncResult> IndexActions;
-        private Queue<string> PendingIndexes;
-        private int MaxIndexes;
+		private int MaxActions;
 
         private List<Exception> _errors;
 
@@ -63,8 +77,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private SyncProfile _profile;
         private ProfileParticipant _localSettings;
-
-        private IIndexMapper _indexer;
 		#endregion
 
 		#region Constructors
@@ -73,19 +85,14 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// </summary>
 		public QueuedDiskCopier(SyncProfile profile, IIndexMapper indexer)
 		{
-			CopyActions = new List<IAsyncResult>();
-			PendingCopies = new Queue<SyncOperation>();
-			MaxCopies = 2;
-
-            IndexActions = new List<IAsyncResult>();
-            PendingIndexes = new Queue<string>();
-            MaxIndexes = 2;
+			InProgressActions = new List<IAsyncResult>();
+			PendingFileActions = new Queue<SyncOperation>();
+			MaxActions = 2;
 
 			_errors = new List<Exception>();
 
             _profile = profile;
             _localSettings = profile.GetParticipant(Settings.Default.MachineName);
-            _indexer = indexer;
 		}
 		#endregion
 
@@ -96,48 +103,110 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <param name="source">The source file to copy.</param>
 		/// <param name="target">The destination where the file will be copied to.</param>
 		void IFileManager.CopyFile(string source, string target)
-		{
-			lock (CopyActions)
-			{
-                if (!source.Equals(target) && !File.Exists(target))
+        {
+            if (!source.Equals(target) && !File.Exists(target))
+            {
+                PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+                BeginThreads();
+            }
+        }
+
+        void IFileManager.MoveFile(string source, string target)
+        {
+            if (!source.Equals(target) && !File.Exists(target))
+            {
+                PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Move));
+                BeginThreads();
+            }
+        }
+
+        private void BeginThreads()
+        {
+            while (InProgressActions.Count < MaxActions)
+            {
+                // Pop a pending action off the queue.
+                var op = PendingFileActions.Dequeue();
+                // Kick off a thread.
+                switch (op.Action)
                 {
-                    if (CopyActions.Count < MaxCopies)
-                    {
+                    case SyncOperation.SyncAction.Copy:
                         CopyFileDelegate cf = new CopyFileDelegate(File.Copy);
-                        CopyActions.Add(cf.BeginInvoke(source, target, FinishCopy, cf));
-                    }
-                    else
-                    {
-                        PendingCopies.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
-                    }
+                        lock (InProgressActions)
+                        {
+                            InProgressActions.Add(cf.BeginInvoke(op.SourceFile, op.TargetFile, FinishAction, cf));
+                        }
+                        break;
+                    case SyncOperation.SyncAction.Delete:
+                        if (Directory.Exists(op.SourceFile))
+                        {
+                            DeleteDirectoryDelegate dd = new DeleteDirectoryDelegate(Directory.Delete);
+                            lock (InProgressActions)
+                            {
+                                InProgressActions.Add(dd.BeginInvoke(op.SourceFile, FinishAction, dd));
+                            }
+                        }
+                        else if (File.Exists(op.SourceFile))
+                        {
+                            DeleteFileDelegate df = new DeleteFileDelegate(File.Delete);
+                            lock (InProgressActions)
+                            {
+                                InProgressActions.Add(df.BeginInvoke(op.SourceFile, FinishAction, df));
+                            }
+                        }
+                        break;
+                    case SyncOperation.SyncAction.Move:
+                        MoveFileDelegate mf = new MoveFileDelegate(File.Move);
+                        lock (InProgressActions)
+                        {
+                            InProgressActions.Add(mf.BeginInvoke(op.SourceFile, op.TargetFile, FinishAction, mf));
+                        }
+                        break;
+                    default:
+                        break;
                 }
-			}
-		}
+            }
+        }
+
 		/// <summary>
-		/// Tidies up after a copy operation is complete.
+		/// Tidies up after a file operation is complete.
 		/// </summary>
-		/// <param name="result">The asynchronous details of the copy operation.</param>
-		public void FinishCopy(IAsyncResult result)
-		{
-			lock (CopyActions)
-			{
-				CopyActions.Remove(result);
-				while (CopyActions.Count < MaxCopies && PendingCopies.Count > 0)
-				{
-					SyncOperation op = PendingCopies.Dequeue();
-					((IFileManager)this).CopyFile(op.SourceFile, op.TargetFile);
-				}
-			}
-			try
-			{
-				CopyFileDelegate cf = (CopyFileDelegate)result.AsyncState;
-				cf.EndInvoke(result);
-			}
-			catch (Exception e)
-			{
-				_errors.Add(e);
-			}
-		}
+		/// <param name="result">The asynchronous details of the file operation.</param>
+        /// <remarks>
+        /// I'd rather this be a generic method to avoid the type conditionals, but I can't figure out the root type for the delegates.
+        /// It's not System.Delegate because why would it be?
+        /// </remarks>
+        public void FinishAction(IAsyncResult result)
+        {
+            lock (InProgressActions)
+            {
+                InProgressActions.Remove(result);
+            }
+            try
+            {
+                object finished = result.AsyncState;
+                if (finished is CopyFileDelegate)
+                {
+                    ((CopyFileDelegate)finished).EndInvoke(result);
+                }
+                else if (finished is DeleteFileDelegate)
+                {
+                    ((DeleteFileDelegate)finished).EndInvoke(result);
+                }
+                else if (finished is DeleteDirectoryDelegate)
+                {
+                    ((DeleteDirectoryDelegate)finished).EndInvoke(result);
+                }
+                else if (finished is MoveFileDelegate)
+                {
+                    ((MoveFileDelegate)finished).EndInvoke(result);
+                }
+            }
+            catch (Exception e)
+            {
+                _errors.Add(e);
+            }
+            BeginThreads();
+        }
 
         public string[] ListLocalFiles()
         {
@@ -208,14 +277,8 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <param name="dir">The full path to the file or directory to remove.</param>
         void IFileManager.Delete(string dir)
         {
-            if (Directory.Exists(dir))
-            {
-                Directory.Delete(dir);
-            }
-            else if (File.Exists(dir))
-            {
-                File.Delete(dir);
-            }
+            PendingFileActions.Enqueue(new SyncOperation(dir));
+            BeginThreads();
         }
         /// <summary>
         /// Ensures that a given path exists, creating it if necessary.
@@ -275,7 +338,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		{
 			get
 			{
-				return CopyActions.Count + PendingCopies.Count;
+				return InProgressActions.Count + PendingFileActions.Count;
 			}
 		}
 		#endregion

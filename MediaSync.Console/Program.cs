@@ -208,10 +208,20 @@ namespace AssimilationSoftware.MediaSync.Console
             }
 
             System.Console.WriteLine("Finished.");
-            System.Console.WriteLine("\t{0} files pushed", pushed);
-            System.Console.WriteLine("\t{0} files pulled", pulled);
-            System.Console.WriteLine("\t{0} files pruned", pruned);
-            System.Console.WriteLine("\t{0} errors encountered", errors);
+            if (pushed + pulled + pruned > 0)
+            {
+                System.Console.WriteLine("\t{0} files pushed", pushed);
+                System.Console.WriteLine("\t{0} files pulled", pulled);
+                System.Console.WriteLine("\t{0} files pruned", pruned);
+            }
+            else
+            {
+                System.Console.WriteLine("\tNo actions taken");
+            }
+            if (errors > 0)
+            {
+                System.Console.WriteLine("\t{0} errors encountered", errors);
+            }
             Debug.Flush();
         }
 

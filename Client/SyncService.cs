@@ -454,7 +454,14 @@ namespace AssimilationSoftware.MediaSync.Core
 			}
 
             // Report a summary of actions taken.
-            ReportMessage("Pulled: {0}\tPushed: {1}\tPruned: {2}", PulledCount, PushedCount, PrunedCount);
+            if (PulledCount + PushedCount + PrunedCount > 0)
+            {
+                ReportMessage("Pulled: {0}\tPushed: {1}\tPruned: {2}", PulledCount, PushedCount, PrunedCount);
+            }
+            else
+            {
+                ReportMessage("No actions taken.");
+            }
 
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)

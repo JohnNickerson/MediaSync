@@ -211,11 +211,21 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
-            view.WriteLine("Finished.");
-            view.WriteLine("\t{0} files pushed", pushed);
-            view.WriteLine("\t{0} files pulled", pulled);
-            view.WriteLine("\t{0} files purged", purged);
-            view.WriteLine("\t{0} errors encountered", errors);
+            Console.WriteLine("Finished.");
+            if (pushed + pulled + pruned > 0)
+            {
+                Console.WriteLine("\t{0} files pushed", pushed);
+                Console.WriteLine("\t{0} files pulled", pulled);
+                Console.WriteLine("\t{0} files pruned", pruned);
+            }
+            else
+            {
+                Console.WriteLine("\tNo actions taken");
+            }
+            if (errors > 0)
+            {
+                Console.WriteLine("\t{0} errors encountered", errors);
+            }
             Debug.Flush();
         }
 

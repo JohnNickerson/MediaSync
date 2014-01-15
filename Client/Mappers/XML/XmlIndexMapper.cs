@@ -23,14 +23,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         {
             serialiser = new SharpSerializer(false);
             _filename = filename;
-            if (File.Exists(_filename))
-            {
-                _indexes = LoadAll();
-            }
-            else
-            {
-                _indexes = new List<FileIndex>();
-            }
+            LoadAll();
         }
         #endregion
 
@@ -57,7 +50,15 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         public List<FileIndex> LoadAll()
         {
-            return (List<FileIndex>)serialiser.Deserialize(_filename);
+            if (File.Exists(_filename))
+            {
+                _indexes = (List<FileIndex>)serialiser.Deserialize(_filename);
+            }
+            else
+            {
+                _indexes = new List<FileIndex>();
+            }
+            return _indexes;
         }
 
         public List<FileIndex> Load(SyncProfile profile)

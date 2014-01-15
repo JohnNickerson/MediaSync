@@ -165,7 +165,7 @@ namespace AssimilationSoftware.MediaSync.Console
 
                         IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
                         IFileManager copier = new QueuedDiskCopier(opts, indexer);
-                        SyncService s = new SyncService(opts, indexer, copier, false);
+                        SyncService s = new SyncService(opts, indexer, copier, false, Settings.Default.MachineName);
                         s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
                         s.VerboseMode = args.Contains("/d");
                         try

@@ -80,9 +80,9 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Constructors
-        public SyncService(SyncProfile opts, IIndexMapper indexer, IFileManager filemanager, bool simulate)
+        public SyncService(SyncProfile opts, IIndexMapper indexer, IFileManager filemanager, bool simulate, string thismachine)
         {
-            _localSettings = opts.GetParticipant(Settings.Default.MachineName);
+            _localSettings = opts.GetParticipant(thismachine);
             LocalPath = _localSettings.LocalPath;
             SharedPath = _localSettings.SharedPath;
             NumPeers = 0;

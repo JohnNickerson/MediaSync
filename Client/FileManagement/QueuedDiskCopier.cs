@@ -83,7 +83,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// Constructs a new asynchronous file copy service.
 		/// </summary>
-		public QueuedDiskCopier(SyncProfile profile, IIndexMapper indexer)
+		public QueuedDiskCopier(SyncProfile profile, IIndexMapper indexer, string participant)
 		{
 			InProgressActions = new List<IAsyncResult>();
 			PendingFileActions = new Queue<SyncOperation>();
@@ -92,7 +92,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			_errors = new List<Exception>();
 
             _profile = profile;
-            _localSettings = profile.GetParticipant(Settings.Default.MachineName);
+            _localSettings = profile.GetParticipant(participant);
 		}
 		#endregion
 
@@ -309,10 +309,10 @@ namespace AssimilationSoftware.MediaSync.Core
         public FileIndex CreateIndex()
         {
             FileIndex index = new FileIndex();
-            index.MachineName = Settings.Default.MachineName;
+            index.MachineName = _localSettings.MachineName;
             index.ProfileName = _profile.ProfileName;
             index.TimeStamp = DateTime.Now;
-            index.LocalBasePath = _profile.GetParticipant(Settings.Default.MachineName).LocalPath;
+            index.LocalBasePath = _localSettings.LocalPath;
             IFileHashProvider hasher = new MockHasher();
 
             foreach (string file in ListLocalFiles())

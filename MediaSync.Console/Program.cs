@@ -164,7 +164,7 @@ namespace AssimilationSoftware.MediaSync.Console
                         System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
 
                         IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
-                        IFileManager copier = new QueuedDiskCopier(opts, indexer);
+                        IFileManager copier = new QueuedDiskCopier(opts, indexer, Settings.Default.MachineName);
                         SyncService s = new SyncService(opts, indexer, copier, false, Settings.Default.MachineName);
                         s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
                         s.VerboseMode = args.Contains("/d");

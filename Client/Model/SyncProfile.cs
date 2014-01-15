@@ -56,6 +56,7 @@ namespace AssimilationSoftware.MediaSync.Model
         public static void SetLocalMachineName(string name)
         {
             Settings.Default.MachineName = name;
+            Settings.Default.Save();
         }
     }
 }

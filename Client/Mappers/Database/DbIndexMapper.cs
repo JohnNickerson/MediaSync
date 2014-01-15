@@ -19,11 +19,13 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
     {
         private List<string> contents = new List<string>();
         private SyncProfile _options;
+        private ProfileParticipant _localSettings;
         private string _connString = ConfigurationManager.ConnectionStrings["database"].ConnectionString;
 
-        public DbIndexMapper(SyncProfile options)
+        public DbIndexMapper(SyncProfile options, string machine)
         {
             this._options = options;
+            this._localSettings = options.GetParticipant(machine);
         }
 
         public void Save(FileIndex index)
@@ -43,7 +45,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             foreach (FileHeader file in index.Files)
             {
                 adapter.InsertCommand.Parameters["@Timestamp"] = new SqlCeParameter("@Timestamp", indextime);
-                adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Settings.Default.MachineName);
+                adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", _localSettings.MachineName);
                 adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
                 adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", Path.Combine(file.RelativePath, file.FileName));
                 adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", file.FileSize);
@@ -55,7 +57,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             adapter.DeleteCommand = new SqlCeCommand("Delete From Indexes Where Timestamp Not In (Select Top 2 Timestamp From Indexes Where Machine = @Machine And Profile = @Profile) And Machine = @Machine And Profile = @Profile", connection);
             adapter.DeleteCommand.Parameters.Add("@Machine", SqlDbType.NVarChar);
             adapter.DeleteCommand.Parameters.Add("@Profile", SqlDbType.NVarChar);
-            adapter.DeleteCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", Settings.Default.MachineName);
+            adapter.DeleteCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", _localSettings.MachineName);
             adapter.DeleteCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
             adapter.DeleteCommand.ExecuteNonQuery();
             connection.Close();

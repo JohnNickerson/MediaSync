@@ -33,10 +33,10 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         /// Constructs a new text indexer for a given sync profile.
         /// </summary>
         /// <param name="_options">The sync profile to work from.</param>
-        public TextIndexMapper(SyncProfile _options)
+        public TextIndexMapper(SyncProfile _options, string machine)
         {
             this._options = _options;
-            _localSettings = _options.GetParticipant(Settings.Default.MachineName);
+            _localSettings = _options.GetParticipant(machine);
             _fileList = new List<string>();
         }
         #endregion
@@ -82,7 +82,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.PlainText
         {
             get
             {
-                string indexfile = Path.Combine(_localSettings.SharedPath, string.Format("{0}_index.txt", Settings.Default.MachineName));
+                string indexfile = Path.Combine(_localSettings.SharedPath, string.Format("{0}_index.txt", _localSettings.MachineName));
                 return indexfile;
             }
         }

@@ -8,10 +8,10 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public abstract class FileAction
     {
-        public FileAction(MediaSync.Model.SyncProfile profile)
+        public FileAction(MediaSync.Model.SyncProfile profile, string machine)
         {
             ProfileName = profile.ProfileName;
-            MachineName = Settings.Default.MachineName;
+            MachineName = machine;
             Timestamp = DateTime.Now;
             ID = Guid.NewGuid();
         }

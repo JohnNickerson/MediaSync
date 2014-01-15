@@ -13,7 +13,7 @@ namespace UnitTests
         [Test]
         public void CreateIndex()
         {
-            QueuedDiskCopier q = new QueuedDiskCopier(null, null);
+            QueuedDiskCopier q = new QueuedDiskCopier(null, null, null);
             var f = q.CreateIndex();
         }
     }

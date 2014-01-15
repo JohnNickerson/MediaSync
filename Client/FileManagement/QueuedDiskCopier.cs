@@ -106,7 +106,10 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
-                PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+                lock (PendingFileActions)
+                {
+                    PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+                }
                 BeginThreads();
             }
         }
@@ -115,7 +118,10 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
-                PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Move));
+                lock (PendingFileActions)
+                {
+                    PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Move));
+                }
                 BeginThreads();
             }
         }
@@ -125,7 +131,11 @@ namespace AssimilationSoftware.MediaSync.Core
             while (InProgressActions.Count < MaxActions)
             {
                 // Pop a pending action off the queue.
-                var op = PendingFileActions.Dequeue();
+                SyncOperation op;
+                lock (PendingFileActions)
+                {
+                    op = PendingFileActions.Dequeue();
+                }
                 // Kick off a thread.
                 switch (op.Action)
                 {
@@ -277,7 +287,10 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <param name="dir">The full path to the file or directory to remove.</param>
         void IFileManager.Delete(string dir)
         {
-            PendingFileActions.Enqueue(new SyncOperation(dir));
+            lock (PendingFileActions)
+            {
+                PendingFileActions.Enqueue(new SyncOperation(dir));
+            }
             BeginThreads();
         }
         /// <summary>

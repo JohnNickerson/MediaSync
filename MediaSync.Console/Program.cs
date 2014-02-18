@@ -154,6 +154,35 @@ namespace AssimilationSoftware.MediaSync.Console
                 System.Console.WriteLine(string.Empty);
                 #endregion
             }
+			else if (args.Contains("listmachines"))
+			{
+				#region List participant machines
+                ListMachines(profileManager);
+				#endregion
+			}
+			else if (args.Contains("removemachine"))
+            {
+                #region Remove a machine from all profiles
+                ListMachines(profileManager);
+                string machine = configurator.ConfigureString("", "Machine to remove");
+                var profiles = profileManager.Load();
+                foreach (SyncProfile p in profiles)
+                {
+                    for (int x = 0; x < p.Participants.Count; )
+                    {
+                        if (p.Participants[x].MachineName == machine)
+                        {
+                            p.Participants.RemoveAt(x);
+                        }
+                        else
+                        {
+                            x++;
+                        }
+                    }
+                }
+                profileManager.Save(profiles);
+                #endregion
+            }
             else
             {
                 foreach (SyncProfile opts in profileManager.Load())
@@ -223,6 +252,30 @@ namespace AssimilationSoftware.MediaSync.Console
                 System.Console.WriteLine("\t{0} errors encountered", errors);
             }
             Debug.Flush();
+        }
+
+        private static void ListMachines(IProfileMapper profileManager)
+        {
+            System.Console.WriteLine(string.Empty);
+            System.Console.WriteLine("Current machines:");
+            System.Console.WriteLine(string.Empty);
+            var profiles = profileManager.Load();
+            var participants = new List<String>();
+            foreach (SyncProfile p in profiles)
+            {
+                foreach (ProfileParticipant party in p.Participants)
+                {
+                    if (!participants.Contains(party.MachineName))
+                    {
+                        participants.Add(party.MachineName);
+                    }
+                }
+            }
+            foreach (string p in participants)
+            {
+                System.Console.WriteLine("\t\t{0}{1}", p, (p == Settings.Default.MachineName ? " <-- This machine" : ""));
+            }
+            System.Console.WriteLine(string.Empty);
         }
 
         static void SyncServicePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

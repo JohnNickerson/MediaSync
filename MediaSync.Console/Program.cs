@@ -40,24 +40,23 @@ namespace AssimilationSoftware.MediaSync.Console
             {
                 #region Help text
                 // Display help text.
-                System.Console.WriteLine();
-                System.Console.WriteLine("Usage:");
-                System.Console.WriteLine("client.exe [addprofile|joinprofile|leaveprofile|list|reconfigure] [/d] [/?]");
-                System.Console.WriteLine();
-                System.Console.WriteLine("\taddprofile\tAdd a new sync profile. Also adds this machine");
-                System.Console.WriteLine("\t\t\tas a participant.");
-                System.Console.WriteLine("\tjoinprofile\tJoins an existing profile as a participant.");
-                System.Console.WriteLine("\tleaveprofile\tStops participating in an existing profile.");
-                System.Console.WriteLine("\tlist\t\tLists active profiles by name, indicating whether this");
-                System.Console.WriteLine("\t\t\tmachine is participating.");
-                System.Console.WriteLine("\t\t\tCan also be used with the '/d' switch to see directory");
-                System.Console.WriteLine("\t\t\tconfiguration and contributor/consumer status.");
-                System.Console.WriteLine("\treconfigure\tAllows reconfiguration of machine name and profile");
-                System.Console.WriteLine("\t\t\tstorage location.");
-                System.Console.WriteLine("\t/d\t\tShow detailed activity reports or configuration.");
-                System.Console.WriteLine("\t/?\t\tShows this help text.");
+                System.Console.WriteLine("MediaSync version {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
+                System.Console.WriteLine(@"
+Usage:
+    client.exe [command] [/d] [/?]
 
-                System.Console.WriteLine();
+Commands:
+    addprofile      Add a new sync profile with this machine as a participant.
+    joinprofile     Joins an existing profile as a participant.
+    leaveprofile    Stops participating in an existing profile.
+    list            Lists active profiles by name, indicating whether this
+                    machine is participating.
+    reconfigure     Allows reconfiguration of machine name and profile
+                    storage location.
+    removemachine   Allows removal of a configured machine from every profile.
+    /d              Show detailed activity reports or configuration.
+    /?              Shows this help text.
+");
                 #endregion
             }
             else if (args.Contains("addprofile"))
@@ -85,11 +84,24 @@ namespace AssimilationSoftware.MediaSync.Console
             {
                 #region Join profile
                 var profiles = profileManager.Load();
+                string firstprofile = string.Empty;
                 foreach (SyncProfile p in profiles)
                 {
+                    if (p.ContainsParticipant(Settings.Default.MachineName))
+                    {
+                        System.Console.Write("*\t");
+                    }
+                    else
+                    {
+                        System.Console.Write("\t");
+                        if (firstprofile.Length == 0)
+                        {
+                            firstprofile = p.ProfileName;
+                        }
+                    }
                     System.Console.WriteLine(p.ProfileName);
                 }
-                string profilename = configurator.ConfigureString("", "Profile to join");
+                string profilename = configurator.ConfigureString(firstprofile, "Profile to join");
                 if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
                 {
                     var profile = (from p in profiles where p.ProfileName == profilename select p).First();
@@ -110,11 +122,24 @@ namespace AssimilationSoftware.MediaSync.Console
             {
                 #region Leave profile
                 var profiles = profileManager.Load();
+                string firstprofile = string.Empty;
                 foreach (SyncProfile p in profiles)
                 {
+                    if (p.ContainsParticipant(Settings.Default.MachineName))
+                    {
+                        System.Console.Write("*\t");
+                        if (firstprofile.Length == 0)
+                        {
+                            firstprofile = p.ProfileName;
+                        }
+                    }
+                    else
+                    {
+                        System.Console.Write("\t");
+                    }
                     System.Console.WriteLine(p.ProfileName);
                 }
-                string profilename = configurator.ConfigureString("", "Profile to leave");
+                string profilename = configurator.ConfigureString(firstprofile, "Profile to leave");
                 if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
                 {
                     var profile = (from p in profiles where p.ProfileName == profilename select p).First();

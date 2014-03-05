@@ -260,6 +260,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // Update size cache.
                                 _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
                                 pushcount++;
+                                Status = string.Format("\t\tConstructing copy queue: {1} {0}.", _copyq.Count, (_copyq.Count == 1 ? "item" : "items"));
                             }
                             else
                             {

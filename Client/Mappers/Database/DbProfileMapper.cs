@@ -12,6 +12,13 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
     /// </summary>
     public class DbProfileMapper : IProfileMapper
     {
+        private string _connString;
+
+        public DbProfileMapper(string conn)
+        {
+            _connString = conn;
+        }
+
         public void Save(string machineName, SyncProfile saveobject)
         {
             throw new NotImplementedException();

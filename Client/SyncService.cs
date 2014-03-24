@@ -17,7 +17,7 @@ using System.ComponentModel;
 namespace AssimilationSoftware.MediaSync.Core
 {
     /// <summary>
-    /// A photo synchronising service.
+    /// A file synchronising service.
     /// </summary>
     public class SyncService : INotifyPropertyChanged
     {
@@ -467,7 +467,7 @@ namespace AssimilationSoftware.MediaSync.Core
 			// Report any errors.
 			if (_copyq.Errors.Count > 0)
 			{
-				Status = "Errors encountered:";
+				ReportMessage("Errors encountered:");
 				for (int x = 0; x < _copyq.Errors.Count; x++)
 				{
 					ReportMessage(_copyq.Errors[x].Message);
@@ -498,12 +498,25 @@ namespace AssimilationSoftware.MediaSync.Core
 		{
 			// Wait for file copies to finish.
             int lastcount = 0;
+            bool estimate_time = true;
+            DateTime started_waiting = DateTime.Now;
+            var first_count = _copyq.Count;
 			while (_copyq.Count > 0)
 			{
 				if (_copyq.Count != lastcount)
 				{
-                    Status = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
-					lastcount = _copyq.Count;
+                    if (estimate_time)
+                    {
+                        // Estimate time left via copies per second. Assumes even distribution of file sizes in queue.
+                        var cps = (first_count - _copyq.Count) / (DateTime.Now - started_waiting).TotalSeconds;
+                        var timeleft = new TimeSpan(0, 0, _copyq.Count / (int)cps);
+                        Status = string.Format("\t\tWaiting on {0} {1}... ({2:hh:mm:ss} remaining)", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"), timeleft);
+                    }
+                    else
+                    {
+                        Status = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
+                    }
+                    lastcount = _copyq.Count;
 				}
 				Thread.Sleep(1000);
 			}

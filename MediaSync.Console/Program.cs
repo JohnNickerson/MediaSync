@@ -312,7 +312,7 @@ Commands:
                     System.Console.WriteLine(s.Log.Last());
                     break;
                 case "Status":
-                    System.Console.WriteLine(s.Status);
+                    System.Console.Write("\r{0}   ", s.Status);
                     break;
             }
         }

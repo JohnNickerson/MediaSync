@@ -5,43 +5,55 @@ using System.Text;
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using System.IO;
-using AssimilationSoftware.MediaSync.Console.Properties;
+using AssimilationSoftware.MediaSync.CLI.Properties;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Mappers.Xml;
 using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.CLI.Options;
 
-namespace AssimilationSoftware.MediaSync.Console
+namespace AssimilationSoftware.MediaSync.CLI
 {
     class Program
     {
         static void Main(string[] args)
         {
+            if (!Settings.Default.Configured && !args.Contains("init") && !args.Contains("help"))
+            {
+                Console.WriteLine("Please use the 'init' command to set up first.");
+                return;
+            }
+
+
+            string argverb = string.Empty;
+            object argsubs = null;
+            var options = new Options.Options();
+            if (!CommandLine.Parser.Default.ParseArguments(args, options,
+                (verb, subOptions) =>
+                {
+                    argverb = verb;
+                    argsubs = subOptions;
+                }))
+            {
+                Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+            }
+
             IInputView configurator = new ConsoleView();
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            #region Configuration
-            if (args.Contains("reconfigure"))
-            {
-                Settings.Default.Configured = false;
-            }
-            if (!Settings.Default.Configured)
-            {
-                Settings.Default.MachineName = configurator.ConfigureString(Settings.Default.MachineName, "Machine name");
-                Settings.Default.MetadataFolder = configurator.ConfigurePath(Settings.Default.MetadataFolder, "Metadata folder location");
-                Settings.Default.Configured = true;
-
-                Settings.Default.Save();
-            }
-            #endregion
-
             IProfileMapper profileManager = new XmlProfileMapper(Path.Combine(Settings.Default.MetadataFolder, "Profiles.xml"));
+            var profiles = profileManager.Load();
+            SyncProfile profile;
+            ProfileParticipant participant;
+            string firstprofile, profilename;
+
             int pulled = 0, pushed = 0, pruned = 0, errors = 0;
-            if (args.Contains("/?"))
+            switch (argverb)
             {
-                #region Help text
-                // Display help text.
-                System.Console.WriteLine("MediaSync version {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
-                System.Console.WriteLine(@"
+                case "help":
+                    #region Help text
+                    // Display help text.
+                    System.Console.WriteLine("MediaSync version {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
+                    System.Console.WriteLine(@"
 Usage:
     client.exe [command] [/d] [/?]
 
@@ -57,208 +69,205 @@ Commands:
     /d              Show detailed activity reports or configuration.
     /?              Shows this help text.
 ");
-                #endregion
-            }
-            else if (args.Contains("addprofile"))
-            {
-                #region Add profile
-                var profiles = profileManager.Load();
-
-                var profile = new SyncProfile();
-                profile.ProfileName = configurator.ConfigureString("NewProfile", "Profile name");
-                var participant = new ProfileParticipant();
-                participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
-                participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
-                profile.ReserveSpace = configurator.ConfigureULong(500, "Reserve space (MB)") * (ulong)Math.Pow(10, 6);
-                participant.Consumer = true;
-                participant.Contributor = true;
-                participant.MachineName = Settings.Default.MachineName;
-                profile.SearchPatterns.Add(configurator.ConfigureString("*.jpg", "File search pattern"));
-
-                profile.Participants.Add(participant);
-                profiles.Add(profile);
-                profileManager.Save(profiles);
-                #endregion
-            }
-            else if (args.Contains("joinprofile"))
-            {
-                #region Join profile
-                var profiles = profileManager.Load();
-                string firstprofile = string.Empty;
-                foreach (SyncProfile p in profiles)
-                {
-                    if (p.ContainsParticipant(Settings.Default.MachineName))
-                    {
-                        System.Console.Write("*\t");
-                    }
-                    else
-                    {
-                        System.Console.Write("\t");
-                        if (firstprofile.Length == 0)
-                        {
-                            firstprofile = p.ProfileName;
-                        }
-                    }
-                    System.Console.WriteLine(p.ProfileName);
-                }
-                string profilename = configurator.ConfigureString(firstprofile, "Profile to join");
-                if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
-                {
-                    var profile = (from p in profiles where p.ProfileName == profilename select p).First();
-
-                    var participant = new ProfileParticipant();
+                    #endregion
+                    break;
+                case "addprofile":
+                    #region Add profile
+                    profile = new SyncProfile();
+                    profile.ProfileName = configurator.ConfigureString("NewProfile", "Profile name");
+                    
+                    participant = new ProfileParticipant();
                     participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
                     participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
+                    profile.ReserveSpace = configurator.ConfigureULong(500, "Reserve space (MB)") * (ulong)Math.Pow(10, 6);
                     participant.Consumer = true;
                     participant.Contributor = true;
                     participant.MachineName = Settings.Default.MachineName;
+                    profile.SearchPatterns.Add(configurator.ConfigureString("*.jpg", "File search pattern"));
 
                     profile.Participants.Add(participant);
+                    profiles.Add(profile);
                     profileManager.Save(profiles);
-                }
-                #endregion
-            }
-            else if (args.Contains("leaveprofile"))
-            {
-                #region Leave profile
-                var profiles = profileManager.Load();
-                string firstprofile = string.Empty;
-                foreach (SyncProfile p in profiles)
-                {
-                    if (p.ContainsParticipant(Settings.Default.MachineName))
+                    #endregion
+                    break;
+                case "joinprofile":
+                    #region Join profile
+                    firstprofile = string.Empty;
+                    foreach (SyncProfile p in profiles)
                     {
-                        System.Console.Write("*\t");
-                        if (firstprofile.Length == 0)
+                        if (p.ContainsParticipant(Settings.Default.MachineName))
                         {
-                            firstprofile = p.ProfileName;
-                        }
-                    }
-                    else
-                    {
-                        System.Console.Write("\t");
-                    }
-                    System.Console.WriteLine(p.ProfileName);
-                }
-                string profilename = configurator.ConfigureString(firstprofile, "Profile to leave");
-                if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
-                {
-                    var profile = (from p in profiles where p.ProfileName == profilename select p).First();
-
-                    if (profile.ContainsParticipant(Settings.Default.MachineName))
-                    {
-                        var participant = profile.GetParticipant(Settings.Default.MachineName);
-
-                        profile.Participants.Remove(participant);
-                        profileManager.Save(profiles);
-                    }
-                }
-                #endregion
-            }
-            else if (args.Contains("list"))
-            {
-                #region List profiles
-                // Print a summary of profiles.
-                System.Console.WriteLine(string.Empty);
-                System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
-                System.Console.WriteLine(string.Empty);
-                var profiles = profileManager.Load();
-                foreach (SyncProfile p in profiles)
-                {
-                    var star = p.ContainsParticipant(Settings.Default.MachineName);
-                    System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
-                    // Show participating paths if detailed view is selected.
-                    if (args.Contains("/d") && star)
-                    {
-                        var party = p.GetParticipant(Settings.Default.MachineName);
-                        System.Console.WriteLine("\t\t{0}", party.LocalPath);
-                        System.Console.WriteLine("\t\t{0}", party.SharedPath);
-                        // Indicate give/consumer status.
-                        System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
-                    }
-                }
-                System.Console.WriteLine(string.Empty);
-                #endregion
-            }
-			else if (args.Contains("listmachines"))
-			{
-				#region List participant machines
-                ListMachines(profileManager);
-				#endregion
-			}
-			else if (args.Contains("removemachine"))
-            {
-                #region Remove a machine from all profiles
-                ListMachines(profileManager);
-                string machine = configurator.ConfigureString("", "Machine to remove");
-                var profiles = profileManager.Load();
-                foreach (SyncProfile p in profiles)
-                {
-                    for (int x = 0; x < p.Participants.Count; )
-                    {
-                        if (p.Participants[x].MachineName == machine)
-                        {
-                            p.Participants.RemoveAt(x);
+                            System.Console.Write("*\t");
                         }
                         else
                         {
-                            x++;
+                            System.Console.Write("\t");
+                            if (firstprofile.Length == 0)
+                            {
+                                firstprofile = p.ProfileName;
+                            }
+                        }
+                        System.Console.WriteLine(p.ProfileName);
+                    }
+                    profilename = configurator.ConfigureString(firstprofile, "Profile to join");
+                    if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
+                    {
+                        profile = (from p in profiles where p.ProfileName == profilename select p).First();
+
+                        participant = new ProfileParticipant();
+                        participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
+                        participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
+                        participant.Consumer = true;
+                        participant.Contributor = true;
+                        participant.MachineName = Settings.Default.MachineName;
+
+                        profile.Participants.Add(participant);
+                        profileManager.Save(profiles);
+                    }
+                    #endregion
+                    break;
+                case "leaveprofile":
+                    #region Leave profile
+                    firstprofile = string.Empty;
+                    foreach (SyncProfile p in profiles)
+                    {
+                        if (p.ContainsParticipant(Settings.Default.MachineName))
+                        {
+                            System.Console.Write("*\t");
+                            if (firstprofile.Length == 0)
+                            {
+                                firstprofile = p.ProfileName;
+                            }
+                        }
+                        else
+                        {
+                            System.Console.Write("\t");
+                        }
+                        System.Console.WriteLine(p.ProfileName);
+                    }
+                    profilename = configurator.ConfigureString(firstprofile, "Profile to leave");
+                    if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
+                    {
+                        profile = (from p in profiles where p.ProfileName == profilename select p).First();
+
+                        if (profile.ContainsParticipant(Settings.Default.MachineName))
+                        {
+                            participant = profile.GetParticipant(Settings.Default.MachineName);
+
+                            profile.Participants.Remove(participant);
+                            profileManager.Save(profiles);
                         }
                     }
-                }
-                profileManager.Save(profiles);
-                #endregion
-            }
-            else
-            {
-                foreach (SyncProfile opts in profileManager.Load())
-                {
-                    if (opts.ContainsParticipant(Settings.Default.MachineName))
+                    #endregion
+                    break;
+                case "list":
+                    #region List profiles
+                    // Print a summary of profiles.
+                    System.Console.WriteLine(string.Empty);
+                    System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
+                    System.Console.WriteLine(string.Empty);
+                    foreach (SyncProfile p in profiles)
                     {
-                        System.Console.WriteLine();
-                        System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
-
-                        IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
-                        IFileManager copier = new QueuedDiskCopier(opts, indexer, Settings.Default.MachineName);
-                        SyncService s = new SyncService(opts, indexer, copier, false, Settings.Default.MachineName);
-                        s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
-                        s.VerboseMode = args.Contains("/d");
-                        try
+                        var star = p.ContainsParticipant(Settings.Default.MachineName);
+                        System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
+                        // Show participating paths if detailed view is selected.
+                        if (args.Contains("/d") && star)
                         {
-                            if (args.Contains("indexonly"))
+                            var party = p.GetParticipant(Settings.Default.MachineName);
+                            System.Console.WriteLine("\t\t{0}", party.LocalPath);
+                            System.Console.WriteLine("\t\t{0}", party.SharedPath);
+                            // Indicate give/consumer status.
+                            System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
+                        }
+                    }
+                    System.Console.WriteLine(string.Empty);
+                    #endregion
+                    break;
+                case "listmachines":
+                    #region List participant machines
+                    ListMachines(profileManager);
+                    #endregion
+                    break;
+                case "init":
+                    var initOptions = (InitSubOptions)argsubs;
+                    Settings.Default.MachineName = initOptions.MachineName;
+                    Settings.Default.MetadataFolder = initOptions.MetadataFolder;
+                    Settings.Default.Configured = true;
+
+                    Settings.Default.Save();
+                    break;
+                case "removemachine":
+                    #region Remove a machine from all profiles
+                    ListMachines(profileManager);
+                    string machine = configurator.ConfigureString("", "Machine to remove");
+                    foreach (SyncProfile p in profiles)
+                    {
+                        for (int x = 0; x < p.Participants.Count; )
+                        {
+                            if (p.Participants[x].MachineName == machine)
                             {
-                                s.ShowIndexComparison();
+                                p.Participants.RemoveAt(x);
                             }
                             else
                             {
-                                s.Sync();
-                                pulled += s.PulledCount;
-                                pushed += s.PushedCount;
-                                pruned += s.PrunedCount;
-                                errors += s.Errors.Count;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            System.Console.WriteLine("Could not sync.");
-                            System.Console.WriteLine(e.Message);
-                            var x = e;
-                            while (x != null)
-                            {
-                                Debug.WriteLine(DateTime.Now);
-                                Debug.WriteLine(x.Message);
-                                Debug.WriteLine(x.StackTrace);
-                                Debug.WriteLine("");
-
-                                x = x.InnerException;
+                                x++;
                             }
                         }
                     }
-                    else
+                    profileManager.Save(profiles);
+                    #endregion
+                    break;
+                default:
+                    foreach (SyncProfile opts in profileManager.Load())
                     {
-                        System.Console.WriteLine(string.Empty);
-                        System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                        if (opts.ContainsParticipant(Settings.Default.MachineName))
+                        {
+                            System.Console.WriteLine();
+                            System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+
+                            IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
+                            IFileManager copier = new QueuedDiskCopier(opts, indexer, Settings.Default.MachineName);
+                            SyncService s = new SyncService(opts, indexer, copier, false, Settings.Default.MachineName);
+                            s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
+                            s.VerboseMode = args.Contains("/d");
+                            try
+                            {
+                                if (args.Contains("indexonly"))
+                                {
+                                    s.ShowIndexComparison();
+                                }
+                                else
+                                {
+                                    s.Sync();
+                                    pulled += s.PulledCount;
+                                    pushed += s.PushedCount;
+                                    pruned += s.PrunedCount;
+                                    errors += s.Errors.Count;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                System.Console.WriteLine("Could not sync.");
+                                System.Console.WriteLine(e.Message);
+                                var x = e;
+                                while (x != null)
+                                {
+                                    Debug.WriteLine(DateTime.Now);
+                                    Debug.WriteLine(x.Message);
+                                    Debug.WriteLine(x.StackTrace);
+                                    Debug.WriteLine("");
+
+                                    x = x.InnerException;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            System.Console.WriteLine(string.Empty);
+                            System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                        }
                     }
-                }
+                    break;
             }
 
             System.Console.WriteLine("Finished.");

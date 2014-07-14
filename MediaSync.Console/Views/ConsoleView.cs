@@ -5,9 +5,9 @@ using System.Text;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 using AssimilationSoftware.MediaSync.Core;
-using AssimilationSoftware.MediaSync.Console.Properties;
+using AssimilationSoftware.MediaSync.CLI.Properties;
 
-namespace AssimilationSoftware.MediaSync.Console
+namespace AssimilationSoftware.MediaSync.CLI
 {
     /// <summary>
     /// A view that writes to the console.

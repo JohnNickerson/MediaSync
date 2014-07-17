@@ -16,25 +16,25 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         }
 
         #region Commands
-        [VerbOption("addprofile", HelpText = "Adds a new sync profile")]
+        [VerbOption("add-profile", HelpText = "Adds a new sync profile")]
         public AddProfileSubOptions AddVerb { get; set; }
 
         [VerbOption("init", HelpText = "Initialises general settings")]
         public InitSubOptions InitVerb { get; set; }
 
-        [VerbOption("joinprofile", HelpText = "Join a sync profile")]
+        [VerbOption("join-profile", HelpText = "Join a sync profile")]
         public JoinProfileSubOptions JoinVerb { get; set; }
 
-        [VerbOption("leaveprofile", HelpText = "Leave a sync profile")]
+        [VerbOption("leave-profile", HelpText = "Leave a sync profile")]
         public LeaveProfileSubOptions LeaveVerb { get; set; }
 
         [VerbOption("list", HelpText = "List all profiles")]
         public ListProfilesSubOptions ListProfilesVerb { get; set; }
 
-        [VerbOption("listmachines", HelpText = "List all machines")]
+        [VerbOption("list-machines", HelpText = "List all machines")]
         public ListMachinesSubOptions ListMachinesVerb { get; set; }
 
-        [VerbOption("removemachine", HelpText = "Removes a machine from a profile")]
+        [VerbOption("remove-machine", HelpText = "Removes a machine from a profile")]
         public RemoveMachineSubOptions RemoveMachineVerb { get; set; }
 
         [VerbOption("run", HelpText = "Runs all profiles")]

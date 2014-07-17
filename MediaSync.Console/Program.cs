@@ -44,7 +44,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             var profiles = profileManager.Load();
             SyncProfile profile;
             ProfileParticipant participant;
-            string firstprofile, profilename;
+            string profilename;
 
             int pulled = 0, pushed = 0, pruned = 0, errors = 0;
             switch (argverb)
@@ -71,7 +71,7 @@ Commands:
 ");
                     #endregion
                     break;
-                case "addprofile":
+                case "add-profile":
                     #region Add profile
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
@@ -93,11 +93,10 @@ Commands:
                     }
                     #endregion
                     break;
-                case "joinprofile":
+                case "join-profile":
                     #region Join profile
                     {
                         var joinOptions = (JoinProfileSubOptions)argsubs;
-                        firstprofile = string.Empty;
                         foreach (SyncProfile p in profiles)
                         {
                             if (p.ContainsParticipant(Settings.Default.MachineName))
@@ -107,10 +106,6 @@ Commands:
                             else
                             {
                                 System.Console.Write("\t");
-                                if (firstprofile.Length == 0)
-                                {
-                                    firstprofile = p.ProfileName;
-                                }
                             }
                             System.Console.WriteLine(p.ProfileName);
                         }
@@ -132,31 +127,16 @@ Commands:
                     }
                     #endregion
                     break;
-                case "leaveprofile":
+                case "leave-profile":
                     #region Leave profile
                     {
                         var leaveOptions = (LeaveProfileSubOptions)argsubs;
-                        firstprofile = string.Empty;
-                        foreach (SyncProfile p in profiles)
+                        profilename = leaveOptions.ProfileName.ToLower();
+                        var matches = (from p in profiles where p.ProfileName.ToLower() == profilename select p);
+
+                        if (matches.Count() > 0)
                         {
-                            if (p.ContainsParticipant(Settings.Default.MachineName))
-                            {
-                                System.Console.Write("*\t");
-                                if (firstprofile.Length == 0)
-                                {
-                                    firstprofile = p.ProfileName;
-                                }
-                            }
-                            else
-                            {
-                                System.Console.Write("\t");
-                            }
-                            System.Console.WriteLine(p.ProfileName);
-                        }
-                        profilename = leaveOptions.ProfileName;
-                        if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
-                        {
-                            profile = (from p in profiles where p.ProfileName == profilename select p).First();
+                            profile = matches.First();
 
                             if (profile.ContainsParticipant(Settings.Default.MachineName))
                             {
@@ -165,6 +145,18 @@ Commands:
                                 profile.Participants.Remove(participant);
                                 profileManager.Save(profiles);
                             }
+                        }
+                        foreach (SyncProfile p in profiles)
+                        {
+                            if (p.ContainsParticipant(Settings.Default.MachineName))
+                            {
+                                System.Console.Write("*\t");
+                            }
+                            else
+                            {
+                                System.Console.Write("\t");
+                            }
+                            System.Console.WriteLine(p.ProfileName);
                         }
                     }
                     #endregion
@@ -195,7 +187,7 @@ Commands:
                     }
                     #endregion
                     break;
-                case "listmachines":
+                case "list-machines":
                     #region List participant machines
                     ListMachines(profileManager);
                     #endregion
@@ -208,17 +200,16 @@ Commands:
 
                     Settings.Default.Save();
                     break;
-                case "removemachine":
+                case "remove-machine":
                     #region Remove a machine from all profiles
                     {
                         var removeOptions = (RemoveMachineSubOptions)argsubs;
-                        ListMachines(profileManager);
                         string machine = removeOptions.MachineName;
                         foreach (SyncProfile p in profiles)
                         {
                             for (int x = 0; x < p.Participants.Count; )
                             {
-                                if (p.Participants[x].MachineName == machine)
+                                if (p.Participants[x].MachineName.ToLower() == machine.ToLower())
                                 {
                                     p.Participants.RemoveAt(x);
                                 }
@@ -228,6 +219,7 @@ Commands:
                                 }
                             }
                         }
+                        ListMachines(profileManager);
                     }
                     profileManager.Save(profiles);
                     #endregion
@@ -285,21 +277,21 @@ Commands:
                                 System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
                             }
                         }
+
+                        System.Console.WriteLine("Finished.");
+                        if (pushed + pulled + pruned > 0)
+                        {
+                            System.Console.WriteLine("\t{0} files pushed", pushed);
+                            System.Console.WriteLine("\t{0} files pulled", pulled);
+                            System.Console.WriteLine("\t{0} files pruned", pruned);
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("\tNo actions taken");
+                        }
                     }
                     #endregion
                     break;
-            }
-
-            System.Console.WriteLine("Finished.");
-            if (pushed + pulled + pruned > 0)
-            {
-                System.Console.WriteLine("\t{0} files pushed", pushed);
-                System.Console.WriteLine("\t{0} files pulled", pulled);
-                System.Console.WriteLine("\t{0} files pruned", pruned);
-            }
-            else
-            {
-                System.Console.WriteLine("\tNo actions taken");
             }
             if (errors > 0)
             {
@@ -310,9 +302,6 @@ Commands:
 
         private static void ListMachines(IProfileMapper profileManager)
         {
-            System.Console.WriteLine(string.Empty);
-            System.Console.WriteLine("Current machines:");
-            System.Console.WriteLine(string.Empty);
             var profiles = profileManager.Load();
             var participants = new List<String>();
             foreach (SyncProfile p in profiles)
@@ -325,9 +314,19 @@ Commands:
                     }
                 }
             }
-            foreach (string p in participants)
+            if (participants.Count > 0)
             {
-                System.Console.WriteLine("\t\t{0}{1}", p, (p == Settings.Default.MachineName ? " <-- This machine" : ""));
+                System.Console.WriteLine(string.Empty);
+                System.Console.WriteLine("Current machines:");
+                System.Console.WriteLine(string.Empty);
+                foreach (string p in participants)
+                {
+                    System.Console.WriteLine("\t\t{0}{1}", p, (p.ToLower() == Settings.Default.MachineName.ToLower() ? " <-- This machine" : ""));
+                }
+            }
+            else
+            {
+                Console.WriteLine("No machines currently configured.");
             }
             System.Console.WriteLine(string.Empty);
         }

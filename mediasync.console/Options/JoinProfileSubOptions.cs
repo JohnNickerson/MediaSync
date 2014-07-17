@@ -6,9 +6,9 @@ using System.Text;
 
 namespace AssimilationSoftware.MediaSync.CLI.Options
 {
-    class AddProfileSubOptions
+    class JoinProfileSubOptions
     {
-        [Option('p', "profile", HelpText = "The name of the profile to create")]
+        [Option('p', "profile", HelpText = "The name of the profile to join")]
         public string ProfileName { get; set; }
 
         [Option('l', "local", HelpText = "The path of the local file collection")]
@@ -20,13 +20,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         [Option("consumer", HelpText = "True to set this machine as a consuming participant (others -> local)", DefaultValue = false)]
         public bool Consumer { get; set; }
 
-        [Option('r', "reserve", HelpText = "Maximum megabytes to use for this profile in the shared space", DefaultValue = 500)]
-        public ulong ReserveSpaceMB { get; set; }
-
         [Option("contributor", HelpText = "True to set this machine as a contributing participant (local -> others)", DefaultValue = false)]
         public bool Contributor { get; set; }
-
-        [Option('f', "files", HelpText = "A file search pattern to use for this profile", DefaultValue = "*.jpg")]
-        public string SearchPattern { get; set; }
     }
 }

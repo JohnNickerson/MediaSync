@@ -21,6 +21,21 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 
         [VerbOption("init", HelpText = "Initialises general settings")]
         public InitSubOptions InitVerb { get; set; }
+
+        [VerbOption("joinprofile", HelpText = "Join a sync profile")]
+        public JoinProfileSubOptions JoinVerb { get; set; }
+
+        [VerbOption("leaveprofile", HelpText = "Leave a sync profile")]
+        public LeaveProfileSubOptions LeaveVerb { get; set; }
+
+        [VerbOption("list", HelpText = "List all profiles")]
+        public ListProfilesSubOptions ListProfilesVerb { get; set; }
+
+        [VerbOption("listmachines", HelpText = "List all machines")]
+        public ListMachinesSubOptions ListMachinesVerb { get; set; }
+
+        [VerbOption("removemachine", HelpText = "Removes a machine from a profile")]
+        public RemoveMachineSubOptions RemoveMachineVerb { get; set; }
         #endregion
     }
 }

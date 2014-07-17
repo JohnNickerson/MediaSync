@@ -73,56 +73,62 @@ Commands:
                     break;
                 case "addprofile":
                     #region Add profile
-                    profile = new SyncProfile();
-                    profile.ProfileName = configurator.ConfigureString("NewProfile", "Profile name");
-                    
-                    participant = new ProfileParticipant();
-                    participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
-                    participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
-                    profile.ReserveSpace = configurator.ConfigureULong(500, "Reserve space (MB)") * (ulong)Math.Pow(10, 6);
-                    participant.Consumer = true;
-                    participant.Contributor = true;
-                    participant.MachineName = Settings.Default.MachineName;
-                    profile.SearchPatterns.Add(configurator.ConfigureString("*.jpg", "File search pattern"));
+                    {
+                        var addOptions = (AddProfileSubOptions)argsubs;
+                        profile = new SyncProfile();
+                        profile.ProfileName = addOptions.ProfileName;
 
-                    profile.Participants.Add(participant);
-                    profiles.Add(profile);
-                    profileManager.Save(profiles);
+                        participant = new ProfileParticipant();
+                        participant.LocalPath = addOptions.LocalPath;
+                        participant.SharedPath = addOptions.SharedPath;
+                        profile.ReserveSpace = addOptions.ReserveSpaceMB * (ulong)Math.Pow(10, 6);
+                        participant.Consumer = addOptions.Consumer;
+                        participant.Contributor = addOptions.Contributor;
+                        participant.MachineName = Settings.Default.MachineName;
+                        profile.SearchPatterns.Add(addOptions.SearchPattern);
+
+                        profile.Participants.Add(participant);
+                        profiles.Add(profile);
+                        profileManager.Save(profiles);
+                    }
                     #endregion
                     break;
                 case "joinprofile":
                     #region Join profile
-                    firstprofile = string.Empty;
-                    foreach (SyncProfile p in profiles)
                     {
-                        if (p.ContainsParticipant(Settings.Default.MachineName))
+                        var joinOptions = (JoinProfileSubOptions)argsubs;
+                        firstprofile = string.Empty;
+                        foreach (SyncProfile p in profiles)
                         {
-                            System.Console.Write("*\t");
-                        }
-                        else
-                        {
-                            System.Console.Write("\t");
-                            if (firstprofile.Length == 0)
+                            if (p.ContainsParticipant(Settings.Default.MachineName))
                             {
-                                firstprofile = p.ProfileName;
+                                System.Console.Write("*\t");
                             }
+                            else
+                            {
+                                System.Console.Write("\t");
+                                if (firstprofile.Length == 0)
+                                {
+                                    firstprofile = p.ProfileName;
+                                }
+                            }
+                            System.Console.WriteLine(p.ProfileName);
                         }
-                        System.Console.WriteLine(p.ProfileName);
-                    }
-                    profilename = configurator.ConfigureString(firstprofile, "Profile to join");
-                    if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
-                    {
-                        profile = (from p in profiles where p.ProfileName == profilename select p).First();
+                        profilename = joinOptions.ProfileName;
+                        if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
+                        {
+                            profile = (from p in profiles where p.ProfileName == profilename select p).First();
 
-                        participant = new ProfileParticipant();
-                        participant.LocalPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\Pictures", "Local path");
-                        participant.SharedPath = configurator.ConfigurePath(@"D:\Src\MediaSync\TestData\SharedSpace", "Path to shared space");
-                        participant.Consumer = true;
-                        participant.Contributor = true;
-                        participant.MachineName = Settings.Default.MachineName;
+                            participant = new ProfileParticipant();
+                            participant.LocalPath = joinOptions.LocalPath;
+                            participant.SharedPath = joinOptions.SharedPath;
+                            participant.Consumer = joinOptions.Consumer;
+                            participant.Contributor = joinOptions.Contributor;
+                            participant.MachineName = Settings.Default.MachineName;
 
-                        profile.Participants.Add(participant);
-                        profileManager.Save(profiles);
+                            profile.Participants.Add(participant);
+                            profileManager.Save(profiles);
+                        }
                     }
                     #endregion
                     break;

@@ -41,10 +41,6 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Synchronization.Files, Version=2.1.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\..\..\Program Files\Microsoft Sync Framework\2.1\Runtime\x86\Microsoft.Synchronization.Files.dll</HintPath>
-    </Reference>
     <Reference Include="Ninject">
       <HintPath>..\Library\Ninject.dll</HintPath>
     </Reference>

@@ -134,59 +134,65 @@ Commands:
                     break;
                 case "leaveprofile":
                     #region Leave profile
-                    firstprofile = string.Empty;
-                    foreach (SyncProfile p in profiles)
                     {
-                        if (p.ContainsParticipant(Settings.Default.MachineName))
+                        var leaveOptions = (LeaveProfileSubOptions)argsubs;
+                        firstprofile = string.Empty;
+                        foreach (SyncProfile p in profiles)
                         {
-                            System.Console.Write("*\t");
-                            if (firstprofile.Length == 0)
+                            if (p.ContainsParticipant(Settings.Default.MachineName))
                             {
-                                firstprofile = p.ProfileName;
+                                System.Console.Write("*\t");
+                                if (firstprofile.Length == 0)
+                                {
+                                    firstprofile = p.ProfileName;
+                                }
                             }
+                            else
+                            {
+                                System.Console.Write("\t");
+                            }
+                            System.Console.WriteLine(p.ProfileName);
                         }
-                        else
+                        profilename = leaveOptions.ProfileName;
+                        if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
                         {
-                            System.Console.Write("\t");
-                        }
-                        System.Console.WriteLine(p.ProfileName);
-                    }
-                    profilename = configurator.ConfigureString(firstprofile, "Profile to leave");
-                    if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
-                    {
-                        profile = (from p in profiles where p.ProfileName == profilename select p).First();
+                            profile = (from p in profiles where p.ProfileName == profilename select p).First();
 
-                        if (profile.ContainsParticipant(Settings.Default.MachineName))
-                        {
-                            participant = profile.GetParticipant(Settings.Default.MachineName);
+                            if (profile.ContainsParticipant(Settings.Default.MachineName))
+                            {
+                                participant = profile.GetParticipant(Settings.Default.MachineName);
 
-                            profile.Participants.Remove(participant);
-                            profileManager.Save(profiles);
+                                profile.Participants.Remove(participant);
+                                profileManager.Save(profiles);
+                            }
                         }
                     }
                     #endregion
                     break;
                 case "list":
                     #region List profiles
-                    // Print a summary of profiles.
-                    System.Console.WriteLine(string.Empty);
-                    System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
-                    System.Console.WriteLine(string.Empty);
-                    foreach (SyncProfile p in profiles)
                     {
-                        var star = p.ContainsParticipant(Settings.Default.MachineName);
-                        System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
-                        // Show participating paths if detailed view is selected.
-                        if (args.Contains("/d") && star)
+                        var listOptions = (ListProfilesSubOptions)argsubs;
+                        // Print a summary of profiles.
+                        System.Console.WriteLine(string.Empty);
+                        System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
+                        System.Console.WriteLine(string.Empty);
+                        foreach (SyncProfile p in profiles)
                         {
-                            var party = p.GetParticipant(Settings.Default.MachineName);
-                            System.Console.WriteLine("\t\t{0}", party.LocalPath);
-                            System.Console.WriteLine("\t\t{0}", party.SharedPath);
-                            // Indicate give/consumer status.
-                            System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
+                            var star = p.ContainsParticipant(Settings.Default.MachineName);
+                            System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
+                            // Show participating paths if detailed view is selected.
+                            if (listOptions.Verbose && star)
+                            {
+                                var party = p.GetParticipant(Settings.Default.MachineName);
+                                System.Console.WriteLine("\t\t{0}", party.LocalPath);
+                                System.Console.WriteLine("\t\t{0}", party.SharedPath);
+                                // Indicate give/consumer status.
+                                System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
+                            }
                         }
+                        System.Console.WriteLine(string.Empty);
                     }
-                    System.Console.WriteLine(string.Empty);
                     #endregion
                     break;
                 case "listmachines":
@@ -204,75 +210,83 @@ Commands:
                     break;
                 case "removemachine":
                     #region Remove a machine from all profiles
-                    ListMachines(profileManager);
-                    string machine = configurator.ConfigureString("", "Machine to remove");
-                    foreach (SyncProfile p in profiles)
                     {
-                        for (int x = 0; x < p.Participants.Count; )
+                        var removeOptions = (RemoveMachineSubOptions)argsubs;
+                        ListMachines(profileManager);
+                        string machine = removeOptions.MachineName;
+                        foreach (SyncProfile p in profiles)
                         {
-                            if (p.Participants[x].MachineName == machine)
+                            for (int x = 0; x < p.Participants.Count; )
                             {
-                                p.Participants.RemoveAt(x);
-                            }
-                            else
-                            {
-                                x++;
+                                if (p.Participants[x].MachineName == machine)
+                                {
+                                    p.Participants.RemoveAt(x);
+                                }
+                                else
+                                {
+                                    x++;
+                                }
                             }
                         }
                     }
                     profileManager.Save(profiles);
                     #endregion
                     break;
-                default:
-                    foreach (SyncProfile opts in profileManager.Load())
+                case "run":
+                    #region Run profiles
                     {
-                        if (opts.ContainsParticipant(Settings.Default.MachineName))
+                        var runOptions = (RunSubOptions)argsubs;
+                        foreach (SyncProfile opts in profileManager.Load())
                         {
-                            System.Console.WriteLine();
-                            System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
-
-                            IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
-                            IFileManager copier = new QueuedDiskCopier(opts, indexer, Settings.Default.MachineName);
-                            SyncService s = new SyncService(opts, indexer, copier, false, Settings.Default.MachineName);
-                            s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
-                            s.VerboseMode = args.Contains("/d");
-                            try
+                            if (opts.ContainsParticipant(Settings.Default.MachineName))
                             {
-                                if (args.Contains("indexonly"))
+                                System.Console.WriteLine();
+                                System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+
+                                IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
+                                IFileManager copier = new QueuedDiskCopier(opts, indexer, Settings.Default.MachineName);
+                                SyncService s = new SyncService(opts, indexer, copier, false, Settings.Default.MachineName);
+                                s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
+                                s.VerboseMode = runOptions.Verbose;
+                                try
                                 {
-                                    s.ShowIndexComparison();
+                                    if (runOptions.IndexOnly)
+                                    {
+                                        s.ShowIndexComparison();
+                                    }
+                                    else
+                                    {
+                                        s.Sync();
+                                        pulled += s.PulledCount;
+                                        pushed += s.PushedCount;
+                                        pruned += s.PrunedCount;
+                                        errors += s.Errors.Count;
+                                    }
                                 }
-                                else
+                                catch (Exception e)
                                 {
-                                    s.Sync();
-                                    pulled += s.PulledCount;
-                                    pushed += s.PushedCount;
-                                    pruned += s.PrunedCount;
-                                    errors += s.Errors.Count;
+                                    System.Console.WriteLine("Could not sync.");
+                                    System.Console.WriteLine(e.Message);
+                                    var x = e;
+                                    while (x != null)
+                                    {
+                                        Debug.WriteLine(DateTime.Now);
+                                        Debug.WriteLine(x.Message);
+                                        Debug.WriteLine(x.StackTrace);
+                                        Debug.WriteLine("");
+
+                                        x = x.InnerException;
+                                    }
                                 }
                             }
-                            catch (Exception e)
+                            else
                             {
-                                System.Console.WriteLine("Could not sync.");
-                                System.Console.WriteLine(e.Message);
-                                var x = e;
-                                while (x != null)
-                                {
-                                    Debug.WriteLine(DateTime.Now);
-                                    Debug.WriteLine(x.Message);
-                                    Debug.WriteLine(x.StackTrace);
-                                    Debug.WriteLine("");
-
-                                    x = x.InnerException;
-                                }
+                                System.Console.WriteLine(string.Empty);
+                                System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
                             }
-                        }
-                        else
-                        {
-                            System.Console.WriteLine(string.Empty);
-                            System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
                         }
                     }
+                    #endregion
                     break;
             }
 

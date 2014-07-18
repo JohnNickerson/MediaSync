@@ -49,28 +49,6 @@ namespace AssimilationSoftware.MediaSync.CLI
             int pulled = 0, pushed = 0, pruned = 0, errors = 0;
             switch (argverb)
             {
-                case "help":
-                    #region Help text
-                    // Display help text.
-                    System.Console.WriteLine("MediaSync version {0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
-                    System.Console.WriteLine(@"
-Usage:
-    client.exe [command] [/d] [/?]
-
-Commands:
-    addprofile      Add a new sync profile with this machine as a participant.
-    joinprofile     Joins an existing profile as a participant.
-    leaveprofile    Stops participating in an existing profile.
-    list            Lists active profiles by name, indicating whether this
-                    machine is participating.
-    reconfigure     Allows reconfiguration of machine name and profile
-                    storage location.
-    removemachine   Allows removal of a configured machine from every profile.
-    /d              Show detailed activity reports or configuration.
-    /?              Shows this help text.
-");
-                    #endregion
-                    break;
                 case "add-profile":
                     #region Add profile
                     {

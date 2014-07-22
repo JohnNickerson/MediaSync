@@ -6,7 +6,7 @@ using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Model;
 using AssimilationSoftware.MediaSync.Interfaces;
 
-namespace UnitTests.Mocks
+namespace AssimilationSoftware.MediaSync.UnitTests.Mocks
 {
     class ConsoleIndexer : IIndexMapper
     {

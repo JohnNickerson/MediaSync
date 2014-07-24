@@ -1,0 +1,1 @@
+"C:\Software\xunit-build-1705\xunit.gui.clr4.x86.exe" UnitTests.xunit

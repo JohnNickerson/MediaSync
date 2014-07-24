@@ -15,7 +15,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         {
             var mockprofile = new SyncProfile
             {
-                ProfileName = "mockprofile",
+                Name = "mockprofile",
                 ReserveSpace = 5000,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
                 Participants = new List<ProfileParticipant>(new ProfileParticipant[] {

@@ -136,7 +136,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // For each other most recent index...
             foreach (var p in options.Participants)
             {
-                var f = _indexer.LoadLatest(p.MachineName, options.ProfileName);
+                var f = _indexer.LoadLatest(p.MachineName, options.Name);
                 if (f != null)
                 {
                     foreach (var idxfile in f.Files)

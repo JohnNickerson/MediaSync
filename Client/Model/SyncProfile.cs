@@ -14,14 +14,24 @@ namespace AssimilationSoftware.MediaSync.Model
     public class SyncProfile
     {
         #region Properties
+        /// <summary>
+        /// Bytes reserved for this profile on shared storage.
+        /// </summary>
         public ulong ReserveSpace { get; set; }
 
         /// <summary>
         /// A search pattern for files to include.
         /// </summary>
         public List<string> SearchPatterns { get; set; }
-        public string ProfileName { get; set; }
+        
+        /// <summary>
+        /// The name of the profile.
+        /// </summary>
+        public string Name { get; set; }
 
+        /// <summary>
+        /// All the participants in this profile.
+        /// </summary>
         public List<ProfileParticipant> Participants { get; set; }
         #endregion
 
@@ -36,7 +46,7 @@ namespace AssimilationSoftware.MediaSync.Model
         #region Methods
         public ProfileParticipant GetParticipant(string machine)
         {
-            var localsettings = from p in Participants where p.MachineName == machine select p;
+            var localsettings = Participants.Where(p => p.MachineName.ToLower() == machine.ToLower());
             if (localsettings.Count() > 0)
             {
                 return localsettings.First();
@@ -49,10 +59,11 @@ namespace AssimilationSoftware.MediaSync.Model
 
         public bool ContainsParticipant(string machine)
         {
-            return (from p in Participants where p.MachineName == machine select p).Count() > 0;
+            return Participants.Where(p => p.MachineName.ToLower() == machine.ToLower()).Count() > 0;
         }
         #endregion
 
+        // TODO: Move this. I don't think it belongs here.
         public static void SetLocalMachineName(string name)
         {
             Settings.Default.MachineName = name;

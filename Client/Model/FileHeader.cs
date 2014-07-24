@@ -10,6 +10,7 @@ namespace AssimilationSoftware.MediaSync.Model
 {
     public class FileHeader
     {
+        #region Constructors
         public FileHeader(string filename, string basepath, IFileHashProvider hasher)
         {
             var fileinfo = new FileInfo(Path.Combine(basepath, filename));
@@ -23,10 +24,28 @@ namespace AssimilationSoftware.MediaSync.Model
         public FileHeader()
         {
         }
+        #endregion
 
+        #region Properties
+        /// <summary>
+        /// The path of the file, relative to the local base path.
+        /// </summary>
         public string RelativePath { get; set; }
+
+        /// <summary>
+        /// The name of the file.
+        /// </summary>
         public string FileName { get; set; }
+
+        /// <summary>
+        /// The size of the file.
+        /// </summary>
         public long FileSize { get; set; }
+
+        /// <summary>
+        /// A hash of the contents, to compare quickly with others.
+        /// </summary>
         public string ContentsHash { get; set; }
+        #endregion
     }
 }

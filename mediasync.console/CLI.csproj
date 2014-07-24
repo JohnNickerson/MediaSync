@@ -65,7 +65,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Views\ConsoleView.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Client\MediaSync.Core.csproj">

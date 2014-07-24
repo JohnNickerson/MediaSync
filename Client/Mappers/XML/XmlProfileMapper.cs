@@ -21,7 +21,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         void IProfileMapper.Save(string machineName, SyncProfile saveobject)
         {
-            string filename = String.Format("{0}_{1}.xml", machineName, saveobject.ProfileName);
+            string filename = String.Format("{0}_{1}.xml", machineName, saveobject.Name);
             XmlSerializer formatter = new XmlSerializer(typeof(SyncProfile));
             Stream stream = new FileStream(filename,
                                      FileMode.Create,

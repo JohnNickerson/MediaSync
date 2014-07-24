@@ -46,7 +46,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             {
                 adapter.InsertCommand.Parameters["@Timestamp"] = new SqlCeParameter("@Timestamp", indextime);
                 adapter.InsertCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", _localSettings.MachineName);
-                adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
+                adapter.InsertCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.Name);
                 adapter.InsertCommand.Parameters["@RelPath"] = new SqlCeParameter("@RelPath", Path.Combine(file.RelativePath, file.FileName));
                 adapter.InsertCommand.Parameters["@Size"] = new SqlCeParameter("@Size", file.FileSize);
                 adapter.InsertCommand.Parameters["@Hash"] = new SqlCeParameter("@Hash", file.ContentsHash);
@@ -58,7 +58,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Database
             adapter.DeleteCommand.Parameters.Add("@Machine", SqlDbType.NVarChar);
             adapter.DeleteCommand.Parameters.Add("@Profile", SqlDbType.NVarChar);
             adapter.DeleteCommand.Parameters["@Machine"] = new SqlCeParameter("@Machine", _localSettings.MachineName);
-            adapter.DeleteCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.ProfileName);
+            adapter.DeleteCommand.Parameters["@Profile"] = new SqlCeParameter("@Profile", _options.Name);
             adapter.DeleteCommand.ExecuteNonQuery();
             connection.Close();
         }

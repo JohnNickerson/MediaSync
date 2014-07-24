@@ -37,7 +37,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                 Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
             }
 
-            IInputView configurator = new ConsoleView();
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
             IProfileMapper profileManager = new XmlProfileMapper(Path.Combine(Settings.Default.MetadataFolder, "Profiles.xml"));
@@ -54,7 +53,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
                         profile = new SyncProfile();
-                        profile.ProfileName = addOptions.ProfileName;
+                        profile.Name = addOptions.ProfileName;
 
                         participant = new ProfileParticipant();
                         participant.LocalPath = addOptions.LocalPath;
@@ -85,12 +84,12 @@ namespace AssimilationSoftware.MediaSync.CLI
                             {
                                 System.Console.Write("\t");
                             }
-                            System.Console.WriteLine(p.ProfileName);
+                            System.Console.WriteLine(p.Name);
                         }
                         profilename = joinOptions.ProfileName;
-                        if ((from p in profiles select p.ProfileName.ToLower()).Contains(profilename.ToLower()))
+                        if ((from p in profiles select p.Name.ToLower()).Contains(profilename.ToLower()))
                         {
-                            profile = (from p in profiles where p.ProfileName == profilename select p).First();
+                            profile = (from p in profiles where p.Name == profilename select p).First();
 
                             participant = new ProfileParticipant();
                             participant.LocalPath = joinOptions.LocalPath;
@@ -110,7 +109,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var leaveOptions = (LeaveProfileSubOptions)argsubs;
                         profilename = leaveOptions.ProfileName.ToLower();
-                        var matches = (from p in profiles where p.ProfileName.ToLower() == profilename select p);
+                        var matches = (from p in profiles where p.Name.ToLower() == profilename select p);
 
                         if (matches.Count() > 0)
                         {
@@ -134,7 +133,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             {
                                 System.Console.Write("\t");
                             }
-                            System.Console.WriteLine(p.ProfileName);
+                            System.Console.WriteLine(p.Name);
                         }
                     }
                     #endregion
@@ -150,7 +149,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         foreach (SyncProfile p in profiles)
                         {
                             var star = p.ContainsParticipant(Settings.Default.MachineName);
-                            System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.ProfileName);
+                            System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.Name);
                             // Show participating paths if detailed view is selected.
                             if (listOptions.Verbose && star)
                             {
@@ -211,7 +210,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             if (opts.ContainsParticipant(Settings.Default.MachineName))
                             {
                                 System.Console.WriteLine();
-                                System.Console.WriteLine(string.Format("Processing profile {0}", opts.ProfileName));
+                                System.Console.WriteLine(string.Format("Processing profile {0}", opts.Name));
 
                                 IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
                                 IFileManager copier = new QueuedDiskCopier(opts, indexer, Settings.Default.MachineName);
@@ -252,7 +251,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             else
                             {
                                 System.Console.WriteLine(string.Empty);
-                                System.Console.WriteLine("Not participating in profile {0}", opts.ProfileName);
+                                System.Console.WriteLine("Not participating in profile {0}", opts.Name);
                             }
                         }
 

@@ -63,7 +63,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         public List<FileIndex> Load(SyncProfile profile)
         {
-            return (from i in LoadAll() where i.ProfileName == profile.ProfileName select i).ToList();
+            return (from i in LoadAll() where i.ProfileName == profile.Name select i).ToList();
         }
 
         public List<FileIndex> Load(string machine)
@@ -73,7 +73,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
 
         public List<FileIndex> Load(string machine, SyncProfile profile)
         {
-            return (from i in LoadAll() where i.MachineName == machine && i.ProfileName == profile.ProfileName select i).ToList();
+            return (from i in LoadAll() where i.MachineName == machine && i.ProfileName == profile.Name select i).ToList();
         }
         #endregion
     }

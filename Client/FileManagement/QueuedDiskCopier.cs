@@ -323,7 +323,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             FileIndex index = new FileIndex();
             index.MachineName = _localSettings.MachineName;
-            index.ProfileName = _profile.ProfileName;
+            index.ProfileName = _profile.Name;
             index.TimeStamp = DateTime.Now;
             index.LocalBasePath = _localSettings.LocalPath;
             IFileHashProvider hasher = new MockHasher();

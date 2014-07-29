@@ -39,6 +39,9 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 
         [VerbOption("run", HelpText = "Runs all profiles")]
         public RunSubOptions RunVerb { get; set; }
+
+        [VerbOption("version", HelpText = "Displays version information")]
+        public VersionSubOptions VersionVerb { get; set; }
         #endregion
     }
 }

@@ -269,6 +269,9 @@ namespace AssimilationSoftware.MediaSync.CLI
                     }
                     #endregion
                     break;
+                case "version":
+                    Console.WriteLine("MediaSync v{0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
+                    break;
             }
             if (errors > 0)
             {

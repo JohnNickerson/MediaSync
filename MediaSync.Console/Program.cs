@@ -52,6 +52,12 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Add profile
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
+                        if (profiles.Where(p => p.Name.ToLower() == addOptions.ProfileName.ToLower()).Count() > 0)
+                        {
+                            Console.WriteLine("Profile name already in use.");
+                            break;
+
+                        }
                         profile = new SyncProfile();
                         profile.Name = addOptions.ProfileName;
 
@@ -87,7 +93,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             System.Console.WriteLine(p.Name);
                         }
                         profilename = joinOptions.ProfileName;
-                        if ((from p in profiles select p.Name.ToLower()).Contains(profilename.ToLower()))
+                        if (profiles.Select(p => p.Name.ToLower()).Contains(profilename.ToLower()))
                         {
                             profile = (from p in profiles where p.Name == profilename select p).First();
 

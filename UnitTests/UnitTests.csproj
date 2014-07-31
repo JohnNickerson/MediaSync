@@ -58,7 +58,7 @@
     <Compile Include="SyncServiceTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Client\MediaSync.Core.csproj">
+    <ProjectReference Include="..\Core\Core.csproj">
       <Project>{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}</Project>
       <Name>MediaSync.Core</Name>
     </ProjectReference>

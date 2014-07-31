@@ -15,6 +15,11 @@ namespace AssimilationSoftware.MediaSync.Model
     {
         #region Properties
         /// <summary>
+        /// A unique ID for the profile.
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
         /// Bytes reserved for this profile on shared storage.
         /// </summary>
         public ulong ReserveSpace { get; set; }

@@ -322,17 +322,16 @@ namespace AssimilationSoftware.MediaSync.Core
         public FileIndex CreateIndex()
         {
             FileIndex index = new FileIndex();
-            index.MachineName = _localSettings.MachineName;
-            index.ProfileName = _profile.Name;
+            index.Participant = _localSettings;
+            index.Profile = _profile;
             index.TimeStamp = DateTime.Now;
-            index.LocalBasePath = _localSettings.LocalPath;
             IFileHashProvider hasher = new MockHasher();
 
             foreach (string file in ListLocalFiles())
             {
                 try
                 {
-                    index.Files.Add(new FileHeader(file, index.LocalBasePath, hasher));
+                    index.Files.Add(new FileHeader(file, index.Participant.LocalPath, hasher));
                 }
                 catch (Exception e)
                 {

@@ -9,6 +9,11 @@ namespace AssimilationSoftware.MediaSync.Model
     {
         #region Properties
         /// <summary>
+        /// Participant ID.
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
         /// The path on the local machine for the file collection.
         /// </summary>
         public string LocalPath { get; set; }

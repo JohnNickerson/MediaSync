@@ -12,10 +12,10 @@ namespace AssimilationSoftware.MediaSync.Model
             Files = new List<FileHeader>();
         }
 
-        public string MachineName { get; set; }
-        public string ProfileName { get; set; }
+        public int Id { get; set; }
+        public SyncProfile Profile { get; set; }
+        public ProfileParticipant Participant { get; set; }
         public DateTime TimeStamp { get; set; }
-        public string LocalBasePath { get; set; }
         public List<FileHeader> Files { get; set; }
     }
 }

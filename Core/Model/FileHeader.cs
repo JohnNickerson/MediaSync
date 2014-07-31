@@ -28,6 +28,11 @@ namespace AssimilationSoftware.MediaSync.Model
 
         #region Properties
         /// <summary>
+        /// File ID.
+        /// </summary>
+        public int Id { get; set; }
+        
+        /// <summary>
         /// The path of the file, relative to the local base path.
         /// </summary>
         public string RelativePath { get; set; }

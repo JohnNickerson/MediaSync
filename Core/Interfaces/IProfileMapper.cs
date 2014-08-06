@@ -29,6 +29,12 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         /// </summary>
         /// <param name="profiles">The list of profiles to save.</param>
         void Save(List<SyncProfile> profiles);
+
+        /// <summary>
+        /// Saves an individual profile.
+        /// </summary>
+        /// <param name="profile">The profile to save.</param>
+        void Save(SyncProfile profile);
         #endregion
     }
 }

@@ -50,7 +50,7 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
         }
 
 
-        List<SyncProfile> IProfileMapper.Load()
+        public List<SyncProfile> Load()
         {
             List<SyncProfile> p;
             if (File.Exists(Filename))
@@ -65,10 +65,21 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
             return p;
         }
 
-        void IProfileMapper.Save(List<SyncProfile> profiles)
+        public void Save(List<SyncProfile> profiles)
         {
             SharpSerializer s = new SharpSerializer();
             s.Serialize(profiles, Filename);
+        }
+
+        public void Save(SyncProfile profile)
+        {
+            var allprofiles = Load();
+            if (allprofiles.Select(p => p.Id).Contains(profile.Id))
+            {
+                allprofiles.Remove(allprofiles.Where(p => p.Id == profile.Id).First());
+            }
+            allprofiles.Add(profile);
+            Save(allprofiles);
         }
     }
 }

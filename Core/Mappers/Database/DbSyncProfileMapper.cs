@@ -26,7 +26,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
 
         public List<MediaSync.Model.SyncProfile> Load()
         {
-            throw new NotImplementedException();
+            return DatabaseContext.Default.SyncProfiles.ToList();
         }
 
         public void Save(List<MediaSync.Model.SyncProfile> profiles)

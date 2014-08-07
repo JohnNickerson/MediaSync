@@ -28,5 +28,13 @@ namespace AssimilationSoftware.MediaSync.UnitTests
 
             mapper.Save(p);
         }
+
+        [Fact]
+        public void Test_Read()
+        {
+            IProfileMapper mapper = new DbSyncProfileMapper();
+
+            mapper.Load();
+        }
     }
 }

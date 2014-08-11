@@ -81,5 +81,19 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
             allprofiles.Add(profile);
             Save(allprofiles);
         }
+
+        public SyncProfile Load(int id)
+        {
+            var search = Load().Where(s => s.Id == id);
+
+            if (search.Count() > 0)
+            {
+                return search.First();
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

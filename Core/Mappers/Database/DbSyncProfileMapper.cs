@@ -37,6 +37,22 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
         public void Save(MediaSync.Model.SyncProfile p)
         {
             DatabaseContext.Default.SyncProfiles.Add(p);
+            DatabaseContext.Default.SaveChanges();
+        }
+
+
+        public MediaSync.Model.SyncProfile Load(int id)
+        {
+            var search = Load().Where(s => s.Id == id);
+
+            if (search.Count() > 0)
+            {
+                return search.First();
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

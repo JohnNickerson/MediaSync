@@ -35,6 +35,13 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         /// </summary>
         /// <param name="profile">The profile to save.</param>
         void Save(SyncProfile profile);
+
+        /// <summary>
+        /// Loads a single sync profile by ID.
+        /// </summary>
+        /// <param name="id">The ID of the profile to load.</param>
+        /// <returns>The profile with the given ID, if any.</returns>
+        SyncProfile Load(int id);
         #endregion
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using AssimilationSoftware.MediaSync.Model;
-namespace AssimilationSoftware.MediaSync.Interfaces
+using AssimilationSoftware.MediaSync.Core.Model;
+namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
 	/// <summary>
 	/// An interface for components that handle file copying.

@@ -8,9 +8,9 @@ using System.Threading;
 using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Mappers.Mock;
+using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 using AssimilationSoftware.MediaSync.Core.Properties;
 using System.ComponentModel;
 

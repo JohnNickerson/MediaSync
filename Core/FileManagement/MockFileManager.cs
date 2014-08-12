@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
 
 namespace AssimilationSoftware.MediaSync.Core
 {

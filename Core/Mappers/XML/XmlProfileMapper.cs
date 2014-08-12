@@ -5,10 +5,10 @@ using System.Text;
 using System.Xml.Serialization;
 using System.IO;
 using Polenter.Serialization;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Mappers.Xml
+namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 {
     public class XmlProfileMapper : IProfileMapper
     {
@@ -94,6 +94,12 @@ namespace AssimilationSoftware.MediaSync.Mappers.Xml
             {
                 return null;
             }
+        }
+
+
+        public void Delete(SyncProfile p)
+        {
+            throw new NotImplementedException();
         }
     }
 }

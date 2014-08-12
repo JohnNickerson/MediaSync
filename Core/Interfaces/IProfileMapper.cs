@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Model;
 
-namespace AssimilationSoftware.MediaSync.Interfaces
+namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
     public interface IProfileMapper
     {
@@ -42,6 +42,12 @@ namespace AssimilationSoftware.MediaSync.Interfaces
         /// <param name="id">The ID of the profile to load.</param>
         /// <returns>The profile with the given ID, if any.</returns>
         SyncProfile Load(int id);
+
+        /// <summary>
+        /// Deletes a profile.
+        /// </summary>
+        /// <param name="p">The profile to delete.</param>
+        void Delete(SyncProfile p);
         #endregion
     }
 }

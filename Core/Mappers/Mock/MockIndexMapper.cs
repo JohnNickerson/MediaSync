@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Mappers.Mock
+namespace AssimilationSoftware.MediaSync.Core.Mappers.Mock
 {
     public class MockIndexMapper : IIndexMapper
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core.Model

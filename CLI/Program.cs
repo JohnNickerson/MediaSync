@@ -6,9 +6,9 @@ using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using System.IO;
 using AssimilationSoftware.MediaSync.CLI.Properties;
-using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Mappers.Xml;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.Xml;
+using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
 
 namespace AssimilationSoftware.MediaSync.CLI

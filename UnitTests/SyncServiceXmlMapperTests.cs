@@ -1,6 +1,6 @@
-﻿using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Mappers.Xml;
-using AssimilationSoftware.MediaSync.Model;
+﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.Xml;
+using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;

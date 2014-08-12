@@ -1,6 +1,6 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Mappers.Database;
-using AssimilationSoftware.MediaSync.Interfaces;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
             {
                 Id = 1,
                 Name = "testprofile",
-                ReserveSpace = 500,
+                ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
                 Participants = new List<ProfileParticipant>()
             };
@@ -46,7 +46,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
             {
                 Id = 1,
                 Name = "testprofile",
-                ReserveSpace = 500,
+                ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
                 Participants = new List<ProfileParticipant>()
             };
@@ -69,6 +69,24 @@ namespace AssimilationSoftware.MediaSync.UnitTests
             {
                 Assert.True(s.SearchPatterns.Contains(search));
             }
+        }
+
+        [Fact]
+        public void Test_Delete()
+        {
+            IProfileMapper mapper = new DbSyncProfileMapper();
+
+            SyncProfile p = new SyncProfile
+            {
+                Id = 1,
+                Name = "testprofile",
+                ReserveSpace = 300,
+                SearchPatterns = new List<string>(new string[] { "*.*" }),
+                Participants = new List<ProfileParticipant>()
+            };
+
+            mapper.Save(p);
+            mapper.Delete(p);
         }
     }
 }

@@ -9,7 +9,7 @@ using System.Configuration;
 using System.Data;
 using AssimilationSoftware.MediaSync.Core.Properties;
 
-namespace AssimilationSoftware.MediaSync.Model
+namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class SyncProfile
     {

@@ -6,7 +6,7 @@ using System.IO;
 using System.Security.Cryptography;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Model
+namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class FileHeader
     {

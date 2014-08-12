@@ -88,7 +88,9 @@
     <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Commands\FileAction.cs" />
     <Compile Include="Commands\FileActionCreate.cs" />
+    <Compile Include="Interfaces\IParticipantMapper.cs" />
     <Compile Include="Mappers\Database\DatabaseContext.cs" />
+    <Compile Include="Mappers\Database\DbParticipantMapper.cs" />
     <Compile Include="Mappers\Database\DbSyncProfileMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />

@@ -1,5 +1,5 @@
 ﻿using AssimilationSoftware.MediaSync.Core;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +14,12 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_SyncService_Constructor()
         {
-            var testprofile = new Model.SyncProfile
+            var testprofile = new SyncProfile
                 {
                     Name = "testprofile",
                     ReserveSpace = 5000,
                     SearchPatterns = new List<string>(new string[] { "*.*" }),
-                    Participants = new List<Model.ProfileParticipant>(new ProfileParticipant[]{
+                    Participants = new List<ProfileParticipant>(new ProfileParticipant[]{
                         new ProfileParticipant{
                             Consumer=true,
                             Contributor=true,
@@ -28,7 +28,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                             MachineName=Environment.MachineName
                          }})
                 };
-            var mockindexer = new AssimilationSoftware.MediaSync.Mappers.Mock.MockIndexMapper();
+            var mockindexer = new AssimilationSoftware.MediaSync.Core.Mappers.Mock.MockIndexMapper();
             var s = new SyncService(testprofile, mockindexer,
                          new QueuedDiskCopier(testprofile, mockindexer, Environment.MachineName),
                          true, Environment.MachineName);

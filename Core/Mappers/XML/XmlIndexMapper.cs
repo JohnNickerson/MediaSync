@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Polenter.Serialization;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Properties;
 using System.IO;
 
-namespace AssimilationSoftware.MediaSync.Mappers.Xml
+namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 {
     public class XmlIndexMapper : IIndexMapper
     {

@@ -7,8 +7,8 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core.Properties;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Mappers.Database;
 
 namespace AssimilationSoftware.MediaSync.Core.Mappers.Database

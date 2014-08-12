@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core.Properties;
-using AssimilationSoftware.MediaSync.Model;
-using AssimilationSoftware.MediaSync.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 
-namespace AssimilationSoftware.MediaSync.Mappers.PlainText
+namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
 {
     /// <summary>
     /// An index class that writes to a text file.

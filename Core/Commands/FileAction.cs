@@ -8,7 +8,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public abstract class FileAction
     {
-        public FileAction(MediaSync.Model.SyncProfile profile, string machine)
+        public FileAction(SyncProfile profile, string machine)
         {
             ProfileName = profile.Name;
             MachineName = machine;

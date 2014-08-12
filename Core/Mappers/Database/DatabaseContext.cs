@@ -1,4 +1,4 @@
-﻿using AssimilationSoftware.MediaSync.Model;
+﻿using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;

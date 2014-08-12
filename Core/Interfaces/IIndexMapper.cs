@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Model;
 
-namespace AssimilationSoftware.MediaSync.Interfaces
+namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
     public interface IIndexMapper
     {

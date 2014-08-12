@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using AssimilationSoftware.MediaSync.Core;
 using Xunit;
-using AssimilationSoftware.MediaSync.Model;
+using AssimilationSoftware.MediaSync.Core.Model;
 
 namespace AssimilationSoftware.MediaSync.UnitTests
 {

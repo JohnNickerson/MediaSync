@@ -12,6 +12,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
     /// <summary>
     /// An index class that writes to a text file.
     /// </summary>
+    [Obsolete("To be removed in version 1.2")]
     public class TextIndexMapper : IIndexMapper
     {
         #region Fields

@@ -6,6 +6,7 @@ using AssimilationSoftware.MediaSync.Core.Model;
 
 namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
+    [Obsolete("To be removed in version 1.2")]
     public interface IProfileMapper
     {
         #region Methods

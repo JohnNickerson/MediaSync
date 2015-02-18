@@ -10,6 +10,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Mappers.Xml;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
+using AssimilationSoftware.MediaSync.Core.Mappers.Database;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -39,8 +40,32 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            IProfileMapper profileManager = new XmlProfileMapper(Path.Combine(Settings.Default.MetadataFolder, "Profiles.xml"));
-            var profiles = profileManager.Load();
+            IDataStore datamapper = new DatabaseMapper();
+            //IProfileMapper profileManager;
+            //List<SyncProfile> profiles;
+            //if (argverb != "init" && argverb != "version")
+            //{
+            //    try
+            //    {
+            //        profileManager = new DbSyncProfileMapper();
+            //        profiles = profileManager.Load();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine("Could not load profile data.");
+            //        while (ex != null)
+            //        {
+            //            Console.WriteLine(ex.Message);
+            //            ex = ex.InnerException;
+            //        }
+            //        return;
+            //    }
+            //}
+            //else
+            //{
+            //    profileManager = null;
+            //    profiles = null;
+            //}
             SyncProfile profile;
             ProfileParticipant participant;
             string profilename;
@@ -52,7 +77,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Add profile
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
-                        if (profiles.Where(p => p.Name.ToLower() == addOptions.ProfileName.ToLower()).Count() > 0)
+                        if (datamapper.GetAllSyncProfile().Where(p => p.Name.ToLower() == addOptions.ProfileName.ToLower()).Count() > 0)
                         {
                             Console.WriteLine("Profile name already in use.");
                             break;
@@ -71,8 +96,9 @@ namespace AssimilationSoftware.MediaSync.CLI
                         profile.SearchPatterns.Add(addOptions.SearchPattern);
 
                         profile.Participants.Add(participant);
-                        profiles.Add(profile);
-                        profileManager.Save(profiles);
+                        datamapper.CreateProfileParticipant(participant);
+                        datamapper.CreateSyncProfile(profile);
+                        datamapper.SaveChanges();
                     }
                     #endregion
                     break;
@@ -80,7 +106,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Join profile
                     {
                         var joinOptions = (JoinProfileSubOptions)argsubs;
-                        foreach (SyncProfile p in profiles)
+                        foreach (SyncProfile p in datamapper.GetAllSyncProfile())
                         {
                             if (p.ContainsParticipant(Settings.Default.MachineName))
                             {
@@ -93,9 +119,9 @@ namespace AssimilationSoftware.MediaSync.CLI
                             System.Console.WriteLine(p.Name);
                         }
                         profilename = joinOptions.ProfileName;
-                        if (profiles.Select(p => p.Name.ToLower()).Contains(profilename.ToLower()))
+                        if (datamapper.GetAllSyncProfile().Select(p => p.Name.ToLower()).Contains(profilename.ToLower()))
                         {
-                            profile = (from p in profiles where p.Name == profilename select p).First();
+                            profile = (from p in datamapper.GetAllSyncProfile() where p.Name == profilename select p).First();
 
                             participant = new ProfileParticipant();
                             participant.LocalPath = joinOptions.LocalPath;
@@ -105,7 +131,8 @@ namespace AssimilationSoftware.MediaSync.CLI
                             participant.MachineName = Settings.Default.MachineName;
 
                             profile.Participants.Add(participant);
-                            profileManager.Save(profiles);
+                            datamapper.CreateProfileParticipant(participant);
+                            datamapper.SaveChanges();
                         }
                     }
                     #endregion
@@ -115,7 +142,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var leaveOptions = (LeaveProfileSubOptions)argsubs;
                         profilename = leaveOptions.ProfileName.ToLower();
-                        var matches = (from p in profiles where p.Name.ToLower() == profilename select p);
+                        var matches = (from p in datamapper.GetAllSyncProfile() where p.Name.ToLower() == profilename select p);
 
                         if (matches.Count() > 0)
                         {
@@ -126,10 +153,11 @@ namespace AssimilationSoftware.MediaSync.CLI
                                 participant = profile.GetParticipant(Settings.Default.MachineName);
 
                                 profile.Participants.Remove(participant);
-                                profileManager.Save(profiles);
+                                datamapper.DeleteProfileParticipant(participant);
+                                datamapper.SaveChanges();
                             }
                         }
-                        foreach (SyncProfile p in profiles)
+                        foreach (SyncProfile p in datamapper.GetAllSyncProfile())
                         {
                             if (p.ContainsParticipant(Settings.Default.MachineName))
                             {
@@ -152,7 +180,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         System.Console.WriteLine(string.Empty);
                         System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
                         System.Console.WriteLine(string.Empty);
-                        foreach (SyncProfile p in profiles)
+                        foreach (SyncProfile p in datamapper.GetAllSyncProfile())
                         {
                             var star = p.ContainsParticipant(Settings.Default.MachineName);
                             System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.Name);
@@ -172,7 +200,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     break;
                 case "list-machines":
                     #region List participant machines
-                    ListMachines(profileManager);
+                    ListMachines(datamapper);
                     #endregion
                     break;
                 case "init":
@@ -188,13 +216,14 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var removeOptions = (RemoveMachineSubOptions)argsubs;
                         string machine = removeOptions.MachineName;
-                        foreach (SyncProfile p in profiles)
+                        foreach (SyncProfile p in datamapper.GetAllSyncProfile())
                         {
                             for (int x = 0; x < p.Participants.Count; )
                             {
                                 if (p.Participants[x].MachineName.ToLower() == machine.ToLower())
                                 {
                                     p.Participants.RemoveAt(x);
+                                    datamapper.DeleteProfileParticipant(p.Participants[x]);
                                 }
                                 else
                                 {
@@ -202,16 +231,16 @@ namespace AssimilationSoftware.MediaSync.CLI
                                 }
                             }
                         }
-                        ListMachines(profileManager);
+                        ListMachines(datamapper);
                     }
-                    profileManager.Save(profiles);
+                    datamapper.SaveChanges();
                     #endregion
                     break;
                 case "run":
                     #region Run profiles
                     {
                         var runOptions = (RunSubOptions)argsubs;
-                        foreach (SyncProfile opts in profileManager.Load())
+                        foreach (SyncProfile opts in datamapper.GetAllSyncProfile())
                         {
                             if (opts.ContainsParticipant(Settings.Default.MachineName))
                             {
@@ -286,21 +315,11 @@ namespace AssimilationSoftware.MediaSync.CLI
             Debug.Flush();
         }
 
-        private static void ListMachines(IProfileMapper profileManager)
+        private static void ListMachines(IDataStore profileManager)
         {
-            var profiles = profileManager.Load();
-            var participants = new List<String>();
-            foreach (SyncProfile p in profiles)
-            {
-                foreach (ProfileParticipant party in p.Participants)
-                {
-                    if (!participants.Contains(party.MachineName))
-                    {
-                        participants.Add(party.MachineName);
-                    }
-                }
-            }
-            if (participants.Count > 0)
+            var participants = (from p in profileManager.GetAllProfileParticipant() select p.MachineName).Distinct();
+
+            if (participants.Count() > 0)
             {
                 System.Console.WriteLine(string.Empty);
                 System.Console.WriteLine("Current machines:");

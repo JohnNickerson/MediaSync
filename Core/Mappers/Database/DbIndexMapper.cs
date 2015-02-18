@@ -16,6 +16,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
     /// <summary>
     /// Stores file indexes in a database.
     /// </summary>
+    [Obsolete("To be removed in version 1.2")]
     class DbIndexMapper : IIndexMapper
     {
         private List<string> contents = new List<string>();

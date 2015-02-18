@@ -85,13 +85,23 @@
   <ItemGroup>
     <Compile Include="FileManagement\Hashing\MockHasher.cs" />
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
+    <Compile Include="Interfaces\IDataStore.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Commands\FileAction.cs" />
     <Compile Include="Commands\FileActionCreate.cs" />
     <Compile Include="Interfaces\IParticipantMapper.cs" />
     <Compile Include="Mappers\Database\DatabaseContext.cs" />
+    <Compile Include="Mappers\Database\DatabaseMapper.cs" />
     <Compile Include="Mappers\Database\DbParticipantMapper.cs" />
     <Compile Include="Mappers\Database\DbSyncProfileMapper.cs" />
+    <Compile Include="Mappers\Mock\MockDataStore.cs" />
+    <Compile Include="Mappers\PlainText\TextDataStore.cs" />
+    <Compile Include="Mappers\XML\XmlDataStore.cs" />
+    <Compile Include="Migrations\201502180413485_LinkParticipantsToProfiles.cs" />
+    <Compile Include="Migrations\201502180413485_LinkParticipantsToProfiles.Designer.cs">
+      <DependentUpon>201502180413485_LinkParticipantsToProfiles.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
     <Compile Include="Mappers\Mock\MockIndexMapper.cs" />
@@ -114,6 +124,7 @@
     <Compile Include="SyncService.cs" />
     <Compile Include="Commands\SyncOperation.cs" />
     <Compile Include="Model\SyncProfile.cs" />
+    <Compile Include="ViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -122,6 +133,11 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201502180413485_LinkParticipantsToProfiles.resx">
+      <DependentUpon>201502180413485_LinkParticipantsToProfiles.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

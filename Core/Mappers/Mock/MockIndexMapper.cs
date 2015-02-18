@@ -7,6 +7,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Mappers.Mock
 {
+    [Obsolete("To be removed in version 1.2")]
     public class MockIndexMapper : IIndexMapper
     {
         public void CreateIndex(IFileManager file_manager)

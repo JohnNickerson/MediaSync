@@ -1,4 +1,5 @@
-﻿using AssimilationSoftware.MediaSync.Core.Model;
+﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
 {
-    internal class DatabaseContext : DbContext
+    public class DatabaseContext : DbContext
     {
         static DatabaseContext()
         {

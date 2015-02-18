@@ -10,6 +10,7 @@ using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 {
+    [Obsolete("To be removed in version 1.2")]
     public class XmlIndexMapper : IIndexMapper
     {
         #region Fields

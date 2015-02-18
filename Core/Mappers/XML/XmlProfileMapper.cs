@@ -10,6 +10,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 {
+    [Obsolete("To be removed in version 1.2")]
     public class XmlProfileMapper : IProfileMapper
     {
         public string Filename;

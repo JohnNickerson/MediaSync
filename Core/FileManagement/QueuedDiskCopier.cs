@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Properties;
-using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using System.Diagnostics;
 

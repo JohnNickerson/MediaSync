@@ -37,7 +37,9 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// All the participants in this profile.
         /// </summary>
-        public List<ProfileParticipant> Participants { get; set; }
+        public virtual List<ProfileParticipant> Participants { get; set; }
+
+        public List<string> IgnorePatterns { get; set; }
         #endregion
 
 		#region Constructors

@@ -13,8 +13,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         }
 
         public int Id { get; set; }
-        public SyncProfile Profile { get; set; }
-        public ProfileParticipant Participant { get; set; }
+        public string ProfileName { get; set; }
+        public Repository Participant { get; set; }
         public DateTime TimeStamp { get; set; }
         public List<FileHeader> Files { get; set; }
     }

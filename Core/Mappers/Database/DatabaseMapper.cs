@@ -24,7 +24,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
             DatabaseContext.Default.FileIndexes.Add(obj);
         }
 
-        public void CreateProfileParticipant(Model.ProfileParticipant obj)
+        public void CreateProfileParticipant(Model.Repository obj)
         {
             DatabaseContext.Default.ProfileParticipants.Add(obj);
         }
@@ -44,7 +44,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
             return DatabaseContext.Default.FileIndexes.Find(id);
         }
 
-        public Model.ProfileParticipant GetProfileParticipantById(int id)
+        public Model.Repository GetProfileParticipantById(int id)
         {
             return DatabaseContext.Default.ProfileParticipants.Find(id);
         }
@@ -65,7 +65,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
             return DatabaseContext.Default.FileIndexes.ToArray();
         }
 
-        public Model.ProfileParticipant[] GetAllProfileParticipant()
+        public Model.Repository[] GetAllProfileParticipant()
         {
             return DatabaseContext.Default.ProfileParticipants.ToArray();
         }
@@ -86,7 +86,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
             // Automatically handled by Entity Framework.
         }
 
-        public void UpdateProfileParticipant(Model.ProfileParticipant obj)
+        public void UpdateProfileParticipant(Model.Repository obj)
         {
             // Automatically handled by Entity Framework.
         }
@@ -106,7 +106,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
             DatabaseContext.Default.FileIndexes.Remove(obj);
         }
 
-        public void DeleteProfileParticipant(Model.ProfileParticipant obj)
+        public void DeleteProfileParticipant(Model.Repository obj)
         {
             DatabaseContext.Default.ProfileParticipants.Remove(obj);
         }
@@ -114,6 +114,11 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
         public void DeleteSyncProfile(Model.SyncProfile obj)
         {
             DatabaseContext.Default.SyncProfiles.Remove(obj);
+        }
+
+        public Model.Machine[] GetAllMachines()
+        {
+            DatabaseContext.Default.Machines.ToArray();
         }
     }
 }

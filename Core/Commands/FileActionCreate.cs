@@ -14,19 +14,19 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         private string sharedpath;
         private string localpath;
 
-        public FileActionCreate(SyncProfile profile, string filename, string machine) : base(profile, machine)
+        public FileActionCreate(SyncProfile profile, string filename, string machine)
         {
             sharedpath = profile.GetParticipant(machine).SharedPath;
             localpath = profile.GetParticipant(machine).LocalPath;
             FileName = filename;
         }
 
-        public override void Replay()
+        public void Replay()
         {
             string sharedfilename = Path.Combine(sharedpath, FileName);
             string localfilename = Path.Combine(localpath, FileName);
 
-            File.Copy(sharedfilename, localfilename);
+            System.IO.File.Copy(sharedfilename, localfilename);
         }
     }
 }

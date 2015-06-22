@@ -21,7 +21,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
         /// </summary>
         private SyncProfile _options;
 
-        private ProfileParticipant _localSettings;
+        private Repository _localSettings;
 
         /// <summary>
         /// The current list of files.

@@ -38,7 +38,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 
         public FileIndex LoadLatest(string machine, string profile)
         {
-            var c = (from i in LoadAll() where i.Participant.MachineName.ToLower() == machine.ToLower() && i.Profile.Name.ToLower() == profile.ToLower() orderby i.TimeStamp select i);
+            var c = (from i in LoadAll() where i.Participant.MachineName.ToLower() == machine.ToLower() && i.ProfileName.ToLower() == profile.ToLower() orderby i.TimeStamp select i);
             if (c.Count() > 0)
             {
                 return c.Last();
@@ -64,7 +64,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 
         public List<FileIndex> Load(SyncProfile profile)
         {
-            return (from i in LoadAll() where i.Profile.Name.ToLower() == profile.Name.ToLower() select i).ToList();
+            return (from i in LoadAll() where i.ProfileName.ToLower() == profile.Name.ToLower() select i).ToList();
         }
 
         public List<FileIndex> Load(string machine)
@@ -74,7 +74,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Xml
 
         public List<FileIndex> Load(string machine, SyncProfile profile)
         {
-            return (from i in LoadAll() where i.Participant.MachineName.ToLower() == machine.ToLower() && i.Profile.Name.ToLower() == profile.Name.ToLower() select i).ToList();
+            return (from i in LoadAll() where i.Participant.MachineName.ToLower() == machine.ToLower() && i.ProfileName.ToLower() == profile.Name.ToLower() select i).ToList();
         }
         #endregion
     }

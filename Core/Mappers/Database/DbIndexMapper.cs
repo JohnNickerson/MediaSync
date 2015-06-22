@@ -21,7 +21,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
     {
         private List<string> contents = new List<string>();
         private SyncProfile _options;
-        private ProfileParticipant _localSettings;
+        private Repository _localSettings;
 
         public DbIndexMapper(SyncProfile options, string machine)
         {
@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
 
         public FileIndex LoadLatest(string machine, string profile)
         {
-            return DatabaseContext.Default.FileIndexes.Where(i => i.Participant.MachineName.ToLower() == machine.ToLower() && i.Profile.Name.ToLower() == profile.ToLower()).OrderBy(i => i.TimeStamp).LastOrDefault();
+            return DatabaseContext.Default.FileIndexes.Where(i => i.Participant.MachineName.ToLower() == machine.ToLower() && i.ProfileName.ToLower() == profile.ToLower()).OrderBy(i => i.TimeStamp).LastOrDefault();
         }
 
 
@@ -48,7 +48,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
 
         public List<FileIndex> Load(SyncProfile profile)
         {
-            return DatabaseContext.Default.FileIndexes.Where(i => i.Profile.Name.ToLower() == profile.Name.ToLower()).ToList();
+            return DatabaseContext.Default.FileIndexes.Where(i => i.ProfileName.ToLower() == profile.Name.ToLower()).ToList();
         }
 
         public List<FileIndex> Load(string machine)
@@ -58,7 +58,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
 
         public List<FileIndex> Load(string machine, SyncProfile profile)
         {
-            return DatabaseContext.Default.FileIndexes.Where(i => i.Participant.MachineName.ToLower() == machine.ToLower() && i.Profile.Name.ToLower() == profile.Name.ToLower()).ToList();
+            return DatabaseContext.Default.FileIndexes.Where(i => i.Participant.MachineName.ToLower() == machine.ToLower() && i.ProfileName.ToLower() == profile.Name.ToLower()).ToList();
         }
     }
 }

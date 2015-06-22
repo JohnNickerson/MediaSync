@@ -15,7 +15,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Create()
         {
-            IProfileMapper mapper = new DbSyncProfileMapper();
+            IDataStore mapper = new DatabaseMapper();
 
             SyncProfile p = new SyncProfile
             {
@@ -23,24 +23,25 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 Name = "testprofile",
                 ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<ProfileParticipant>()
+                Participants = new List<Repository>()
             };
 
-            mapper.Save(p);
+            mapper.CreateSyncProfile(p);
+            mapper.SaveChanges();
         }
 
         [Fact]
         public void Test_Read()
         {
-            IProfileMapper mapper = new DbSyncProfileMapper();
+            IDataStore mapper = new DatabaseMapper();
 
-            mapper.Load();
+            mapper.GetAllSyncProfile();
         }
 
         [Fact]
         public void Test_Update()
         {
-            IProfileMapper mapper = new DbSyncProfileMapper();
+            IDataStore mapper = new DatabaseMapper();
 
             SyncProfile p = new SyncProfile
             {
@@ -48,18 +49,19 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 Name = "testprofile",
                 ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<ProfileParticipant>()
+                Participants = new List<Repository>()
             };
 
-            mapper.Save(p);
+            mapper.CreateSyncProfile(p);
+            mapper.SaveChanges();
 
             p.Name = "updatedname";
             p.ReserveSpace = 1000;
             p.SearchPatterns.Add("*.jpg");
 
-            mapper.Save(p);
+            mapper.SaveChanges();
 
-            SyncProfile s = mapper.Load(p.Id);
+            SyncProfile s = mapper.GetSyncProfileById(p.Id);
 
             Assert.Equal(p.Id, s.Id);
             Assert.Equal(p.Name, s.Name);
@@ -74,7 +76,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Delete()
         {
-            IProfileMapper mapper = new DbSyncProfileMapper();
+            IDataStore mapper = new DatabaseMapper();
 
             SyncProfile p = new SyncProfile
             {
@@ -82,11 +84,12 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 Name = "testprofile",
                 ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<ProfileParticipant>()
+                Participants = new List<Repository>()
             };
 
-            mapper.Save(p);
-            mapper.Delete(p);
+            mapper.CreateSyncProfile(p);
+            mapper.SaveChanges();
+            mapper.DeleteSyncProfile(p);
         }
     }
 }

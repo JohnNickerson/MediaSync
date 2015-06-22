@@ -1,5 +1,6 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Mappers.Xml;
+using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
             {
                 File.Delete(filename);
             }
-            IProfileMapper mapper = new XmlProfileMapper(filename);
+            IDataStore mapper = new XmlDataStore(filename, null);
 
             SyncProfile p = new SyncProfile
             {
@@ -29,10 +30,11 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 Name = "testprofile",
                 ReserveSpace = 500,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<ProfileParticipant>()
+                Participants = new List<Repository>()
             };
 
-            mapper.Save(p);
+            mapper.CreateSyncProfile(p);
+            mapper.SaveChanges();
         }
     }
 }

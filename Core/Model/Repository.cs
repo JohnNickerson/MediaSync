@@ -6,7 +6,7 @@ using System.Text;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class ProfileParticipant
+    public class Repository
     {
         #region Properties
         /// <summary>
@@ -28,6 +28,10 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// The name of the machine participant.
         /// </summary>
         public string MachineName { get; set; }
+
+        public Machine Machine { get; set; }
+
+        public SyncProfile Profile { get; set; }
 
         /// <summary>
         /// True if this machine contributes files to this profile.

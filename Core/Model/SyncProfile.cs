@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// All the participants in this profile.
         /// </summary>
-        public virtual List<ProfileParticipant> Participants { get; set; }
+        public virtual List<Repository> Participants { get; set; }
 
         public List<string> IgnorePatterns { get; set; }
         #endregion
@@ -46,12 +46,12 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 		public SyncProfile()
 		{
             SearchPatterns = new List<string>();
-            Participants = new List<ProfileParticipant>();
+            Participants = new List<Repository>();
 		}
 		#endregion
 
         #region Methods
-        public ProfileParticipant GetParticipant(string machine)
+        public Repository GetParticipant(string machine)
         {
             var localsettings = Participants.Where(p => p.MachineName.ToLower() == machine.ToLower());
             if (localsettings.Count() > 0)

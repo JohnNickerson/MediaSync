@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AssimilationSoftware.MediaSync.Core.Mappers.Database;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,9 +13,9 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Create()
         {
-            AssimilationSoftware.MediaSync.Core.Interfaces.IParticipantMapper mapper = new AssimilationSoftware.MediaSync.Core.Mappers.Database.DbParticipantMapper();
+            AssimilationSoftware.MediaSync.Core.Interfaces.IDataStore mapper = new DatabaseMapper();
 
-            var p = new MediaSync.Core.Model.ProfileParticipant
+            var p = new MediaSync.Core.Model.Repository
             {
                 Id = 1,
                 MachineName = Environment.MachineName,
@@ -24,7 +25,8 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 SharedPath = @"C:\temp\MediaSync\Shared"
             };
 
-            mapper.Save(p);
+            mapper.CreateProfileParticipant(p);
+            mapper.SaveChanges();
         }
 
         [Fact]

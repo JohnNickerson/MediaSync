@@ -27,7 +27,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public void CreateProfileParticipant(Model.ProfileParticipant obj)
+        public void CreateProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }
@@ -47,7 +47,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public Model.ProfileParticipant GetProfileParticipantById(int id)
+        public Model.Repository GetProfileParticipantById(int id)
         {
             throw new NotImplementedException();
         }
@@ -67,12 +67,17 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public Model.ProfileParticipant[] GetAllProfileParticipant()
+        public Model.Repository[] GetAllProfileParticipant()
         {
             throw new NotImplementedException();
         }
 
         public Model.SyncProfile[] GetAllSyncProfile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Model.Machine[] GetAllMachines()
         {
             throw new NotImplementedException();
         }
@@ -87,7 +92,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public void UpdateProfileParticipant(Model.ProfileParticipant obj)
+        public void UpdateProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }
@@ -107,7 +112,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public void DeleteProfileParticipant(Model.ProfileParticipant obj)
+        public void DeleteProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }

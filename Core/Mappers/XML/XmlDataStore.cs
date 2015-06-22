@@ -1,4 +1,5 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+using Polenter.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,18 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
     /// </summary>
     public class XmlDataStore : IDataStore
     {
+        private string _profilesLocation;
+        private string _indexesLocation;
+        private SharpSerializer _serialiser;
+
+
+        public XmlDataStore(string profilesFilename, string indexesFilename)
+        {
+            _profilesLocation = profilesFilename;
+            _indexesLocation = indexesFilename;
+            _serialiser = new SharpSerializer();
+        }
+
         public void SaveChanges()
         {
             throw new NotImplementedException();
@@ -27,7 +40,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public void CreateProfileParticipant(Model.ProfileParticipant obj)
+        public void CreateProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }
@@ -47,7 +60,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public Model.ProfileParticipant GetProfileParticipantById(int id)
+        public Model.Repository GetProfileParticipantById(int id)
         {
             throw new NotImplementedException();
         }
@@ -67,12 +80,17 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public Model.ProfileParticipant[] GetAllProfileParticipant()
+        public Model.Repository[] GetAllProfileParticipant()
         {
             throw new NotImplementedException();
         }
 
         public Model.SyncProfile[] GetAllSyncProfile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Model.Machine[] GetAllMachines()
         {
             throw new NotImplementedException();
         }
@@ -87,7 +105,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public void UpdateProfileParticipant(Model.ProfileParticipant obj)
+        public void UpdateProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }
@@ -107,7 +125,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public void DeleteProfileParticipant(Model.ProfileParticipant obj)
+        public void DeleteProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }

@@ -20,7 +20,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
 
         public DbSet<FileIndex> FileIndexes { get; set; }
         public DbSet<FileHeader> FileHeaders { get; set; }
-        public DbSet<ProfileParticipant> ProfileParticipants { get; set; }
+        public DbSet<Repository> ProfileParticipants { get; set; }
         public DbSet<SyncProfile> SyncProfiles { get; set; }
     }
 }

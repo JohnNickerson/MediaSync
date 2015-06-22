@@ -16,27 +16,29 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         void CreateFileHeader(FileHeader obj);
         void CreateFileIndex(FileIndex obj);
-        void CreateProfileParticipant(ProfileParticipant obj);
+        void CreateProfileParticipant(Repository obj);
         void CreateSyncProfile(SyncProfile obj);
 
         FileHeader GetFileHeaderById(int id);
         FileIndex GetFileIndexById(int id);
-        ProfileParticipant GetProfileParticipantById(int id);
+        Repository GetProfileParticipantById(int id);
         SyncProfile GetSyncProfileById(int id);
 
         FileHeader[] GetAllFileHeader();
         FileIndex[] GetAllFileIndex();
-        ProfileParticipant[] GetAllProfileParticipant();
+        Repository[] GetAllProfileParticipant();
         SyncProfile[] GetAllSyncProfile();
+        Machine[] GetAllMachines();
 
         void UpdateFileHeader(FileHeader obj);
         void UpdateFileIndex(FileIndex obj);
-        void UpdateProfileParticipant(ProfileParticipant obj);
+        void UpdateProfileParticipant(Repository obj);
         void UpdateSyncProfile(SyncProfile obj);
 
         void DeleteFileHeader(FileHeader obj);
         void DeleteFileIndex(FileIndex obj);
-        void DeleteProfileParticipant(ProfileParticipant obj);
+        void DeleteProfileParticipant(Repository obj);
         void DeleteSyncProfile(SyncProfile obj);
+
     }
 }

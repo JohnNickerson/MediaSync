@@ -47,9 +47,9 @@ namespace AssimilationSoftware.MediaSync.Core
 		private IFileManager _copyq;
 
 		private SyncProfile _options;
-        private ProfileParticipant _localSettings;
+        private Repository _localSettings;
 
-        private IIndexMapper _indexer;
+        private IDataStore _indexer;
 
         private List<string> _log;
 
@@ -80,7 +80,7 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Constructors
-        public SyncService(SyncProfile opts, IIndexMapper indexer, IFileManager filemanager, bool simulate, string thismachine)
+        public SyncService(SyncProfile opts, IDataStore indexer, IFileManager filemanager, bool simulate, string thismachine)
         {
             _localSettings = opts.GetParticipant(thismachine);
             LocalPath = _localSettings.LocalPath;
@@ -99,7 +99,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (Simulate)
             {
                 _copyq = new MockFileManager();
-                _indexer = new MockIndexMapper();
+                _indexer = new MockDataStore();
             }
             else
             {
@@ -117,7 +117,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public void IndexFiles()
         {
             var index = _copyq.CreateIndex();
-            _indexer.Save(index);
+            _indexer.CreateFileIndex(index);
 
             // Compare this index with others.
             NumPeers = _options.Participants.Count;
@@ -136,7 +136,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // For each other most recent index...
             foreach (var p in options.Participants)
             {
-                var f = _indexer.LoadLatest(p.MachineName, options.Name);
+                var f = _indexer.GetAllFileIndex().Where(x => x.ProfileName == options.Name && x.Participant.MachineName == p.MachineName).OrderByDescending(x => x.TimeStamp).First();
                 if (f != null)
                 {
                     foreach (var idxfile in f.Files)

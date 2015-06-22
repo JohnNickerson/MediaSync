@@ -1,4 +1,5 @@
-﻿using AssimilationSoftware.MediaSync.Core.Mappers.Database;
+﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.Database;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Constructors
-        public ViewModel(DatabaseContext datacontext, string machineId)
+        public ViewModel(IDataStore datacontext, string machineId)
         {
             _dataContext = datacontext;
             _machineId = machineId;
@@ -54,19 +55,32 @@ namespace AssimilationSoftware.MediaSync.Core
         #region Methods
         public void CreateProfile(string name, ulong reserve, params string[] ignore)
         {
-            var profile = new Model.SyncProfile();
-            profile.Name = name;
-            profile.ReserveSpace = reserve;
-            profile.IgnorePatterns = ignore.ToList();
-            _dataContext.SyncProfiles.Add(profile);
-            _dataContext.SaveChanges();
+            if (!_dataContext.GetAllSyncProfile().Select(x => x.Name.ToLower()).Contains(name))
+            {
+                var profile = new Model.SyncProfile();
+                profile.Name = name;
+                profile.ReserveSpace = reserve;
+                profile.IgnorePatterns = ignore.ToList();
+                _dataContext.CreateSyncProfile(profile);
+                _dataContext.SaveChanges();
+            }
+            else
+            {
+                StatusMessage = "Profile name already exists: " + name;
+            }
+        }
+
+        public void JoinProfile(string profileName, string localpath, string sharedpath, bool contributor, bool consumer)
+        {
+            var profile = _dataContext.GetAllSyncProfile().Where(x => x.Name.ToLower() == profileName.ToLower()).First();
+            JoinProfile(profile, localpath, sharedpath, contributor, consumer);
         }
 
         public void JoinProfile(SyncProfile profile, string localpath, string sharedpath, bool contributor, bool consumer)
         {
             if (!profile.ContainsParticipant(this.MachineId))
             {
-                profile.Participants.Add(new ProfileParticipant
+                profile.Participants.Add(new Repository
                 {
                     MachineName = this.MachineId,
                     LocalPath = localpath,
@@ -92,10 +106,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// The data context that saves all profile, index and configuration data.
         /// </summary>
-        /// <remarks>
-        /// TODO: Change to a generic interface to allow swapping out for text-based storage if required.
-        /// </remarks>
-        private DatabaseContext _dataContext;
+        private IDataStore _dataContext;
 
         private string _machineId;
         public string MachineId
@@ -110,6 +121,52 @@ namespace AssimilationSoftware.MediaSync.Core
                 NotifyPropertyChanged();
             }
         }
+
+        private string _statusMessage;
+        public string StatusMessage
+        {
+            get
+            {
+                return _statusMessage;
+            }
+            set
+            {
+                _statusMessage = value;
+                NotifyPropertyChanged();
+            }
+        }
         #endregion
+
+        public void SaveChanges()
+        {
+            _dataContext.SaveChanges();
+        }
+
+        public void LeaveProfile(string profileName)
+        {
+            var profile = _dataContext.GetAllSyncProfile().Where(x => x.Name.ToLower() == profileName.ToLower()).First();
+            LeaveProfile(profile);
+        }
+
+        public List<string> GetProfileNames(bool p)
+        {
+            var names = _dataContext.GetAllSyncProfile().Select(x => x.Name).Distinct();
+            return names.ToList();
+        }
+
+        public List<SyncProfile> Profiles
+        {
+            get
+            {
+                return _dataContext.GetAllSyncProfile().ToList();
+            }
+        }
+
+        public List<Machine> Machines
+        {
+            get {
+                return _dataContext.GetAllMachines().ToList();
+            }
+        }
     }
 }

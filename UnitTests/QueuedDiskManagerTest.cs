@@ -5,6 +5,7 @@ using System.Text;
 using AssimilationSoftware.MediaSync.Core;
 using Xunit;
 using AssimilationSoftware.MediaSync.Core.Model;
+using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 
 namespace AssimilationSoftware.MediaSync.UnitTests
 {
@@ -18,8 +19,8 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 Name = "mockprofile",
                 ReserveSpace = 5000,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<ProfileParticipant>(new ProfileParticipant[] {
-                    new ProfileParticipant{
+                Participants = new List<Repository>(new Repository[] {
+                    new Repository{
                         Consumer=true, 
                         Contributor=true, 
                         LocalPath=@"C:\temp", 
@@ -27,7 +28,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                         SharedPath=@"C:\temp\share"}
                 })
             };
-            var mockindexer = new UnitTests.Mocks.ConsoleIndexer();
+            var mockindexer = new MockDataStore();
             QueuedDiskCopier q = new QueuedDiskCopier(mockprofile, mockindexer, "frank");
             var f = q.CreateIndex();
 

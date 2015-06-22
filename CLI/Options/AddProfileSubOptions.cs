@@ -26,7 +26,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         [Option("contributor", HelpText = "True to set this machine as a contributing participant (local -> others)", DefaultValue = false)]
         public bool Contributor { get; set; }
 
-        [Option('f', "files", HelpText = "A file search pattern to use for this profile", DefaultValue = "*.jpg")]
-        public string SearchPattern { get; set; }
+        [Option('i', "ignore", HelpText = "A list of file search patterns to exclude.", DefaultValue = new string[] { })]
+        public string[] IgnorePatterns { get; set; }
     }
 }

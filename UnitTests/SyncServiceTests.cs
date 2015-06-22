@@ -1,4 +1,5 @@
 ﻿using AssimilationSoftware.MediaSync.Core;
+using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
@@ -19,8 +20,8 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                     Name = "testprofile",
                     ReserveSpace = 5000,
                     SearchPatterns = new List<string>(new string[] { "*.*" }),
-                    Participants = new List<ProfileParticipant>(new ProfileParticipant[]{
-                        new ProfileParticipant{
+                    Participants = new List<Repository>(new Repository[]{
+                        new Repository{
                             Consumer=true,
                             Contributor=true,
                             LocalPath=@"C:\temp\local",
@@ -28,7 +29,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                             MachineName=Environment.MachineName
                          }})
                 };
-            var mockindexer = new AssimilationSoftware.MediaSync.Core.Mappers.Mock.MockIndexMapper();
+            var mockindexer = new MockDataStore();
             var s = new SyncService(testprofile, mockindexer,
                          new QueuedDiskCopier(testprofile, mockindexer, Environment.MachineName),
                          true, Environment.MachineName);

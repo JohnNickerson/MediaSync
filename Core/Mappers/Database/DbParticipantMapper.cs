@@ -10,7 +10,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.Database
     [Obsolete("To be removed in version 1.2")]
     public class DbParticipantMapper : IParticipantMapper
     {
-        public void Save(ProfileParticipant p)
+        public void Save(Repository p)
         {
             DatabaseContext.Default.ProfileParticipants.Add(p);
             DatabaseContext.Default.SaveChanges();

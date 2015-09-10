@@ -14,22 +14,22 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void CreateIndex()
         {
-            var mockprofile = new SyncProfile
+            var mockprofile = new SyncSet
             {
                 Name = "mockprofile",
                 ReserveSpace = 5000,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<Repository>(new Repository[] {
-                    new Repository{
-                        Consumer=true, 
-                        Contributor=true, 
+                Participants = new List<FileIndex>(new FileIndex[] {
+                    new FileIndex{
+                        IsPull=true, 
+                        IsPush=true, 
                         LocalPath=@"C:\temp", 
                         MachineName="frank", 
                         SharedPath=@"C:\temp\share"}
                 })
             };
             var mockindexer = new MockDataStore();
-            QueuedDiskCopier q = new QueuedDiskCopier(mockprofile, mockindexer, "frank");
+            QueuedDiskCopier q = new QueuedDiskCopier(mockprofile, "frank");
             var f = q.CreateIndex();
 
             // Can't really compare contents to anything without generating another index. Just make sure there are no exceptions.

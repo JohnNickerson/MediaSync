@@ -1,5 +1,4 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
-using AssimilationSoftware.MediaSync.Core.Mappers.Database;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
@@ -57,7 +56,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (!_dataContext.GetAllSyncProfile().Select(x => x.Name.ToLower()).Contains(name))
             {
-                var profile = new Model.SyncProfile();
+                var profile = new Model.SyncSet();
                 profile.Name = name;
                 profile.ReserveSpace = reserve;
                 profile.IgnorePatterns = ignore.ToList();
@@ -76,23 +75,23 @@ namespace AssimilationSoftware.MediaSync.Core
             JoinProfile(profile, localpath, sharedpath, contributor, consumer);
         }
 
-        public void JoinProfile(SyncProfile profile, string localpath, string sharedpath, bool contributor, bool consumer)
+        public void JoinProfile(SyncSet profile, string localpath, string sharedpath, bool contributor, bool consumer)
         {
             if (!profile.ContainsParticipant(this.MachineId))
             {
-                profile.Participants.Add(new Repository
+                profile.Participants.Add(new FileIndex
                 {
                     MachineName = this.MachineId,
                     LocalPath = localpath,
                     SharedPath = sharedpath,
-                    Contributor = contributor,
-                    Consumer = consumer
+                    IsPush = contributor,
+                    IsPull = consumer
                 });
                 _dataContext.SaveChanges();
             }
         }
 
-        public void LeaveProfile(SyncProfile profile)
+        public void LeaveProfile(SyncSet profile)
         {
             if (profile.ContainsParticipant(this.MachineId))
             {
@@ -154,7 +153,7 @@ namespace AssimilationSoftware.MediaSync.Core
             return names.ToList();
         }
 
-        public List<SyncProfile> Profiles
+        public List<SyncSet> Profiles
         {
             get
             {
@@ -168,5 +167,75 @@ namespace AssimilationSoftware.MediaSync.Core
                 return _dataContext.GetAllMachines().ToList();
             }
         }
+
+        public void RemoveMachine(string machine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RunSync(bool Verbose, bool IndexOnly, PropertyChangedEventHandler SyncServicePropertyChanged)
+        {
+            int pushed = 0, pulled = 0, pruned = 0, errors = 0;
+            foreach (SyncSet opts in this.Profiles)
+            {
+                if (opts.ContainsParticipant(_machineId))
+                {
+                    StatusMessage = string.Format("Processing profile {0}", opts.Name);
+
+                    //IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
+                    IFileManager copier = new QueuedDiskCopier(opts, _machineId);
+                    SyncService s = new SyncService(opts, _dataContext, copier, false, _machineId);
+                    s.PropertyChanged += SyncServicePropertyChanged;
+                    s.VerboseMode = Verbose;
+                    try
+                    {
+                        if (IndexOnly)
+                        {
+                            s.ShowIndexComparison();
+                        }
+                        else
+                        {
+                            s.Sync();
+                            pulled += s.PulledCount;
+                            pushed += s.PushedCount;
+                            pruned += s.PrunedCount;
+                            errors += s.Errors.Count;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        System.Console.WriteLine("Could not sync.");
+                        System.Console.WriteLine(e.Message);
+                        var x = e;
+                        while (x != null)
+                        {
+                            System.Console.WriteLine(DateTime.Now);
+                            System.Console.WriteLine(x.Message);
+                            System.Console.WriteLine(x.StackTrace);
+                            System.Console.WriteLine("");
+
+                            x = x.InnerException;
+                        }
+                    }
+                }
+                else
+                {
+                    StatusMessage = string.Format("Not participating in profile {0}", opts.Name);
+                }
+            }
+
+            StatusMessage = "Finished.";
+            if (pushed + pulled + pruned > 0)
+            {
+                System.Console.WriteLine("\t{0} files pushed", pushed);
+                System.Console.WriteLine("\t{0} files pulled", pulled);
+                System.Console.WriteLine("\t{0} files pruned", pruned);
+            }
+            else
+            {
+                StatusMessage = "\tNo actions taken";
+            }
+        }
     }
 }
+

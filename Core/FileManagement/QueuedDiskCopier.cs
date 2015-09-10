@@ -9,6 +9,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Properties;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using System.Diagnostics;
+using AssimilationSoftware.MediaSync.Core.Commands;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -54,7 +55,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// Sync operations waiting to go ahead.
 		/// </summary>
-		private Queue<SyncOperation> PendingFileActions;
+		private Queue<FileCommand> PendingFileActions;
 
 		/// <summary>
 		/// The maximum number of simultaneous copies to perform.
@@ -74,18 +75,18 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        private SyncProfile _profile;
-        private Repository _localSettings;
+        private SyncSet _profile;
+        private FileIndex _localSettings;
 		#endregion
 
 		#region Constructors
 		/// <summary>
 		/// Constructs a new asynchronous file copy service.
 		/// </summary>
-		public QueuedDiskCopier(SyncProfile profile, IDataStore indexer, string participant)
+		public QueuedDiskCopier(SyncSet profile, string participant)
 		{
 			InProgressActions = new List<IAsyncResult>();
-			PendingFileActions = new Queue<SyncOperation>();
+			PendingFileActions = new Queue<FileCommand>();
 			MaxActions = 2;
 
 			_errors = new List<Exception>();
@@ -107,7 +108,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 lock (PendingFileActions)
                 {
-                    PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Copy));
+                    PendingFileActions.Enqueue(new CopyCommand(source, target));
                 }
                 BeginThreads();
             }
@@ -119,7 +120,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 lock (PendingFileActions)
                 {
-                    PendingFileActions.Enqueue(new SyncOperation(source, target, SyncOperation.SyncAction.Move));
+                    PendingFileActions.Enqueue(new MoveCommand(source, target));
                 }
                 BeginThreads();
             }
@@ -130,48 +131,16 @@ namespace AssimilationSoftware.MediaSync.Core
             while (InProgressActions.Count < MaxActions)
             {
                 // Pop a pending action off the queue.
-                SyncOperation op;
+                FileCommand op;
                 lock (PendingFileActions)
                 {
                     op = PendingFileActions.Dequeue();
                 }
                 // Kick off a thread.
-                switch (op.Action)
+                var cf = new Action(op.Replay);
+                lock (InProgressActions)
                 {
-                    case SyncOperation.SyncAction.Copy:
-                        CopyFileDelegate cf = new CopyFileDelegate(File.Copy);
-                        lock (InProgressActions)
-                        {
-                            InProgressActions.Add(cf.BeginInvoke(op.SourceFile, op.TargetFile, FinishAction, cf));
-                        }
-                        break;
-                    case SyncOperation.SyncAction.Delete:
-                        if (Directory.Exists(op.SourceFile))
-                        {
-                            DeleteDirectoryDelegate dd = new DeleteDirectoryDelegate(Directory.Delete);
-                            lock (InProgressActions)
-                            {
-                                InProgressActions.Add(dd.BeginInvoke(op.SourceFile, FinishAction, dd));
-                            }
-                        }
-                        else if (File.Exists(op.SourceFile))
-                        {
-                            DeleteFileDelegate df = new DeleteFileDelegate(File.Delete);
-                            lock (InProgressActions)
-                            {
-                                InProgressActions.Add(df.BeginInvoke(op.SourceFile, FinishAction, df));
-                            }
-                        }
-                        break;
-                    case SyncOperation.SyncAction.Move:
-                        MoveFileDelegate mf = new MoveFileDelegate(File.Move);
-                        lock (InProgressActions)
-                        {
-                            InProgressActions.Add(mf.BeginInvoke(op.SourceFile, op.TargetFile, FinishAction, mf));
-                        }
-                        break;
-                    default:
-                        break;
+                    InProgressActions.Add(cf.BeginInvoke(FinishAction, cf));
                 }
             }
         }
@@ -288,7 +257,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             lock (PendingFileActions)
             {
-                PendingFileActions.Enqueue(new SyncOperation(dir));
+                PendingFileActions.Enqueue(new DeleteFile(dir));
             }
             BeginThreads();
         }
@@ -320,17 +289,21 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public FileIndex CreateIndex()
         {
-            FileIndex index = new FileIndex();
-            index.Participant = _localSettings;
-            index.ProfileName = _profile.Name;
-            index.TimeStamp = DateTime.Now;
+            FileIndex index = new FileIndex {
+                LocalPath=_localSettings.LocalPath,
+                MachineName=_localSettings.MachineName,
+                IsPull = _localSettings.IsPull,
+                IsPush = _localSettings.IsPush,
+                SharedPath=_localSettings.SharedPath,
+                TimeStamp=DateTime.Now
+            };
             IFileHashProvider hasher = new MockHasher();
 
             foreach (string file in ListLocalFiles())
             {
                 try
                 {
-                    index.Files.Add(new FileHeader(file, index.Participant.LocalPath, hasher));
+                    index.Files.Add(new FileHeader(file, index.LocalPath, hasher));
                 }
                 catch (Exception e)
                 {

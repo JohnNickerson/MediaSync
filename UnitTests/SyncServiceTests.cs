@@ -15,15 +15,15 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_SyncService_Constructor()
         {
-            var testprofile = new SyncProfile
+            var testprofile = new SyncSet
                 {
                     Name = "testprofile",
                     ReserveSpace = 5000,
                     SearchPatterns = new List<string>(new string[] { "*.*" }),
-                    Participants = new List<Repository>(new Repository[]{
-                        new Repository{
-                            Consumer=true,
-                            Contributor=true,
+                    Participants = new List<FileIndex>(new FileIndex[]{
+                        new FileIndex{
+                            IsPull=true,
+                            IsPush=true,
                             LocalPath=@"C:\temp\local",
                             SharedPath=@"C:\temp\shared",
                             MachineName=Environment.MachineName
@@ -31,7 +31,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 };
             var mockindexer = new MockDataStore();
             var s = new SyncService(testprofile, mockindexer,
-                         new QueuedDiskCopier(testprofile, mockindexer, Environment.MachineName),
+                         new QueuedDiskCopier(testprofile, Environment.MachineName),
                          true, Environment.MachineName);
         }
     }

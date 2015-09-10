@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
-using System.IO;
 using AssimilationSoftware.MediaSync.CLI.Properties;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
-using AssimilationSoftware.MediaSync.Core.Mappers.Xml;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
-using AssimilationSoftware.MediaSync.Core.Mappers.Database;
+using AssimilationSoftware.MediaSync.Core.Mappers.XML;
+using AssimilationSoftware.MediaSync.CLI.Views;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -65,14 +63,10 @@ namespace AssimilationSoftware.MediaSync.CLI
             //    profileManager = null;
             //    profiles = null;
             //}
-            SyncProfile profile;
-            Repository participant;
-            string profilename;
 
-            var vm = new ViewModel(new DatabaseMapper(), Settings.Default.MachineName);
+            var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName);
             vm.PropertyChanged += vm_PropertyChanged;
 
-            int pulled = 0, pushed = 0, pruned = 0, errors = 0;
             switch (argverb)
             {
                 case "add-profile":
@@ -112,7 +106,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         System.Console.WriteLine(string.Empty);
                         System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
                         System.Console.WriteLine(string.Empty);
-                        foreach (SyncProfile p in vm.Profiles)
+                        foreach (SyncSet p in vm.Profiles)
                         {
                             var star = p.ContainsParticipant(Settings.Default.MachineName);
                             System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.Name);
@@ -123,7 +117,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                                 System.Console.WriteLine("\t\t{0}", party.LocalPath);
                                 System.Console.WriteLine("\t\t{0}", party.SharedPath);
                                 // Indicate give/consumer status.
-                                System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.Contributor ? "" : "Not "), (party.Consumer ? "" : "Not "));
+                                System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.IsPush ? "" : "Not "), (party.IsPull ? "" : "Not "));
                             }
                         }
                         System.Console.WriteLine(string.Empty);
@@ -131,9 +125,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #endregion
                     break;
                 case "list-machines":
-                    #region List participant machines
-                    ListMachines(vm.Machines);
-                    #endregion
+                    new MachineListConsoleView(vm).Run();
                     break;
                 case "init":
                     var initOptions = (InitSubOptions)argsubs;
@@ -148,91 +140,18 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var removeOptions = (RemoveMachineSubOptions)argsubs;
                         string machine = removeOptions.MachineName;
-                        foreach (SyncProfile p in datamapper.GetAllSyncProfile())
-                        {
-                            for (int x = 0; x < p.Participants.Count; )
-                            {
-                                if (p.Participants[x].MachineName.ToLower() == machine.ToLower())
-                                {
-                                    p.Participants.RemoveAt(x);
-                                    datamapper.DeleteProfileParticipant(p.Participants[x]);
-                                }
-                                else
-                                {
-                                    x++;
-                                }
-                            }
-                        }
-                        ListMachines(datamapper);
+                        vm.RemoveMachine(machine);
+                        var machineview = new MachineListConsoleView(vm);
+                        machineview.Run();
                     }
-                    datamapper.SaveChanges();
+                    vm.SaveChanges();
                     #endregion
                     break;
                 case "run":
                     #region Run profiles
                     {
                         var runOptions = (RunSubOptions)argsubs;
-                        foreach (SyncProfile opts in datamapper.GetAllSyncProfile())
-                        {
-                            if (opts.ContainsParticipant(Settings.Default.MachineName))
-                            {
-                                System.Console.WriteLine();
-                                System.Console.WriteLine(string.Format("Processing profile {0}", opts.Name));
-
-                                //IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
-                                IFileManager copier = new QueuedDiskCopier(opts, datamapper, Settings.Default.MachineName);
-                                SyncService s = new SyncService(opts, datamapper, copier, false, Settings.Default.MachineName);
-                                s.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged);
-                                s.VerboseMode = runOptions.Verbose;
-                                try
-                                {
-                                    if (runOptions.IndexOnly)
-                                    {
-                                        s.ShowIndexComparison();
-                                    }
-                                    else
-                                    {
-                                        s.Sync();
-                                        pulled += s.PulledCount;
-                                        pushed += s.PushedCount;
-                                        pruned += s.PrunedCount;
-                                        errors += s.Errors.Count;
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    System.Console.WriteLine("Could not sync.");
-                                    System.Console.WriteLine(e.Message);
-                                    var x = e;
-                                    while (x != null)
-                                    {
-                                        Debug.WriteLine(DateTime.Now);
-                                        Debug.WriteLine(x.Message);
-                                        Debug.WriteLine(x.StackTrace);
-                                        Debug.WriteLine("");
-
-                                        x = x.InnerException;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                System.Console.WriteLine(string.Empty);
-                                System.Console.WriteLine("Not participating in profile {0}", opts.Name);
-                            }
-                        }
-
-                        System.Console.WriteLine("Finished.");
-                        if (pushed + pulled + pruned > 0)
-                        {
-                            System.Console.WriteLine("\t{0} files pushed", pushed);
-                            System.Console.WriteLine("\t{0} files pulled", pulled);
-                            System.Console.WriteLine("\t{0} files pruned", pruned);
-                        }
-                        else
-                        {
-                            System.Console.WriteLine("\tNo actions taken");
-                        }
+                        vm.RunSync(runOptions.Verbose, runOptions.IndexOnly, new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged));
                     }
                     #endregion
                     break;
@@ -240,16 +159,12 @@ namespace AssimilationSoftware.MediaSync.CLI
                     Console.WriteLine("MediaSync v{0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
                     break;
             }
-            if (errors > 0)
-            {
-                System.Console.WriteLine("\t{0} errors encountered", errors);
-            }
             Debug.Flush();
         }
 
-        private static void PrintProfilesWithParticipation(List<SyncProfile> profiles)
+        private static void PrintProfilesWithParticipation(List<SyncSet> profiles)
         {
-            foreach (SyncProfile p in profiles)
+            foreach (SyncSet p in profiles)
             {
                 if (p.ContainsParticipant(Settings.Default.MachineName))
                 {
@@ -275,25 +190,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                     System.Console.Write("\r{0}                      ", vm.StatusMessage);
                     break;
             }
-        }
-
-        private static void ListMachines(List<Machine> participants)
-        {
-            if (participants.Count() > 0)
-            {
-                System.Console.WriteLine(string.Empty);
-                System.Console.WriteLine("Current machines:");
-                System.Console.WriteLine(string.Empty);
-                foreach (var p in participants)
-                {
-                    System.Console.WriteLine("\t\t{0}{1}", p.Name, (p.Name.ToLower() == Settings.Default.MachineName.ToLower() ? " <-- This machine" : ""));
-                }
-            }
-            else
-            {
-                Console.WriteLine("No machines currently configured.");
-            }
-            System.Console.WriteLine(string.Empty);
         }
 
         static void SyncServicePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

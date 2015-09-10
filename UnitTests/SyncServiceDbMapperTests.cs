@@ -1,11 +1,7 @@
-﻿using AssimilationSoftware.MediaSync.Core.Mappers.Database;
-using AssimilationSoftware.MediaSync.Core.Interfaces;
+﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 using AssimilationSoftware.MediaSync.Core.Model;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace AssimilationSoftware.MediaSync.UnitTests
@@ -15,15 +11,15 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Create()
         {
-            IDataStore mapper = new DatabaseMapper();
+            IDataStore mapper = new MockDataStore();
 
-            SyncProfile p = new SyncProfile
+            SyncSet p = new SyncSet
             {
                 Id = 1,
                 Name = "testprofile",
                 ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<Repository>()
+                Participants = new List<FileIndex>()
             };
 
             mapper.CreateSyncProfile(p);
@@ -33,7 +29,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Read()
         {
-            IDataStore mapper = new DatabaseMapper();
+            IDataStore mapper = new MockDataStore();
 
             mapper.GetAllSyncProfile();
         }
@@ -41,15 +37,15 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Update()
         {
-            IDataStore mapper = new DatabaseMapper();
+            IDataStore mapper = new MockDataStore();
 
-            SyncProfile p = new SyncProfile
+            SyncSet p = new SyncSet
             {
                 Id = 1,
                 Name = "testprofile",
                 ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<Repository>()
+                Participants = new List<FileIndex>()
             };
 
             mapper.CreateSyncProfile(p);
@@ -61,7 +57,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
 
             mapper.SaveChanges();
 
-            SyncProfile s = mapper.GetSyncProfileById(p.Id);
+            SyncSet s = mapper.GetSyncProfileById(p.Id);
 
             Assert.Equal(p.Id, s.Id);
             Assert.Equal(p.Name, s.Name);
@@ -76,15 +72,15 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Delete()
         {
-            IDataStore mapper = new DatabaseMapper();
+            IDataStore mapper = new MockDataStore();
 
-            SyncProfile p = new SyncProfile
+            SyncSet p = new SyncSet
             {
                 Id = 1,
                 Name = "testprofile",
                 ReserveSpace = 300,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<Repository>()
+                Participants = new List<FileIndex>()
             };
 
             mapper.CreateSyncProfile(p);

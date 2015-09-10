@@ -1,13 +1,8 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
-using AssimilationSoftware.MediaSync.Core.Mappers.Xml;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.Core.Model;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace AssimilationSoftware.MediaSync.UnitTests
@@ -24,13 +19,13 @@ namespace AssimilationSoftware.MediaSync.UnitTests
             }
             IDataStore mapper = new XmlDataStore(filename, null);
 
-            SyncProfile p = new SyncProfile
+            SyncSet p = new SyncSet
             {
                 Id = 1,
                 Name = "testprofile",
                 ReserveSpace = 500,
                 SearchPatterns = new List<string>(new string[] { "*.*" }),
-                Participants = new List<Repository>()
+                Participants = new List<FileIndex>()
             };
 
             mapper.CreateSyncProfile(p);

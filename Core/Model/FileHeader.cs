@@ -28,11 +28,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         #region Properties
         /// <summary>
-        /// File ID.
-        /// </summary>
-        public int Id { get; set; }
-        
-        /// <summary>
         /// The path of the file, relative to the local base path.
         /// </summary>
         public string RelativePath { get; set; }
@@ -51,6 +46,19 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// A hash of the contents, to compare quickly with others.
         /// </summary>
         public string ContentsHash { get; set; }
+
+        /// <summary>
+        /// A version number. Helps track conflicting edits.
+        /// </summary>
+        public int Revision { get; set; }
+
+        /// <summary>
+        /// A flag to indicate that the file was deleted.
+        /// </summary>
+        /// <remarks>
+        /// Used only in the master index. Records with this flag that do not exist in any satellite index should be removed.
+        /// </remarks>
+        public bool IsDeleted { get; set; }
         #endregion
     }
 }

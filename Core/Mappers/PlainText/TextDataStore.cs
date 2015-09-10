@@ -32,7 +32,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public void CreateSyncProfile(Model.SyncProfile obj)
+        public void CreateSyncProfile(Model.SyncSet obj)
         {
             throw new NotImplementedException();
         }
@@ -52,7 +52,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public Model.SyncProfile GetSyncProfileById(int id)
+        public Model.SyncSet GetSyncProfileById(int id)
         {
             throw new NotImplementedException();
         }
@@ -72,7 +72,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public Model.SyncProfile[] GetAllSyncProfile()
+        public Model.SyncSet[] GetAllSyncProfile()
         {
             throw new NotImplementedException();
         }
@@ -97,7 +97,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public void UpdateSyncProfile(Model.SyncProfile obj)
+        public void UpdateSyncProfile(Model.SyncSet obj)
         {
             throw new NotImplementedException();
         }
@@ -117,7 +117,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.PlainText
             throw new NotImplementedException();
         }
 
-        public void DeleteSyncProfile(Model.SyncProfile obj)
+        public void DeleteSyncProfile(Model.SyncSet obj)
         {
             throw new NotImplementedException();
         }

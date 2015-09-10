@@ -11,7 +11,7 @@ using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class SyncProfile
+    public class SyncSet
     {
         #region Properties
         /// <summary>
@@ -37,21 +37,23 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// All the participants in this profile.
         /// </summary>
-        public virtual List<Repository> Participants { get; set; }
+        public List<FileIndex> Participants { get; set; }
+
+        public FileIndex MasterIndex { get; set; }
 
         public List<string> IgnorePatterns { get; set; }
         #endregion
 
 		#region Constructors
-		public SyncProfile()
+		public SyncSet()
 		{
             SearchPatterns = new List<string>();
-            Participants = new List<Repository>();
+            Participants = new List<FileIndex>();
 		}
 		#endregion
 
         #region Methods
-        public Repository GetParticipant(string machine)
+        public FileIndex GetParticipant(string machine)
         {
             var localsettings = Participants.Where(p => p.MachineName.ToLower() == machine.ToLower());
             if (localsettings.Count() > 0)

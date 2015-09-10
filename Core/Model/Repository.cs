@@ -31,7 +31,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public Machine Machine { get; set; }
 
-        public SyncProfile Profile { get; set; }
+        public SyncSet Profile { get; set; }
 
         /// <summary>
         /// True if this machine contributes files to this profile.

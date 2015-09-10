@@ -1,9 +1,5 @@
-﻿using AssimilationSoftware.MediaSync.Core.Mappers.Database;
+﻿using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace AssimilationSoftware.MediaSync.UnitTests
@@ -13,7 +9,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
         [Fact]
         public void Test_Create()
         {
-            AssimilationSoftware.MediaSync.Core.Interfaces.IDataStore mapper = new DatabaseMapper();
+            AssimilationSoftware.MediaSync.Core.Interfaces.IDataStore mapper = new MockDataStore();
 
             var p = new MediaSync.Core.Model.Repository
             {

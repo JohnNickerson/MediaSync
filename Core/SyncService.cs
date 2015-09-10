@@ -13,6 +13,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 using AssimilationSoftware.MediaSync.Core.Properties;
 using System.ComponentModel;
+using AssimilationSoftware.MediaSync.Core.Commands;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -46,8 +47,8 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// </summary>
 		private IFileManager _copyq;
 
-		private SyncProfile _options;
-        private Repository _localSettings;
+		private SyncSet _options;
+        private FileIndex _localSettings;
 
         private IDataStore _indexer;
 
@@ -80,7 +81,7 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Constructors
-        public SyncService(SyncProfile opts, IDataStore indexer, IFileManager filemanager, bool simulate, string thismachine)
+        public SyncService(SyncSet opts, IDataStore datastore, IFileManager filemanager, bool simulate, string thismachine)
         {
             _localSettings = opts.GetParticipant(thismachine);
             LocalPath = _localSettings.LocalPath;
@@ -104,7 +105,7 @@ namespace AssimilationSoftware.MediaSync.Core
             else
             {
                 _copyq = filemanager;
-                _indexer = indexer;
+                _indexer = datastore;
             }
             _log = new List<string>();
         }
@@ -129,14 +130,14 @@ namespace AssimilationSoftware.MediaSync.Core
         /// Compares all index contents to get a count of file existences.
         /// </summary>
         /// <returns>A dictionary of file names to index membership counts.</returns>
-        public Dictionary<string, int> CompareCounts(SyncProfile options)
+        public Dictionary<string, int> CompareCounts(SyncSet options)
         {
             var FileCounts = new Dictionary<string, int>();
 
             // For each other most recent index...
             foreach (var p in options.Participants)
             {
-                var f = _indexer.GetAllFileIndex().Where(x => x.ProfileName == options.Name && x.Participant.MachineName == p.MachineName).OrderByDescending(x => x.TimeStamp).First();
+                var f = _indexer.GetAllFileIndex().Where(x => x.ProfileName == options.Name && x.MachineName == p.MachineName).OrderByDescending(x => x.TimeStamp).First();
                 if (f != null)
                 {
                     foreach (var idxfile in f.Files)
@@ -174,7 +175,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         if (VerboseMode)
                         {
-                            Report(new SyncOperation(dir));
+                            Report(new DeleteFile(dir));
                         }
                         _copyq.Delete(dir);
                     }
@@ -192,19 +193,19 @@ namespace AssimilationSoftware.MediaSync.Core
             RaisePropertyChanged("Log");
         }
 
-        private void Report(SyncOperation op)
+        private void Report(FileCommand op)
         {
-            switch (op.Action)
+            if (op is CopyCommand)
             {
-                case SyncOperation.SyncAction.Copy:
-                    _log.Add(string.Format("Copying:{2}\t{0}{2}\t->{2}\t{1}", op.SourceFile, op.TargetFile, Environment.NewLine));
-                    break;
-                case SyncOperation.SyncAction.Delete:
-                    _log.Add(string.Format("Deleting {0}", op.TargetFile));
-                    break;
-                default:
-                    _log.Add(string.Format("Unknown sync action: {0}", op.Action));
-                    break;
+                _log.Add(string.Format("Copying:\t{0}{1}", ((CopyCommand)op).Source, Environment.NewLine));
+            }
+            else if (op is MoveCommand)
+            {
+                _log.Add(string.Format("Moving:\t{0}{1}", ((MoveCommand)op).Source, Environment.NewLine));
+            }
+            else if (op is DeleteFile)
+            {
+                _log.Add(string.Format("Deleting:\t{0}{1}", ((DeleteFile)op).Path, Environment.NewLine));
             }
             RaisePropertyChanged("Log");
         }
@@ -252,7 +253,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 string targetdir = Path.GetDirectoryName(targetfile);
                                 if (VerboseMode)
                                 {
-                                    Report(new SyncOperation(filename_local, targetfile, SyncOperation.SyncAction.Copy));
+                                    Report(new CopyCommand(filename_local, targetfile));
                                 }
                                 _copyq.EnsureFolder(targetdir);
                                 string fullpathlocal = Path.Combine(LocalPath, filename_local);
@@ -340,7 +341,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             {
                                 if (VerboseMode)
                                 {
-                                    Report(new SyncOperation(incoming, targetfile, SyncOperation.SyncAction.Copy));
+                                    Report(new CopyCommand(incoming, targetfile));
                                 }
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
                                 _copyq.CopyFile(incoming, targetfile);
@@ -384,12 +385,12 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         if (VerboseMode)
                         {
-                            Report(new SyncOperation(filename));
+                            Report(new DeleteFile(filename));
                         }
                         // Remove it from shared storage.
                         try
                         {
-                                _copyq.Delete(filename);
+                            _copyq.Delete(filename);
                             prunecount++;
                         }
                         catch (Exception e)
@@ -420,7 +421,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
             PulledCount = 0;
-            if (_localSettings.Consumer)
+            if (_localSettings.IsPull)
 			{
                 ReportMessage("\tPulling files from shared space.");
 				PulledCount = PullFiles();
@@ -448,7 +449,7 @@ namespace AssimilationSoftware.MediaSync.Core
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
             PushedCount = 0;
-			if (_localSettings.Contributor)
+			if (_localSettings.IsPush)
 			{
                 ReportMessage("\tPushing files.");
 				PushedCount = PushFiles();
@@ -482,13 +483,13 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             // QAD way: Preserve consumer/give flags, call Sync.
             // TODO: Count files in full sync, only here, and only elsewhere.
-            bool take = _localSettings.Consumer;
-            bool give = _localSettings.Contributor;
+            bool take = _localSettings.IsPull;
+            bool give = _localSettings.IsPush;
 
             Sync();
 
-            _localSettings.Consumer = take;
-            _localSettings.Contributor = give;
+            _localSettings.IsPull = take;
+            _localSettings.IsPush = give;
         }
 
 		/// <summary>

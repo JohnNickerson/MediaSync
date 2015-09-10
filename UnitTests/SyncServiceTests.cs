@@ -30,7 +30,7 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                          }})
                 };
             var mockindexer = new MockDataStore();
-            var s = new SyncService(testprofile, mockindexer,
+            var s = new ViewModel(testprofile, mockindexer,
                          new QueuedDiskCopier(testprofile, Environment.MachineName),
                          true, Environment.MachineName);
         }

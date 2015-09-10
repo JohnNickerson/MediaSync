@@ -38,32 +38,6 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            //IProfileMapper profileManager;
-            //List<SyncProfile> profiles;
-            //if (argverb != "init" && argverb != "version")
-            //{
-            //    try
-            //    {
-            //        profileManager = new DbSyncProfileMapper();
-            //        profiles = profileManager.Load();
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Console.WriteLine("Could not load profile data.");
-            //        while (ex != null)
-            //        {
-            //            Console.WriteLine(ex.Message);
-            //            ex = ex.InnerException;
-            //        }
-            //        return;
-            //    }
-            //}
-            //else
-            //{
-            //    profileManager = null;
-            //    profiles = null;
-            //}
-
             var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName);
             vm.PropertyChanged += vm_PropertyChanged;
 
@@ -194,7 +168,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 
         static void SyncServicePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            SyncService s = (SyncService)sender;
+            var s = (ViewModel)sender;
             switch (e.PropertyName)
             {
                 case "Log":

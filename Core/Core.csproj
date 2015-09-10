@@ -97,7 +97,6 @@
     <Compile Include="FileManagement\QueuedDiskCopier.cs" />
     <Compile Include="Interfaces\IFileManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SyncService.cs" />
     <Compile Include="Commands\FileCommand.cs" />
     <Compile Include="Model\SyncProfile.cs" />
     <Compile Include="ViewModel.cs" />

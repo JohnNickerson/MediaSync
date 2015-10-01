@@ -76,7 +76,6 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
         private SyncSet _profile;
-        private FileIndex _localSettings;
 		#endregion
 
 		#region Constructors
@@ -92,7 +91,6 @@ namespace AssimilationSoftware.MediaSync.Core
 			_errors = new List<Exception>();
 
             _profile = profile;
-            _localSettings = profile.GetParticipant(participant);
 		}
 		#endregion
 
@@ -186,11 +184,11 @@ namespace AssimilationSoftware.MediaSync.Core
             BeginThreads();
         }
 
-        public string[] ListLocalFiles()
+        public string[] ListLocalFiles(string path)
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
-            queue.Enqueue(_localSettings.LocalPath);
+            queue.Enqueue(path);
             // While the queue is not empty,
             while (queue.Count > 0)
             {
@@ -211,7 +209,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     foreach (string file in Directory.GetFiles(folder, search))
                     {
                         // Remove the base path.
-                        string trunc_file = file.Remove(0, _localSettings.LocalPath.Length + 1).Replace("/", "\\");
+                        string trunc_file = file.Remove(0, path.Length + 1).Replace("/", "\\");
                         result.Add(trunc_file);
                     }
                 }
@@ -223,18 +221,15 @@ namespace AssimilationSoftware.MediaSync.Core
         /// Gets the size of all files in the watch path combined.
         /// </summary>
         /// <returns>A size, in bytes, representing all files combined.</returns>
-        ulong IFileManager.SharedPathSize()
+        ulong IFileManager.SharedPathSize(string path)
         {
-            // Calculate the actual size of the shared path, plus the anticipated size of files yet to be copied in.
+            // Calculate the actual size of the shared path.
             ulong total = 0;
-            // TODO: Search for all files, not just matching ones?
+            // Search for all files, not just matching ones.
             // If some other files get mixed in, it could overrun the reserve space.
-            foreach (string search in _profile.SearchPatterns)
+            foreach (string filename in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
             {
-                foreach (string filename in Directory.GetFiles(_localSettings.SharedPath, search, SearchOption.AllDirectories))
-                {
-                    total += (ulong)new FileInfo(filename).Length;
-                }
+                total += (ulong)new FileInfo(filename).Length;
             }
 
             return total;
@@ -279,27 +274,23 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <remarks>
         /// I don't like this much, but I get a lot of errors when a read-only file gets into the mix.
         /// </remarks>
-        void IFileManager.SetNormalAttributes()
+        void IFileManager.SetNormalAttributes(string path)
         {
-            foreach (string file in Directory.GetFiles(_localSettings.SharedPath, "*.*", SearchOption.AllDirectories))
+            foreach (string file in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
             {
                 File.SetAttributes(file, FileAttributes.Normal);
             }
         }
 
-        public FileIndex CreateIndex()
+        public FileIndex CreateIndex(string path)
         {
             FileIndex index = new FileIndex {
-                LocalPath=_localSettings.LocalPath,
-                MachineName=_localSettings.MachineName,
-                IsPull = _localSettings.IsPull,
-                IsPush = _localSettings.IsPush,
-                SharedPath=_localSettings.SharedPath,
+                LocalPath=path,
                 TimeStamp=DateTime.Now
             };
             IFileHashProvider hasher = new MockHasher();
 
-            foreach (string file in ListLocalFiles())
+            foreach (string file in ListLocalFiles(path))
             {
                 try
                 {

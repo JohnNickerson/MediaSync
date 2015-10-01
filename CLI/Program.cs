@@ -39,7 +39,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
             var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName);
-            vm.PropertyChanged += vm_PropertyChanged;
+            vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)
             {
@@ -155,17 +155,6 @@ namespace AssimilationSoftware.MediaSync.CLI
         /// <summary>
         /// Responds to property change events.
         /// </summary>
-        static void vm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            var vm = (ViewModel)sender;
-            switch (e.PropertyName)
-            {
-                case "StatusMessage":
-                    System.Console.Write("\r{0}                      ", vm.StatusMessage);
-                    break;
-            }
-        }
-
         static void SyncServicePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             var s = (ViewModel)sender;
@@ -174,8 +163,8 @@ namespace AssimilationSoftware.MediaSync.CLI
                 case "Log":
                     System.Console.WriteLine(s.Log.Last());
                     break;
-                case "Status":
-                    System.Console.Write("\r{0}   ", s.Status);
+                case "StatusMessage":
+                    System.Console.Write("\r{0}   ", s.StatusMessage);
                     break;
             }
         }

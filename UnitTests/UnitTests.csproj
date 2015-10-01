@@ -75,7 +75,6 @@
     <Compile Include="QueuedDiskManagerTest.cs" />
     <Compile Include="SyncParticipantDbMapperTests.cs" />
     <Compile Include="SyncServiceDbMapperTests.cs" />
-    <Compile Include="SyncServiceTests.cs" />
     <Compile Include="SyncServiceXmlMapperTests.cs" />
   </ItemGroup>
   <ItemGroup>

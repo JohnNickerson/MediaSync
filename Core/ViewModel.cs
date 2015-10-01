@@ -47,11 +47,57 @@ namespace AssimilationSoftware.MediaSync.Core
         }
         #endregion
 
+        #region Fields
+        public string LocalPath;
+        public string SharedPath;
+        private int NumPeers;
+
+        [Obsolete("Too simplistic for performing updates and deletes.")]
+        private Dictionary<string, int> FileCounts;
+        public ulong SizeLimit;
+        private ulong _sizecache;
+
+        public bool VerboseMode;
+
+        public List<string> FileSearches = new List<string>();
+
+        /// <summary>
+        /// An asynchronous file copier.
+        /// </summary>
+        private IFileManager _copyq;
+
+        private SyncSet _options;
+        private FileIndex _localSettings;
+
+        private IDataStore _indexer;
+
+        private List<string> _log;
+        #endregion
+
         #region Constructors
         public ViewModel(IDataStore datacontext, string machineId)
         {
-            _dataContext = datacontext;
+            _indexer = datacontext;
             _machineId = machineId;
+        }
+
+        public void SetOptions(SyncSet opts, IFileManager filemanager)
+        {
+            _localSettings = opts.GetParticipant(_machineId);
+            LocalPath = _localSettings.LocalPath;
+            SharedPath = _localSettings.SharedPath;
+            NumPeers = 0;
+            FileCounts = new Dictionary<string, int>();
+            SizeLimit = opts.ReserveSpace;
+            FileSearches = opts.SearchPatterns;
+            if (FileSearches.Count == 0)
+            {
+                FileSearches.Add("*.*");
+            }
+            _sizecache = 0;
+            _options = opts;
+            _copyq = filemanager;
+            _log = new List<string>();
         }
         #endregion
 
@@ -64,8 +110,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.Name = name;
                 profile.ReserveSpace = reserve;
                 profile.IgnorePatterns = ignore.ToList();
-                _dataContext.CreateSyncProfile(profile);
-                _dataContext.SaveChanges();
+                _indexer.CreateSyncProfile(profile);
+                _indexer.SaveChanges();
             }
             else
             {
@@ -75,12 +121,12 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private bool ProfileExists(string name)
         {
-            return _dataContext.GetAllSyncProfile().Select(x => x.Name.ToLower()).Contains(name.ToLower());
+            return _indexer.GetAllSyncProfile().Select(x => x.Name.ToLower()).Contains(name.ToLower());
         }
 
         private SyncSet GetProfile(string name)
         {
-            return _dataContext.GetAllSyncProfile().Where(x => x.Name.ToLower() == name.ToLower()).First();
+            return _indexer.GetAllSyncProfile().Where(x => x.Name.ToLower() == name.ToLower()).First();
         }
 
         public void JoinProfile(string profileName, string localpath, string sharedpath, bool contributor, bool consumer)
@@ -101,7 +147,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     IsPush = contributor,
                     IsPull = consumer
                 });
-                _dataContext.SaveChanges();
+                _indexer.SaveChanges();
             }
         }
 
@@ -110,49 +156,13 @@ namespace AssimilationSoftware.MediaSync.Core
             if (profile.ContainsParticipant(this.MachineId))
             {
                 profile.Participants.Remove((from p in profile.Participants where p.MachineName == this.MachineId select p).Single());
-                _dataContext.SaveChanges();
+                _indexer.SaveChanges();
             }
         }
-        #endregion
-
-        #region Properties
-        /// <summary>
-        /// The data context that saves all profile, index and configuration data.
-        /// </summary>
-        private IDataStore _dataContext;
-
-        private string _machineId;
-        public string MachineId
-        {
-            get
-            {
-                return _machineId;
-            }
-            set
-            {
-                _machineId = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private string _statusMessage;
-        public string StatusMessage
-        {
-            get
-            {
-                return _statusMessage;
-            }
-            set
-            {
-                _statusMessage = value;
-                NotifyPropertyChanged();
-            }
-        }
-        #endregion
 
         public void SaveChanges()
         {
-            _dataContext.SaveChanges();
+            _indexer.SaveChanges();
         }
 
         public void LeaveProfile(string profileName)
@@ -161,9 +171,9 @@ namespace AssimilationSoftware.MediaSync.Core
             LeaveProfile(profile);
         }
 
-        public List<string> GetProfileNames(bool p)
+        public List<string> GetProfileNames()
         {
-            var names = _dataContext.GetAllSyncProfile().Select(x => x.Name).Distinct();
+            var names = _indexer.GetAllSyncProfile().Select(x => x.Name).Distinct();
             return names.ToList();
         }
 
@@ -171,14 +181,14 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             get
             {
-                return _dataContext.GetAllSyncProfile().ToList();
+                return _indexer.GetAllSyncProfile().ToList();
             }
         }
 
         public List<Machine> Machines
         {
             get {
-                return _dataContext.GetAllMachines().ToList();
+                return _indexer.GetAllMachines().ToList();
             }
         }
 
@@ -189,35 +199,34 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void RunSync(bool Verbose, bool IndexOnly, PropertyChangedEventHandler SyncServicePropertyChanged)
         {
-            int pushed = 0, pulled = 0, pruned = 0, errors = 0;
+            PushedCount = 0;
+            PulledCount = 0;
+            PrunedCount = 0;
             foreach (SyncSet opts in this.Profiles)
             {
                 if (opts.ContainsParticipant(_machineId))
                 {
                     StatusMessage = string.Format("Processing profile {0}", opts.Name);
 
-                    //IIndexMapper indexer = new XmlIndexMapper(Path.Combine(Settings.Default.MetadataFolder, "Indexes.xml"));
-                    IFileManager copier = new QueuedDiskCopier(opts, _machineId);
-                    ViewModel s = new ViewModel(opts, _dataContext, copier, false, _machineId);
-                    s.PropertyChanged += SyncServicePropertyChanged;
-                    s.VerboseMode = Verbose;
+                    _copyq = new QueuedDiskCopier(opts, _machineId);
+                    // TODO: Remove this sub-self-reference.
+                    SetOptions(opts, _copyq);
+                    PropertyChanged += SyncServicePropertyChanged;
+                    VerboseMode = Verbose;
                     try
                     {
                         if (IndexOnly)
                         {
-                            s.ShowIndexComparison();
+                            ShowIndexComparison();
                         }
                         else
                         {
-                            s.Sync();
-                            pulled += s.PulledCount;
-                            pushed += s.PushedCount;
-                            pruned += s.PrunedCount;
-                            errors += s.Errors.Count;
+                            Sync();
                         }
                     }
                     catch (Exception e)
                     {
+                        // TODO: Change to status message property setting.
                         System.Console.WriteLine("Could not sync.");
                         System.Console.WriteLine(e.Message);
                         var x = e;
@@ -239,108 +248,23 @@ namespace AssimilationSoftware.MediaSync.Core
             }
 
             StatusMessage = "Finished.";
-            if (pushed + pulled + pruned > 0)
-            {
-                System.Console.WriteLine("\t{0} files pushed", pushed);
-                System.Console.WriteLine("\t{0} files pulled", pulled);
-                System.Console.WriteLine("\t{0} files pruned", pruned);
-            }
-            else
+            if (PushedCount + PulledCount + PrunedCount == 0)
             {
                 StatusMessage = "\tNo actions taken";
             }
         }
-        #region Fields
-        public string LocalPath;
-        public string SharedPath;
-        private int NumPeers;
-        private Dictionary<string, int> FileCounts;
-        public ulong SizeLimit;
-        private ulong _sizecache;
 
-        /// <summary>
-        /// A flag that indicates whether the processes should be simulated (no actual file operations).
-        /// </summary>
-        /// <remarks>
-        /// TODO: Allow for creation of an update script rather than just simulation output.
-        /// </remarks>
-        private bool Simulate;
-
-        public bool VerboseMode;
-
-        public List<string> FileSearches = new List<string>();
-
-        /// <summary>
-        /// An asynchronous file copier.
-        /// </summary>
-        private IFileManager _copyq;
-
-        private SyncSet _options;
-        private FileIndex _localSettings;
-
-        private IDataStore _indexer;
-
-        private List<string> _log;
-
-        private string _status;
-        #endregion
-
-        #region Events
-        /// <summary>
-        /// Fires the PropertyChanged event with given arguments.
-        /// </summary>
-        /// <param name="e"></param>
-        public void RaisePropertyChanged(params string[] propnames)
-        {
-            foreach (string prop in propnames)
-            {
-                var e = new PropertyChangedEventArgs(prop);
-                if (PropertyChanged != null)
-                {
-                    PropertyChanged(this, e);
-                }
-            }
-        }
-        #endregion
-
-        #region Constructors
-        public ViewModel(SyncSet opts, IDataStore datastore, IFileManager filemanager, bool simulate, string thismachine)
-        {
-            _localSettings = opts.GetParticipant(thismachine);
-            LocalPath = _localSettings.LocalPath;
-            SharedPath = _localSettings.SharedPath;
-            NumPeers = 0;
-            FileCounts = new Dictionary<string, int>();
-            SizeLimit = opts.ReserveSpace;
-            Simulate = simulate;
-            FileSearches = opts.SearchPatterns;
-            if (FileSearches.Count == 0)
-            {
-                FileSearches.Add("*.*");
-            }
-            _sizecache = 0;
-            _options = opts;
-            if (Simulate)
-            {
-                _copyq = new MockFileManager();
-                _indexer = new MockDataStore();
-            }
-            else
-            {
-                _copyq = filemanager;
-                _indexer = datastore;
-            }
-            _log = new List<string>();
-        }
-        #endregion
-
-        #region Methods
         /// <summary>
         /// Creates an index file for this machine.
         /// </summary>
         public void IndexFiles()
         {
-            var index = _copyq.CreateIndex();
+            var index = _copyq.CreateIndex(_localSettings.LocalPath);
+            index.IsPull = _localSettings.IsPull;
+            index.IsPush = _localSettings.IsPush;
+            index.MachineName = _localSettings.MachineName;
+            index.ProfileName = _localSettings.ProfileName;
+            index.SharedPath = _localSettings.SharedPath;
             _indexer.CreateFileIndex(index);
 
             // Compare this index with others.
@@ -417,7 +341,7 @@ namespace AssimilationSoftware.MediaSync.Core
         private void ReportMessage(string format, params object[] args)
         {
             _log.Add(string.Format(format, args));
-            RaisePropertyChanged("Log");
+            NotifyPropertiesChanged("Log");
         }
 
         private void Report(FileCommand op)
@@ -434,7 +358,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 _log.Add(string.Format("Deleting:\t{0}{1}", ((DeleteFile)op).Path, Environment.NewLine));
             }
-            RaisePropertyChanged("Log");
+            NotifyPropertiesChanged("Log");
         }
 
         /// <summary>
@@ -449,9 +373,10 @@ namespace AssimilationSoftware.MediaSync.Core
                 return 0;
             }
 
-            _sizecache = _copyq.SharedPathSize();
+            _sizecache = _copyq.SharedPathSize(_localSettings.SharedPath);
             int pushcount = 0;
             // TODO: Prioritise the least-common files.
+            // TODO: Select files that have been updated or created locally.
             //var sortedfilelist = from f in FileCounts.Keys orderby FileCounts[f] select f;
             // For every file in the index
             foreach (string filename in FileCounts.Keys)
@@ -488,7 +413,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // Update size cache.
                                 _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
                                 pushcount++;
-                                Status = string.Format("\t\tConstructing copy queue: {1} {0}.", _copyq.Count, (_copyq.Count == 1 ? "item" : "items"));
+                                StatusMessage = string.Format("\t\tConstructing copy queue: {1} {0}.", _copyq.Count, (_copyq.Count == 1 ? "item" : "items"));
                             }
                             else
                             {
@@ -511,7 +436,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             WaitForCopies();
-            _copyq.SetNormalAttributes();
+            _copyq.SetNormalAttributes(_localSettings.SharedPath);
             return pushcount;
         }
 
@@ -738,11 +663,11 @@ namespace AssimilationSoftware.MediaSync.Core
                         // Estimate time left via copies per second. Assumes even distribution of file sizes in queue.
                         var cps = (first_count - _copyq.Count) / (DateTime.Now - started_waiting).TotalSeconds;
                         var timeleft = new TimeSpan(0, 0, _copyq.Count / (int)cps);
-                        Status = string.Format("\t\tWaiting on {0} {1}... ({2:hh:mm:ss} remaining)", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"), timeleft);
+                        StatusMessage = string.Format("\t\tWaiting on {0} {1}... ({2:hh:mm:ss} remaining)", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"), timeleft);
                     }
                     else
                     {
-                        Status = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
+                        StatusMessage = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
                     }
                     lastcount = _copyq.Count;
                 }
@@ -752,9 +677,75 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Properties
-        public int PulledCount { get; set; }
-        public int PushedCount { get; set; }
-        public int PrunedCount { get; set; }
+        private string _machineId;
+        public string MachineId
+        {
+            get
+            {
+                return _machineId;
+            }
+            set
+            {
+                _machineId = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private string _statusMessage;
+        public string StatusMessage
+        {
+            get
+            {
+                return _statusMessage;
+            }
+            set
+            {
+                _statusMessage = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private int _pulledCount;
+        public int PulledCount
+        {
+            get
+            {
+                return _pulledCount;
+            }
+            set
+            {
+                _pulledCount = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private int _pushedCount;
+        public int PushedCount
+        {
+            get
+            {
+                return _pushedCount;
+            }
+            set
+            {
+                _pushedCount = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private int _prunedCount;
+        public int PrunedCount
+        {
+            get
+            {
+                return _prunedCount;
+            }
+            set
+            {
+                _prunedCount = value;
+                NotifyPropertyChanged();
+            }
+        }
         public List<Exception> Errors
         {
             get
@@ -771,20 +762,7 @@ namespace AssimilationSoftware.MediaSync.Core
             set
             {
                 _log = value;
-                RaisePropertyChanged("Log");
-            }
-        }
-
-        public string Status
-        {
-            get
-            {
-                return _status;
-            }
-            set
-            {
-                _status = value;
-                RaisePropertyChanged("Status");
+                NotifyPropertiesChanged("Log");
             }
         }
         #endregion

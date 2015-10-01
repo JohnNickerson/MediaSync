@@ -18,7 +18,7 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         void MoveFile(string source, string target);
 
-        ulong SharedPathSize();
+        ulong SharedPathSize(string path);
 
         bool ShouldCopy(string filename);
 
@@ -26,11 +26,11 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         void EnsureFolder(string targetdir);
 
-        void SetNormalAttributes();
+        void SetNormalAttributes(string path);
 
-        string[] ListLocalFiles();
+        string[] ListLocalFiles(string path);
 
-        FileIndex CreateIndex();
+        FileIndex CreateIndex(string path);
 		#endregion
 
 		#region Properties

@@ -74,23 +74,19 @@ namespace AssimilationSoftware.MediaSync.Core
                 return _errors;
             }
         }
-
-        private SyncSet _profile;
 		#endregion
 
 		#region Constructors
 		/// <summary>
 		/// Constructs a new asynchronous file copy service.
 		/// </summary>
-		public QueuedDiskCopier(SyncSet profile, string participant)
+		public QueuedDiskCopier(string participant)
 		{
 			InProgressActions = new List<IAsyncResult>();
 			PendingFileActions = new Queue<FileCommand>();
 			MaxActions = 2;
 
 			_errors = new List<Exception>();
-
-            _profile = profile;
 		}
 		#endregion
 
@@ -184,7 +180,7 @@ namespace AssimilationSoftware.MediaSync.Core
             BeginThreads();
         }
 
-        public string[] ListLocalFiles(string path)
+        public string[] ListLocalFiles(string path, string[] SearchPatterns)
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
@@ -204,7 +200,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                 }
                 // Add all image files to the index.
-                foreach (string search in _profile.SearchPatterns)
+                foreach (string search in SearchPatterns)
                 {
                     foreach (string file in Directory.GetFiles(folder, search))
                     {
@@ -282,7 +278,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public FileIndex CreateIndex(string path)
+        public FileIndex CreateIndex(string path, string[] SearchPatterns)
         {
             FileIndex index = new FileIndex {
                 LocalPath=path,
@@ -290,7 +286,7 @@ namespace AssimilationSoftware.MediaSync.Core
             };
             IFileHashProvider hasher = new MockHasher();
 
-            foreach (string file in ListLocalFiles(path))
+            foreach (string file in ListLocalFiles(path, SearchPatterns))
             {
                 try
                 {

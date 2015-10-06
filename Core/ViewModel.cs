@@ -208,7 +208,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     StatusMessage = string.Format("Processing profile {0}", opts.Name);
 
-                    _copyq = new QueuedDiskCopier(opts, _machineId);
+                    _copyq = new QueuedDiskCopier(_machineId);
                     // TODO: Remove this sub-self-reference.
                     SetOptions(opts, _copyq);
                     PropertyChanged += SyncServicePropertyChanged;
@@ -259,7 +259,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         public void IndexFiles()
         {
-            var index = _copyq.CreateIndex(_localSettings.LocalPath);
+            var index = _copyq.CreateIndex(_localSettings.LocalPath, _options.SearchPatterns.ToArray());
             index.IsPull = _localSettings.IsPull;
             index.IsPush = _localSettings.IsPush;
             index.MachineName = _localSettings.MachineName;

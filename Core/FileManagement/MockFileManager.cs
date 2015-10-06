@@ -25,7 +25,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        string[] IFileManager.ListLocalFiles(string path)
+        string[] IFileManager.ListLocalFiles(string path, string[] search)
         {
             return new string[] { };
         }
@@ -64,7 +64,7 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
 
-        public FileIndex CreateIndex(string path)
+        public FileIndex CreateIndex(string path, string[] searchpatterns)
         {
             throw new NotImplementedException();
         }

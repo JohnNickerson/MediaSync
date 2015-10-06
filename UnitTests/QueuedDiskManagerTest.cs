@@ -29,8 +29,8 @@ namespace AssimilationSoftware.MediaSync.UnitTests
                 })
             };
             var mockindexer = new MockDataStore();
-            QueuedDiskCopier q = new QueuedDiskCopier(mockprofile, "frank");
-            var f = q.CreateIndex(mockprofile.Participants[0].LocalPath);
+            QueuedDiskCopier q = new QueuedDiskCopier("frank");
+            var f = q.CreateIndex(mockprofile.Participants[0].LocalPath, mockprofile.SearchPatterns.ToArray());
 
             // Can't really compare contents to anything without generating another index. Just make sure there are no exceptions.
         }

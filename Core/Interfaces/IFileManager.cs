@@ -28,9 +28,9 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         void SetNormalAttributes(string path);
 
-        string[] ListLocalFiles(string path);
+        string[] ListLocalFiles(string path, string[] searchpatterns);
 
-        FileIndex CreateIndex(string path);
+        FileIndex CreateIndex(string path, string[] searchpatterns);
 		#endregion
 
 		#region Properties

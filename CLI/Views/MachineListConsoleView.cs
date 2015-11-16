@@ -26,7 +26,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 System.Console.WriteLine(string.Empty);
                 foreach (var p in participants)
                 {
-                    System.Console.WriteLine("\t\t{0}{1}", p.Name, (p.Name.ToLower() == vm.MachineId.ToLower() ? " <-- This machine" : ""));
+                    System.Console.WriteLine("\t\t{0}{1}", p, (p.ToLower() == vm.MachineId.ToLower() ? " <-- This machine" : ""));
                 }
             }
             else

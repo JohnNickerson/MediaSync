@@ -15,11 +15,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
     {
         #region Properties
         /// <summary>
-        /// A unique ID for the profile.
-        /// </summary>
-        public int Id { get; set; }
-
-        /// <summary>
         /// Bytes reserved for this profile on shared storage.
         /// </summary>
         public ulong ReserveSpace { get; set; }
@@ -27,6 +22,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// A search pattern for files to include.
         /// </summary>
+        [Obsolete("Assume all files are included. Use IgnorePatterns to exclude files as required.")]
         public List<string> SearchPatterns { get; set; }
         
         /// <summary>
@@ -37,25 +33,32 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// All the participants in this profile.
         /// </summary>
-        public List<FileIndex> Participants { get; set; }
+        public List<FileIndex> Indexes { get; set; }
 
+        /// <summary>
+        /// The master index, containing info on the latest versions of files from all participants.
+        /// </summary>
         public FileIndex MasterIndex { get; set; }
 
+        /// <summary>
+        /// File name patterns to exclude from the profile.
+        /// </summary>
         public List<string> IgnorePatterns { get; set; }
         #endregion
 
 		#region Constructors
 		public SyncSet()
 		{
-            SearchPatterns = new List<string>();
-            Participants = new List<FileIndex>();
+            Indexes = new List<FileIndex>();
+            MasterIndex = new FileIndex();
+            IgnorePatterns = new List<string>();
 		}
 		#endregion
 
         #region Methods
-        public FileIndex GetParticipant(string machine)
+        public FileIndex GetIndex(string machine)
         {
-            var localsettings = Participants.Where(p => p.MachineName.ToLower() == machine.ToLower());
+            var localsettings = Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower());
             if (localsettings.Count() > 0)
             {
                 return localsettings.First();
@@ -68,7 +71,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public bool ContainsParticipant(string machine)
         {
-            return Participants.Where(p => p.MachineName.ToLower() == machine.ToLower()).Count() > 0;
+            return Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower()).Count() > 0;
         }
         #endregion
 

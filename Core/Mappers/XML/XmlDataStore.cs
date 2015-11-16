@@ -45,11 +45,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public void CreateProfileParticipant(Model.Repository obj)
-        {
-            throw new NotImplementedException();
-        }
-
         public void CreateSyncProfile(Model.SyncSet obj)
         {
             throw new NotImplementedException();
@@ -61,11 +56,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
         }
 
         public Model.FileIndex GetFileIndexById(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Model.Repository GetProfileParticipantById(int id)
         {
             throw new NotImplementedException();
         }
@@ -85,17 +75,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             throw new NotImplementedException();
         }
 
-        public Model.Repository[] GetAllProfileParticipant()
-        {
-            throw new NotImplementedException();
-        }
-
         public Model.SyncSet[] GetAllSyncProfile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Model.Machine[] GetAllMachines()
         {
             throw new NotImplementedException();
         }
@@ -106,11 +86,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
         }
 
         public void UpdateFileIndex(Model.FileIndex obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }
@@ -126,11 +101,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
         }
 
         public void DeleteFileIndex(Model.FileIndex obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeleteProfileParticipant(Model.Repository obj)
         {
             throw new NotImplementedException();
         }

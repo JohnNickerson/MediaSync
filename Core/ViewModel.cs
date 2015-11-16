@@ -83,7 +83,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void SetOptions(SyncSet opts, IFileManager filemanager)
         {
-            _localSettings = opts.GetParticipant(_machineId);
+            _localSettings = opts.GetIndex(_machineId);
             LocalPath = _localSettings.LocalPath;
             SharedPath = _localSettings.SharedPath;
             NumPeers = 0;
@@ -139,7 +139,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (!profile.ContainsParticipant(this.MachineId))
             {
-                profile.Participants.Add(new FileIndex
+                profile.Indexes.Add(new FileIndex
                 {
                     MachineName = this.MachineId,
                     LocalPath = localpath,
@@ -155,7 +155,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (profile.ContainsParticipant(this.MachineId))
             {
-                profile.Participants.Remove((from p in profile.Participants where p.MachineName == this.MachineId select p).Single());
+                profile.Indexes.Remove((from p in profile.Indexes where p.MachineName == this.MachineId select p).Single());
                 _indexer.SaveChanges();
             }
         }
@@ -185,10 +185,11 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public List<Machine> Machines
+        public List<string> Machines
         {
-            get {
-                return _indexer.GetAllMachines().ToList();
+            get
+            {
+                return _indexer.GetAllSyncProfile().SelectMany(p => p.Indexes).Select(p => p.MachineName).Distinct().ToList();
             }
         }
 
@@ -263,12 +264,11 @@ namespace AssimilationSoftware.MediaSync.Core
             index.IsPull = _localSettings.IsPull;
             index.IsPush = _localSettings.IsPush;
             index.MachineName = _localSettings.MachineName;
-            index.ProfileName = _localSettings.ProfileName;
             index.SharedPath = _localSettings.SharedPath;
             _indexer.CreateFileIndex(index);
 
             // Compare this index with others.
-            NumPeers = _options.Participants.Count;
+            NumPeers = _options.Indexes.Count;
             FileCounts = CompareCounts(_options);
         }
 
@@ -286,22 +286,18 @@ namespace AssimilationSoftware.MediaSync.Core
             var FileCounts = new Dictionary<string, int>();
 
             // For each other most recent index...
-            foreach (var p in options.Participants)
+            foreach (var p in options.Indexes)
             {
-                var f = _indexer.GetAllFileIndex().Where(x => x.ProfileName == options.Name && x.MachineName == p.MachineName).OrderByDescending(x => x.TimeStamp).First();
-                if (f != null)
+                foreach (var idxfile in p.Files)
                 {
-                    foreach (var idxfile in f.Files)
+                    var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
+                    if (FileCounts.ContainsKey(relfile))
                     {
-                        var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
-                        if (FileCounts.ContainsKey(relfile))
-                        {
-                            FileCounts[relfile]++;
-                        }
-                        else
-                        {
-                            FileCounts[relfile] = 1;
-                        }
+                        FileCounts[relfile]++;
+                    }
+                    else
+                    {
+                        FileCounts[relfile] = 1;
                     }
                 }
             }

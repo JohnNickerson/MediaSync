@@ -89,9 +89,6 @@
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
     <Compile Include="FileManagement\MockFileManager.cs" />
-    <Compile Include="Model\FileRevision.cs" />
-    <Compile Include="Model\Machine.cs" />
-    <Compile Include="Model\Repository.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

@@ -35,40 +35,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// </remarks>
         public bool IsDeleted { get; set; }
 
-        /// <summary>
-        /// The most recent file revision details.
-        /// </summary>
-        public FileRevision CurrentRevision
-        {
-            get
-            {
-                if (Revisions == null || Revisions.Count == 0)
-                {
-                    return new FileRevision();
-                }
-                else
-                {
-                    return Revisions.OrderBy(r => r.Revision).Last();
-                }
-            }
-            set
-            {
-                if (Revisions == null)
-                {
-                    Revisions = new List<FileRevision>();
-                }
-                Revisions.Add(value);
-            }
-        }
+        public long Size { get; set; }
 
-        /// <summary>
-        /// Revision history.
-        /// </summary>
-        /// <remarks>
-        /// This is required for the master index, in case it encounters an old version of the file.
-        /// The current revision details will match the highest revision here.
-        /// </remarks>
-        public List<FileRevision> Revisions { get; set; }
+        public string ContentsHash { get; set; }
+
+        public DateTime LastModified { get; set; }
         #endregion
     }
 }

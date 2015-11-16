@@ -35,7 +35,6 @@ namespace UnitTesting.Mocks
         {
             return new FileIndex
             {
-                IsMaster = false,
                 IsPull = true,
                 IsPush = true,
                 LocalPath = path,
@@ -49,12 +48,8 @@ namespace UnitTesting.Mocks
                         FileName = "oldversion.txt",
                         IsDeleted = false,
                         RelativePath = ".",
-                        CurrentRevision = new FileRevision
-                        {
-                            ContentsHash = "aaaa",
-                            FileSize = 1000,
-                            Revision = 1
-                        }
+                        ContentsHash = "aaaa",
+                        Size = 1000,
                     }
                 }
             };

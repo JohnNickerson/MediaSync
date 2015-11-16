@@ -87,7 +87,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             // Show participating paths if detailed view is selected.
                             if (listOptions.Verbose && star)
                             {
-                                var party = p.GetParticipant(Settings.Default.MachineName);
+                                var party = p.GetIndex(Settings.Default.MachineName);
                                 System.Console.WriteLine("\t\t{0}", party.LocalPath);
                                 System.Console.WriteLine("\t\t{0}", party.SharedPath);
                                 // Indicate give/consumer status.

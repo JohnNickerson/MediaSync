@@ -293,16 +293,11 @@ namespace AssimilationSoftware.MediaSync.Core
                     var fileinfo = new FileInfo(Path.Combine(index.LocalPath, file));
                     index.Files.Add(new FileHeader
                     {
-                        CurrentRevision = new FileRevision
-                        {
-                            ContentsHash = hasher.ComputeHash(fileinfo.FullName),
-                            FileSize = fileinfo.Length,
-                            Revision = 0
-                        },
+                        ContentsHash = hasher.ComputeHash(fileinfo.FullName),
+                        Size = fileinfo.Length,
                         FileName = fileinfo.Name,
                         RelativePath = file.Substring(0, file.Length - fileinfo.Name.Length),
                         IsDeleted = false,
-                        Revisions = new List<FileRevision>()
                     }
                         );
                 }

@@ -28,11 +28,10 @@ namespace UnitTesting
 
             var nss = new SyncSet
             {
-                Id = 1,
                 IgnorePatterns = new System.Collections.Generic.List<string> { ".git" },
                 MasterIndex = new FileIndex(),
                 Name = "TestSyncSet",
-                Participants = new System.Collections.Generic.List<FileIndex>(),
+                Indexes = new System.Collections.Generic.List<FileIndex>(),
                 ReserveSpace = 10000,
                 SearchPatterns = new System.Collections.Generic.List<string>()
             };

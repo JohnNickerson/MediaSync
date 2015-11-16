@@ -208,7 +208,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     StatusMessage = string.Format("Processing profile {0}", opts.Name);
 
-                    _copyq = new QueuedDiskCopier(_machineId);
+                    _copyq = new QueuedDiskCopier();
                     // TODO: Remove this sub-self-reference.
                     SetOptions(opts, _copyq);
                     PropertyChanged += SyncServicePropertyChanged;

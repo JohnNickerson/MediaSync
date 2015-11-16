@@ -81,12 +81,15 @@
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="Interfaces\IDataStore.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
+    <Compile Include="Interfaces\ISyncSetMapper.cs" />
     <Compile Include="Mappers\Mock\MockDataStore.cs" />
     <Compile Include="Mappers\PlainText\TextDataStore.cs" />
     <Compile Include="Mappers\XML\XmlDataStore.cs" />
+    <Compile Include="Mappers\XML\XmlSyncSetMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
     <Compile Include="FileManagement\MockFileManager.cs" />
+    <Compile Include="Model\FileRevision.cs" />
     <Compile Include="Model\Machine.cs" />
     <Compile Include="Model\Repository.cs" />
     <Compile Include="Properties\Settings.Designer.cs">

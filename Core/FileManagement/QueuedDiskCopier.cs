@@ -80,8 +80,8 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// Constructs a new asynchronous file copy service.
 		/// </summary>
-		public QueuedDiskCopier(string participant)
-		{
+		public QueuedDiskCopier()
+        {
 			InProgressActions = new List<IAsyncResult>();
 			PendingFileActions = new Queue<FileCommand>();
 			MaxActions = 2;
@@ -96,7 +96,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// </summary>
 		/// <param name="source">The source file to copy.</param>
 		/// <param name="target">The destination where the file will be copied to.</param>
-		void IFileManager.CopyFile(string source, string target)
+		public void CopyFile(string source, string target)
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
@@ -108,7 +108,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        void IFileManager.MoveFile(string source, string target)
+        public void MoveFile(string source, string target)
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
@@ -122,7 +122,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private void BeginThreads()
         {
-            while (InProgressActions.Count < MaxActions)
+            while (InProgressActions.Count < MaxActions && PendingFileActions.Count > 0)
             {
                 // Pop a pending action off the queue.
                 FileCommand op;
@@ -290,7 +290,21 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 try
                 {
-                    index.Files.Add(new FileHeader(file, index.LocalPath, hasher));
+                    var fileinfo = new FileInfo(Path.Combine(index.LocalPath, file));
+                    index.Files.Add(new FileHeader
+                    {
+                        CurrentRevision = new FileRevision
+                        {
+                            ContentsHash = hasher.ComputeHash(fileinfo.FullName),
+                            FileSize = fileinfo.Length,
+                            Revision = 0
+                        },
+                        FileName = fileinfo.Name,
+                        RelativePath = file.Substring(0, file.Length - fileinfo.Name.Length),
+                        IsDeleted = false,
+                        Revisions = new List<FileRevision>()
+                    }
+                        );
                 }
                 catch (Exception e)
                 {

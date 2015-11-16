@@ -33,7 +33,6 @@ namespace UnitTesting
                 Name = "TestSyncSet",
                 Indexes = new System.Collections.Generic.List<FileIndex>(),
                 ReserveSpace = 10000,
-                SearchPatterns = new System.Collections.Generic.List<string>()
             };
             mapper.Update(nss);
         }

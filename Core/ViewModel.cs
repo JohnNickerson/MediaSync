@@ -64,7 +64,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// An asynchronous file copier.
         /// </summary>
-        private IFileManager _copyq;
+        private IFileManager _fileManager;
 
         private SyncSet _options;
         private FileIndex _localSettings;
@@ -81,6 +81,7 @@ namespace AssimilationSoftware.MediaSync.Core
             _machineId = machineId;
         }
 
+        [Obsolete]
         public void SetOptions(SyncSet opts, IFileManager filemanager)
         {
             _localSettings = opts.GetIndex(_machineId);
@@ -96,7 +97,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             _sizecache = 0;
             _options = opts;
-            _copyq = filemanager;
+            _fileManager = filemanager;
             _log = new List<string>();
         }
         #endregion
@@ -121,12 +122,12 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private bool ProfileExists(string name)
         {
-            return _indexer.GetAllSyncProfile().Select(x => x.Name.ToLower()).Contains(name.ToLower());
+            return _indexer.GetAllSyncProfile().Any(x => x.Name.ToLower() == name.ToLower());
         }
 
         private SyncSet GetProfile(string name)
         {
-            return _indexer.GetAllSyncProfile().Where(x => x.Name.ToLower() == name.ToLower()).First();
+            return _indexer.GetAllSyncProfile().FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
         }
 
         public void JoinProfile(string profileName, string localpath, string sharedpath, bool contributor, bool consumer)
@@ -155,7 +156,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (profile.ContainsParticipant(this.MachineId))
             {
-                profile.Indexes.Remove((from p in profile.Indexes where p.MachineName == this.MachineId select p).Single());
+                profile.Indexes.RemoveAll(p => p.MachineName == MachineId);
                 _indexer.SaveChanges();
             }
         }
@@ -209,9 +210,9 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     StatusMessage = string.Format("Processing profile {0}", opts.Name);
 
-                    _copyq = new QueuedDiskCopier();
+                    _fileManager = new QueuedDiskCopier();
                     // TODO: Remove this sub-self-reference.
-                    SetOptions(opts, _copyq);
+                    SetOptions(opts, _fileManager);
                     PropertyChanged += SyncServicePropertyChanged;
                     VerboseMode = Verbose;
                     try
@@ -260,7 +261,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         public void IndexFiles()
         {
-            var index = _copyq.CreateIndex(_localSettings.LocalPath, _options.SearchPatterns.ToArray());
+            var index = _fileManager.CreateIndex(_localSettings.LocalPath, _options.SearchPatterns.ToArray());
             index.IsPull = _localSettings.IsPull;
             index.IsPush = _localSettings.IsPush;
             index.MachineName = _localSettings.MachineName;
@@ -269,43 +270,10 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Compare this index with others.
             NumPeers = _options.Indexes.Count;
-            FileCounts = CompareCounts(_options);
         }
 
         /// <summary>
-        /// Compares all index contents to get a count of file existences.
-        /// </summary>
-        /// <returns>A dictionary of file names to index membership counts.</returns>
-        /// <remarks>
-        /// This method is now obsolete for what I want. I need a queue (maybe two) of file actions
-        /// derived from a three-way comparison between the current file system, the previous local
-        /// index and the current master index.
-        /// </remarks>
-        public Dictionary<string, int> CompareCounts(SyncSet options)
-        {
-            var FileCounts = new Dictionary<string, int>();
-
-            // For each other most recent index...
-            foreach (var p in options.Indexes)
-            {
-                foreach (var idxfile in p.Files)
-                {
-                    var relfile = Path.Combine(idxfile.RelativePath, idxfile.FileName);
-                    if (FileCounts.ContainsKey(relfile))
-                    {
-                        FileCounts[relfile]++;
-                    }
-                    else
-                    {
-                        FileCounts[relfile] = 1;
-                    }
-                }
-            }
-            return FileCounts;
-        }
-
-        /// <summary>
-        /// Removes empty folders from the watch path.
+        /// Removes empty folders from the shared path.
         /// </summary>
         internal void ClearEmptyFolders()
         {
@@ -324,7 +292,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             Report(new DeleteFile(dir));
                         }
-                        _copyq.Delete(dir);
+                        _fileManager.Delete(dir);
                     }
                     catch
                     {
@@ -369,7 +337,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 return 0;
             }
 
-            _sizecache = _copyq.SharedPathSize(_localSettings.SharedPath);
+            _sizecache = _fileManager.SharedPathSize(_localSettings.SharedPath);
             int pushcount = 0;
             // TODO: Prioritise the least-common files.
             // TODO: Select files that have been updated or created locally.
@@ -395,7 +363,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         // ...and is not in shared storage
                         if (!File.Exists(targetfile))
                         {
-                            if (_copyq.ShouldCopy(filename))
+                            if (_fileManager.ShouldCopy(filename))
                             {
                                 // ...copy it to shared storage.
                                 string targetdir = Path.GetDirectoryName(targetfile);
@@ -403,13 +371,13 @@ namespace AssimilationSoftware.MediaSync.Core
                                 {
                                     Report(new CopyCommand(filename_local, targetfile));
                                 }
-                                _copyq.EnsureFolder(targetdir);
+                                _fileManager.EnsureFolder(targetdir);
                                 string fullpathlocal = Path.Combine(LocalPath, filename_local);
-                                _copyq.CopyFile(fullpathlocal, targetfile);
+                                _fileManager.CopyFile(fullpathlocal, targetfile);
                                 // Update size cache.
                                 _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
                                 pushcount++;
-                                StatusMessage = string.Format("\t\tConstructing copy queue: {1} {0}.", _copyq.Count, (_copyq.Count == 1 ? "item" : "items"));
+                                StatusMessage = string.Format("\t\tConstructing copy queue: {1} {0}.", _fileManager.Count, (_fileManager.Count == 1 ? "item" : "items"));
                             }
                             else
                             {
@@ -432,7 +400,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             WaitForCopies();
-            _copyq.SetNormalAttributes(_localSettings.SharedPath);
+            _fileManager.SetNormalAttributes(_localSettings.SharedPath);
             return pushcount;
         }
 
@@ -480,7 +448,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     string relativepath = incoming.Substring(SharedPath.Length + 1);
                     string targetfile = Path.Combine(LocalPath, relativepath);
                     string targetdir = Path.GetDirectoryName(targetfile);
-                    _copyq.EnsureFolder(targetdir);
+                    _fileManager.EnsureFolder(targetdir);
                     if (!incoming.Equals(targetfile))
                     {
                         if (!File.Exists(targetfile))
@@ -492,7 +460,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                     Report(new CopyCommand(incoming, targetfile));
                                 }
                                 // Linux Bug: Source and target locations the same. Probably a slash problem.
-                                _copyq.CopyFile(incoming, targetfile);
+                                _fileManager.CopyFile(incoming, targetfile);
                                 pullcount++;
                             }
                             catch (Exception)
@@ -538,7 +506,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         // Remove it from shared storage.
                         try
                         {
-                            _copyq.Delete(filename);
+                            _fileManager.Delete(filename);
                             prunecount++;
                         }
                         catch (Exception e)
@@ -614,12 +582,12 @@ namespace AssimilationSoftware.MediaSync.Core
             }
 
             // Report any errors.
-            if (_copyq.Errors.Count > 0)
+            if (_fileManager.Errors.Count > 0)
             {
                 ReportMessage("Errors encountered:");
-                for (int x = 0; x < _copyq.Errors.Count; x++)
+                for (int x = 0; x < _fileManager.Errors.Count; x++)
                 {
-                    ReportMessage(_copyq.Errors[x].Message);
+                    ReportMessage(_fileManager.Errors[x].Message);
                 }
             }
         }
@@ -649,23 +617,23 @@ namespace AssimilationSoftware.MediaSync.Core
             int lastcount = 0;
             bool estimate_time = true;
             DateTime started_waiting = DateTime.Now;
-            var first_count = _copyq.Count;
-            while (_copyq.Count > 0)
+            var first_count = _fileManager.Count;
+            while (_fileManager.Count > 0)
             {
-                if (_copyq.Count != lastcount)
+                if (_fileManager.Count != lastcount)
                 {
                     if (estimate_time)
                     {
                         // Estimate time left via copies per second. Assumes even distribution of file sizes in queue.
-                        var cps = (first_count - _copyq.Count) / (DateTime.Now - started_waiting).TotalSeconds;
-                        var timeleft = new TimeSpan(0, 0, _copyq.Count / (int)cps);
-                        StatusMessage = string.Format("\t\tWaiting on {0} {1}... ({2:hh:mm:ss} remaining)", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"), timeleft);
+                        var cps = (first_count - _fileManager.Count) / (DateTime.Now - started_waiting).TotalSeconds;
+                        var timeleft = new TimeSpan(0, 0, _fileManager.Count / (int)cps);
+                        StatusMessage = string.Format("\t\tWaiting on {0} {1}... ({2:hh:mm:ss} remaining)", _fileManager.Count, (_fileManager.Count == 1 ? "copy" : "copies"), timeleft);
                     }
                     else
                     {
-                        StatusMessage = string.Format("\t\tWaiting on {0} {1}...", _copyq.Count, (_copyq.Count == 1 ? "copy" : "copies"));
+                        StatusMessage = string.Format("\t\tWaiting on {0} {1}...", _fileManager.Count, (_fileManager.Count == 1 ? "copy" : "copies"));
                     }
-                    lastcount = _copyq.Count;
+                    lastcount = _fileManager.Count;
                 }
                 Thread.Sleep(1000);
             }
@@ -746,7 +714,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             get
             {
-                return _copyq.Errors;
+                return _fileManager.Errors;
             }
         }
         public List<string> Log

@@ -48,26 +48,17 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Fields
-        public string LocalPath;
-        public string SharedPath;
         private int NumPeers;
 
         [Obsolete("Too simplistic for performing updates and deletes.")]
         private Dictionary<string, int> FileCounts;
-        public ulong SizeLimit;
-        private ulong _sizecache;
 
         public bool VerboseMode;
-
-        public List<string> FileSearches = new List<string>();
 
         /// <summary>
         /// An asynchronous file copier.
         /// </summary>
         private IFileManager _fileManager;
-
-        private SyncSet _options;
-        private FileIndex _localSettings;
 
         private IDataStore _indexer;
 
@@ -75,29 +66,18 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Constructors
-        public ViewModel(IDataStore datacontext, string machineId)
+        public ViewModel(IDataStore datacontext, string machineId, IFileManager filemanager)
         {
             _indexer = datacontext;
             _machineId = machineId;
+            _fileManager = filemanager;
         }
 
         [Obsolete]
-        public void SetOptions(SyncSet opts, IFileManager filemanager)
+        public void SetOptions(SyncSet opts)
         {
-            _localSettings = opts.GetIndex(_machineId);
-            LocalPath = _localSettings.LocalPath;
-            SharedPath = _localSettings.SharedPath;
             NumPeers = 0;
             FileCounts = new Dictionary<string, int>();
-            SizeLimit = opts.ReserveSpace;
-            FileSearches = opts.SearchPatterns;
-            if (FileSearches.Count == 0)
-            {
-                FileSearches.Add("*.*");
-            }
-            _sizecache = 0;
-            _options = opts;
-            _fileManager = filemanager;
             _log = new List<string>();
         }
         #endregion
@@ -196,7 +176,15 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void RemoveMachine(string machine)
         {
-            throw new NotImplementedException();
+            var savemachine = MachineId;
+            MachineId = machine;
+
+            foreach (var p in Profiles)
+            {
+                LeaveProfile(p.Name);
+            }
+
+            MachineId = savemachine;
         }
 
         public void RunSync(bool Verbose, bool IndexOnly, PropertyChangedEventHandler SyncServicePropertyChanged)
@@ -210,9 +198,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     StatusMessage = string.Format("Processing profile {0}", opts.Name);
 
-                    _fileManager = new QueuedDiskCopier();
                     // TODO: Remove this sub-self-reference.
-                    SetOptions(opts, _fileManager);
+                    SetOptions(opts);
                     PropertyChanged += SyncServicePropertyChanged;
                     VerboseMode = Verbose;
                     try
@@ -223,7 +210,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                         else
                         {
-                            Sync();
+                            Sync(opts);
                         }
                     }
                     catch (Exception e)
@@ -259,9 +246,10 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Creates an index file for this machine.
         /// </summary>
-        public void IndexFiles()
+        public void IndexFiles(SyncSet syncSet)
         {
-            var index = _fileManager.CreateIndex(_localSettings.LocalPath, _options.SearchPatterns.ToArray());
+            var _localSettings = syncSet.GetIndex(MachineId);
+            var index = _fileManager.CreateIndex(_localSettings.LocalPath, syncSet.SearchPatterns.ToArray());
             index.IsPull = _localSettings.IsPull;
             index.IsPush = _localSettings.IsPush;
             index.MachineName = _localSettings.MachineName;
@@ -269,13 +257,13 @@ namespace AssimilationSoftware.MediaSync.Core
             _indexer.CreateFileIndex(index);
 
             // Compare this index with others.
-            NumPeers = _options.Indexes.Count;
+            NumPeers = syncSet.Indexes.Count;
         }
 
         /// <summary>
         /// Removes empty folders from the shared path.
         /// </summary>
-        internal void ClearEmptyFolders()
+        internal void ClearEmptyFolders(string SharedPath)
         {
             string inbox = SharedPath;
             // Sort by descending length to get leaf nodes first.
@@ -328,7 +316,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Pushes files to shared storage where they are found wanting in other peers.
         /// </summary>
-        internal int PushFiles()
+        internal int PushFiles(SyncSet syncSet)
         {
             // No point trying to push files when they'll all be ignored.
             if (NumPeers == 1)
@@ -337,62 +325,34 @@ namespace AssimilationSoftware.MediaSync.Core
                 return 0;
             }
 
-            _sizecache = _fileManager.SharedPathSize(_localSettings.SharedPath);
+            var localIndex = syncSet.GetIndex(MachineId);
+            var _sizecache = _fileManager.SharedPathSize(localIndex.SharedPath);
             int pushcount = 0;
             // TODO: Prioritise the least-common files.
             // TODO: Select files that have been updated or created locally.
             //var sortedfilelist = from f in FileCounts.Keys orderby FileCounts[f] select f;
             // For every file in the index
-            foreach (string filename in FileCounts.Keys)
+            foreach (string fullFileName in Directory.GetFiles(localIndex.LocalPath))
             {
                 // If the size allocation has been exceeded, stop.
-                if (_sizecache > SizeLimit)
+                if (_sizecache > syncSet.ReserveSpace)
                 {
                     ReportMessage("Shared space exhausted ({0}). Stopping for now.", VerbaliseBytes(_sizecache));
                     break;
                 }
+                string filename = _fileManager.GetRelativePath(fullFileName, localIndex.LocalPath);
                 string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
-                string targetfile = Path.Combine(SharedPath, filename);
+                var indexFile = localIndex.GetFile(filename);
+                string targetfile = Path.Combine(localIndex.SharedPath, filename);
 
-                // If the file is missing from somewhere
-                if (FileCounts[filename] < NumPeers)
+                // If the file mismatches the local index and space is available...
+                if (!_fileManager.FilesMatch(fullFileName, indexFile))
                 {
-                    // ...and exists locally
-                    if (File.Exists(Path.Combine(LocalPath, filename_local)))
-                    {
-                        // ...and is not in shared storage
-                        if (!File.Exists(targetfile))
-                        {
-                            if (_fileManager.ShouldCopy(filename))
-                            {
-                                // ...copy it to shared storage.
-                                string targetdir = Path.GetDirectoryName(targetfile);
-                                if (VerboseMode)
-                                {
-                                    Report(new CopyCommand(filename_local, targetfile));
-                                }
-                                _fileManager.EnsureFolder(targetdir);
-                                string fullpathlocal = Path.Combine(LocalPath, filename_local);
-                                _fileManager.CopyFile(fullpathlocal, targetfile);
-                                // Update size cache.
-                                _sizecache += (ulong)new FileInfo(fullpathlocal).Length;
-                                pushcount++;
-                                StatusMessage = string.Format("\t\tConstructing copy queue: {1} {0}.", _fileManager.Count, (_fileManager.Count == 1 ? "item" : "items"));
-                            }
-                            else
-                            {
-                                ReportMessage("Excluding file {0} because the file copy manager says no.", filename);
-                            }
-                        }
-                        else
-                        {
-                            //ReportMessage("Excluding file {0} because it is already in shared storage.", file);
-                        }
-                    }
-                    else
-                    {
-                        //ReportMessage("Excluding file {0} because it does not exist here.", file);
-                    }
+                    _fileManager.CopyFile(fullFileName, targetfile);
+                    // Update size cache.
+                    _sizecache += (ulong)new FileInfo(fullFileName).Length;
+                    pushcount++;
+                    StatusMessage = string.Format("\t\tConstructing copy queue: {1} {0}.", _fileManager.Count, (_fileManager.Count == 1 ? "item" : "items"));
                 }
                 else
                 {
@@ -400,7 +360,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             WaitForCopies();
-            _fileManager.SetNormalAttributes(_localSettings.SharedPath);
+            _fileManager.SetNormalAttributes(localIndex.SharedPath);
             return pushcount;
         }
 
@@ -436,46 +396,47 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Copies files from shared storage if they are not present locally.
         /// </summary>
-        internal int PullFiles()
+        internal int PullFiles(SyncSet repo)
         {
             int pullcount = 0;
-            foreach (string FileSearch in FileSearches)
+            foreach (var masterfile in repo.MasterIndex.Files)
             {
-                foreach (string incoming in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
+                var localIndex = repo.GetIndex(MachineId);
+                var localIndexFile = localIndex.GetFile(masterfile.RelativePath);
+                var localFile = Path.Combine(localIndex.LocalPath, masterfile.RelativePath);
+                if (masterfile.IsDeleted)
                 {
-                    // These paths might need some more processing.
-                    // Remove the watch path.
-                    string relativepath = incoming.Substring(SharedPath.Length + 1);
-                    string targetfile = Path.Combine(LocalPath, relativepath);
-                    string targetdir = Path.GetDirectoryName(targetfile);
-                    _fileManager.EnsureFolder(targetdir);
-                    if (!incoming.Equals(targetfile))
+                    // File has been deleted somewhere else. If it's still the same here, delete it here.
+                    // Note: files deleted elsewhere and changed here will be handled later.
+                    if (_fileManager.FilesMatch(localFile, localIndexFile))
                     {
-                        if (!File.Exists(targetfile))
-                        {
-                            try
-                            {
-                                if (VerboseMode)
-                                {
-                                    Report(new CopyCommand(incoming, targetfile));
-                                }
-                                // Linux Bug: Source and target locations the same. Probably a slash problem.
-                                _fileManager.CopyFile(incoming, targetfile);
-                                pullcount++;
-                            }
-                            catch (Exception)
-                            {
-                                ReportMessage("Could not copy file: {0}->{1}", incoming, targetfile);
-                            }
-                        }
-                        else if (VerboseMode)
-                        {
-                            ReportMessage("Skipping file {0}, already exists.", relativepath);
-                        }
+                        _fileManager.Delete(localFile);
+                        localIndex.Files.Remove(localIndexFile);
                     }
-                    else
+                }
+                else
+                {
+                    // If the local file and both indexes are all mismatches, that's a conflict.
+                    // Rename the local file and add the change to the index.
+                    if (localIndexFile != null && !_fileManager.FilesMatch(masterfile, localIndexFile) && File.Exists(localFile) && !_fileManager.FilesMatch(localFile, localIndexFile))
                     {
-                        ReportMessage("Error: source file location for move is target location.");
+                        var newname = _fileManager.GetConflictFileName(localIndex.LocalPath, masterfile.RelativePath, MachineId, DateTime.Now);
+                        // TODO: _fileManager.MoveFileNoOverwrite(...);
+                        _fileManager.MoveFile(localFile, newname);
+                        var fileInfo = new FileInfo(localFile);
+                        localIndex.UpdateFile(masterfile.RelativePath, _fileManager.CreateFileHeader(localIndex.LocalPath, masterfile.RelativePath));
+                    }
+
+                    // If the master index mismatches the local index and the local index matches the local file or the local file is missing, copy the file locally.
+                    if (localIndexFile != null && !_fileManager.FilesMatch(masterfile, localIndexFile) && (!File.Exists(localFile) || _fileManager.FilesMatch(localFile, localIndexFile)))
+                    {
+                        var sharedFile = Path.Combine(localIndex.SharedPath, masterfile.RelativePath);
+                        if (File.Exists(sharedFile))
+                        {
+                            _fileManager.CopyFile(sharedFile, localFile);
+                            pullcount++;
+                            localIndex.UpdateFile(masterfile.RelativePath, _fileManager.CreateFileHeader(localIndex.LocalPath, masterfile.RelativePath));
+                        }
                     }
                 }
             }
@@ -487,88 +448,66 @@ namespace AssimilationSoftware.MediaSync.Core
         /// Checks for files in shared storage that are now present everywhere and removes them from shared
         /// storage to make more room.
         /// </summary>
-        internal int PruneFiles()
+        internal int PruneFiles(SyncSet repo)
         {
             int prunecount = 0;
-            foreach (string FileSearch in FileSearches)
+            var localIndex = repo.GetIndex(MachineId);
+            foreach (string sharedfile in Directory.GetFiles(localIndex.SharedPath))
             {
-                // For each file in the watch path
-                foreach (string filename in Directory.GetFiles(SharedPath, FileSearch, SearchOption.AllDirectories))
+                var relativeSharedPath = _fileManager.GetRelativePath(sharedfile, localIndex.SharedPath);
+                var indexfile = localIndex.GetFile(relativeSharedPath);
+                var masterFile = repo.MasterIndex.GetFile(relativeSharedPath);
+                bool matchallindex = true;
+                foreach (var remoteindex in repo.Indexes)
                 {
-                    // If the file exists in all peers
-                    string relativefile = filename.Remove(0, SharedPath.Length + 1);
-                    if (FileCounts.ContainsKey(relativefile) && FileCounts[relativefile] == NumPeers)
-                    {
-                        if (VerboseMode)
-                        {
-                            Report(new DeleteFile(filename));
-                        }
-                        // Remove it from shared storage.
-                        try
-                        {
-                            _fileManager.Delete(filename);
-                            prunecount++;
-                        }
-                        catch (Exception e)
-                        {
-                            ReportMessage("Error deleting file: {0}", e.Message);
-                        }
-                    }
+                    matchallindex &= _fileManager.FilesMatch(sharedfile, remoteindex.GetFile(relativeSharedPath));
+                }
+                if (matchallindex && !_fileManager.FilesMatch(sharedfile, masterFile))
+                {
+                    _fileManager.Delete(sharedfile);
+                    prunecount++;
                 }
             }
-            ClearEmptyFolders();
+            ClearEmptyFolders(localIndex.SharedPath);
             return prunecount;
         }
 
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        public void Sync()
+        public void Sync(SyncSet syncSet)
         {
             // Check folders, just in case.
+            var localindex = syncSet.GetIndex(MachineId);
+            var SharedPath = localindex.SharedPath;
             if (!Directory.Exists(SharedPath))
             {
                 ReportMessage("Shared storage not available ({0}). Aborting.", SharedPath);
                 return;
             }
-            // Reset size cache in case this is a multiple-run and other changes have been made.
-            _sizecache = 0;
-
+            
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
             PulledCount = 0;
-            if (_localSettings.IsPull)
+            if (localindex.IsPull)
             {
                 ReportMessage("\tPulling files from shared space.");
-                PulledCount = PullFiles();
+                PulledCount = PullFiles(syncSet);
             }
-
-            // Index local files.
-            ReportMessage("\tIndexing local files.");
-            IndexFiles();
-            // Compare this index to other indices.
-            // For each index, including local,
-            // for each file name,
-            // Increment a file name count.
-            // Need names of files that are:
-            //  1. Here but missing elsewhere. (count < consumers && File.Exists)
-            //  2. Elsewhere but missing here. (!File.Exists)
-            //  3. Found everywhere.            (count == consumers)
-            // TODO: Need separate peer counts for contributors and consumers.
 
             // Check for files found in all indexes and in storage, and remove them.
             ReportMessage("\tRemoving shared files that are in every client already.");
-            PrunedCount = PruneFiles();
+            PrunedCount = PruneFiles(syncSet);
 
             // TODO: Find delete operations to pass on?
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.
             PushedCount = 0;
-            if (_localSettings.IsPush)
+            if (localindex.IsPush)
             {
                 ReportMessage("\tPushing files.");
-                PushedCount = PushFiles();
+                PushedCount = PushFiles(syncSet);
             }
 
             // Report a summary of actions taken.
@@ -599,13 +538,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             // QAD way: Preserve consumer/give flags, call Sync.
             // TODO: Count files in full sync, only here, and only elsewhere.
-            bool take = _localSettings.IsPull;
-            bool give = _localSettings.IsPush;
-
-            Sync();
-
-            _localSettings.IsPull = take;
-            _localSettings.IsPush = give;
+            throw new NotImplementedException();
         }
 
         /// <summary>

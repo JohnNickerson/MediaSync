@@ -68,5 +68,35 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             throw new NotImplementedException();
         }
+
+        public bool FilesMatch(string literalFilePath, FileHeader indexFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetConflictFileName(string localPath, string relativePath, string machineId, DateTime now)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string ComputeHash(string localFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FileHeader CreateFileHeader(string localPath, string relativePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetRelativePath(string sharedfile, string sharedPath)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

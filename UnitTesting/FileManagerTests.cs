@@ -15,7 +15,7 @@ namespace UnitTesting
         [TestMethod]
         public void CopyFile()
         {
-            var filemanager = new QueuedDiskCopier();
+            var filemanager = new QueuedDiskCopier(new AssimilationSoftware.MediaSync.Core.FileManagement.Hashing.MockHasher());
 
             string targetfile = @"C:\Temp\mscopytesttarget.txt";
             filemanager.CopyFile(@"C:\Temp\mscopytest.txt", targetfile);
@@ -26,7 +26,7 @@ namespace UnitTesting
         [TestMethod]
         public void CreateIndex()
         {
-            var filemanager = new QueuedDiskCopier();
+            var filemanager = new QueuedDiskCopier(new AssimilationSoftware.MediaSync.Core.FileManagement.Hashing.MockHasher());
 
             string folder = @"C:\temp";
             var index = filemanager.CreateIndex(folder, new string[] { "*.txt" });

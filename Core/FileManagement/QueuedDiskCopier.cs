@@ -63,10 +63,11 @@ namespace AssimilationSoftware.MediaSync.Core
 		private int MaxActions;
 
         private List<Exception> _errors;
+        private IFileHashProvider _fileHasher;
 
-		/// <summary>
-		/// A list of errors that occurred during copies.
-		/// </summary>
+        /// <summary>
+        /// A list of errors that occurred during copies.
+        /// </summary>
         List<Exception> IFileManager.Errors
         {
             get
@@ -80,12 +81,13 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// Constructs a new asynchronous file copy service.
 		/// </summary>
-		public QueuedDiskCopier()
+		public QueuedDiskCopier(IFileHashProvider hashMaker)
         {
 			InProgressActions = new List<IAsyncResult>();
 			PendingFileActions = new Queue<FileCommand>();
 			MaxActions = 2;
 
+            _fileHasher = hashMaker;
 			_errors = new List<Exception>();
 		}
 		#endregion
@@ -308,13 +310,76 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             return index;
         }
+
+        public bool FilesMatch(string literalFilePath, FileHeader indexFile)
+        {
+            var fileDetails = new FileInfo(literalFilePath);
+            return indexFile != null && File.Exists(literalFilePath) && indexFile.Size == fileDetails.Length && (indexFile.ContentsHash == null || indexFile.ContentsHash == ComputeHash(literalFilePath));
+        }
+
+        public bool FilesMatch(FileHeader masterFile, FileHeader indexFile)
+        {
+            return masterFile.Size == indexFile.Size && (masterFile.ContentsHash == null || indexFile.ContentsHash == null || masterFile.ContentsHash == indexFile.ContentsHash);
+        }
+
+        public string GetConflictFileName(string basePath, string relativePath, string machine, DateTime now)
+        {
+            var localfile = Path.Combine(basePath, relativePath);
+            var fileInfo = new FileInfo(localfile);
+            var justname = fileInfo.Name.Remove(fileInfo.Name.Length - fileInfo.Extension.Length);
+            var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}){3}", justname, machine, now, fileInfo.Extension));
+            int ver = 0;
+            while (File.Exists(newname))
+            {
+                ver++;
+                newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}) ({3}){4}", justname, machine, now, ver, fileInfo.Extension));
+            }
+            return newname;
+        }
+
+        public string ComputeHash(string literalFilePath)
+        {
+            return _fileHasher.ComputeHash(literalFilePath);
+        }
+
+        public FileHeader CreateFileHeader(string localPath, string relativePath)
+        {
+            var fileInfo = new FileInfo(Path.Combine(localPath, relativePath));
+            return new FileHeader
+            {
+                RelativePath = relativePath,
+                ContentsHash = ComputeHash(fileInfo.FullName),
+                IsDeleted = false,
+                Size = fileInfo.Length,
+                LastModified = fileInfo.LastWriteTime
+            };
+        }
+
+        public string GetRelativePath(string absolutePath, string basePath)
+        {
+            if (absolutePath.StartsWith(basePath))
+            {
+                if (basePath.EndsWith("\\"))
+                {
+                    return absolutePath.Remove(0, basePath.Length);
+                }
+                else
+                {
+                    return absolutePath.Remove(0, basePath.Length - 1);
+                }
+            }
+            else
+            {
+                return absolutePath;
+            }
+        }
         #endregion
 
-		#region Properties
-		/// <summary>
-		/// Gets the number of pending copy operations.
-		/// </summary>
-		int IFileManager.Count
+        #region Properties
+        /// <summary>
+        /// Gets the number of pending copy operations.
+        /// </summary>
+        int IFileManager.Count
 		{
 			get
 			{

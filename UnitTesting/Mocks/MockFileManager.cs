@@ -26,7 +26,17 @@ namespace UnitTesting.Mocks
             }
         }
 
+        public string ComputeHash(string localFile)
+        {
+            throw new NotImplementedException();
+        }
+
         public void CopyFile(string source, string target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FileHeader CreateFileHeader(string localPath, string relativePath)
         {
             throw new NotImplementedException();
         }
@@ -61,6 +71,26 @@ namespace UnitTesting.Mocks
         }
 
         public void EnsureFolder(string targetdir)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool FilesMatch(string literalFilePath, FileHeader indexFile)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetConflictFileName(string localPath, string relativePath, string machineId, DateTime now)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetRelativePath(string sharedfile, string sharedPath)
         {
             throw new NotImplementedException();
         }

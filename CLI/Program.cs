@@ -38,7 +38,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName);
+            var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName, new QueuedDiskCopier(new Core.FileManagement.Hashing.MockHasher()));
             vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)

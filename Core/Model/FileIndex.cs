@@ -46,5 +46,16 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// Indeicates whether this machine, for this index, replicates its own changes for other repositories to copy.
         /// </summary>
         public bool IsPush { get; set; }
+
+        internal FileHeader GetFile(string relativePath)
+        {
+            return Files.FirstOrDefault(f => f.RelativePath.ToLower() == relativePath.ToLower());
+        }
+
+        internal void UpdateFile(string relativePath, FileHeader fileHeader)
+        {
+            Files.RemoveAll(f => f.RelativePath.ToLower() == relativePath.ToLower());
+            Files.Add(fileHeader);
+        }
     }
 }

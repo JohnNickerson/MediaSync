@@ -40,6 +40,13 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 		int Count { get; }
 
         List<Exception> Errors { get; }
-		#endregion
+
+        bool FilesMatch(string literalFilePath, FileHeader indexFile);
+        bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile);
+        string GetConflictFileName(string localPath, string relativePath, string machineId, DateTime now);
+        string ComputeHash(string localFile);
+        FileHeader CreateFileHeader(string localPath, string relativePath);
+        string GetRelativePath(string sharedfile, string sharedPath);
+        #endregion
     }
 }

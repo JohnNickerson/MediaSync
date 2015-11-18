@@ -9,6 +9,7 @@ using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.CLI.Views;
+using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -38,7 +39,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName, new QueuedDiskCopier(new Core.FileManagement.Hashing.MockHasher()));
+            var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName, new QueuedDiskCopier(new Sha1Calculator()));
             vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)

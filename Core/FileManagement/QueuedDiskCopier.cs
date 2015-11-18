@@ -286,7 +286,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 LocalPath=path,
                 TimeStamp=DateTime.Now
             };
-            IFileHashProvider hasher = new MockHasher();
+            IFileHashProvider hasher = new Sha1Calculator();
 
             foreach (string file in ListLocalFiles(path, SearchPatterns))
             {

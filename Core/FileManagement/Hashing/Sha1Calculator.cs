@@ -8,7 +8,7 @@ using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core.FileManagement.Hashing
 {
-    class Sha1Calculator : IFileHashProvider
+    public class Sha1Calculator : IFileHashProvider
     {
         public string ComputeHash(string filename)
         {

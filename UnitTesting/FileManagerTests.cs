@@ -1,4 +1,5 @@
 ﻿using AssimilationSoftware.MediaSync.Core;
+using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace UnitTesting
         [TestMethod]
         public void CopyFile()
         {
-            var filemanager = new QueuedDiskCopier(new AssimilationSoftware.MediaSync.Core.FileManagement.Hashing.MockHasher());
+            var filemanager = new QueuedDiskCopier(new MockHasher());
 
             string targetfile = @"C:\Temp\mscopytesttarget.txt";
             filemanager.CopyFile(@"C:\Temp\mscopytest.txt", targetfile);
@@ -26,7 +27,7 @@ namespace UnitTesting
         [TestMethod]
         public void CreateIndex()
         {
-            var filemanager = new QueuedDiskCopier(new AssimilationSoftware.MediaSync.Core.FileManagement.Hashing.MockHasher());
+            var filemanager = new QueuedDiskCopier(new MockHasher());
 
             string folder = @"C:\temp";
             var index = filemanager.CreateIndex(folder, new string[] { "*.txt" });

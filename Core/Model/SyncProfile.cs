@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using System.IO;
-using System.Data.SqlServerCe;
 using System.Configuration;
 using System.Data;
 using AssimilationSoftware.MediaSync.Core.Properties;

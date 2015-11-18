@@ -1,7 +1,9 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
 using Polenter.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,25 +16,23 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
     public class XmlDataStore : IDataStore
     {
         private string _profilesLocation;
-        private string _indexesLocation;
         private SharpSerializer _serialiser;
-        private string v;
+        private List<SyncSet> _syncSets;
 
-        public XmlDataStore(string profilesFilename, string indexesFilename)
+        public XmlDataStore(string profilesFilename)
         {
             _profilesLocation = profilesFilename;
-            _indexesLocation = indexesFilename;
             _serialiser = new SharpSerializer();
-        }
-
-        public XmlDataStore(string v)
-        {
-            this.v = v;
+            if (!File.Exists(_profilesLocation))
+            {
+                _serialiser.Serialize(new List<SyncSet>(), _profilesLocation);
+            }
+            _syncSets = (List<SyncSet>)_serialiser.Deserialize(_profilesLocation);
         }
 
         public void SaveChanges()
         {
-            throw new NotImplementedException();
+            _serialiser.Serialize(_syncSets, _profilesLocation);
         }
 
         public void CreateFileHeader(Model.FileHeader obj)
@@ -47,7 +47,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 
         public void CreateSyncProfile(Model.SyncSet obj)
         {
-            throw new NotImplementedException();
+            _syncSets.Add(obj);
         }
 
         public Model.FileHeader GetFileHeaderById(int id)
@@ -77,7 +77,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 
         public Model.SyncSet[] GetAllSyncProfile()
         {
-            throw new NotImplementedException();
+            return _syncSets.ToArray();
         }
 
         public void UpdateFileHeader(Model.FileHeader obj)

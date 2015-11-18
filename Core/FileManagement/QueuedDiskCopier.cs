@@ -365,7 +365,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 else
                 {
-                    return absolutePath.Remove(0, basePath.Length - 1);
+                    return absolutePath.Remove(0, basePath.Length + 1);
                 }
             }
             else

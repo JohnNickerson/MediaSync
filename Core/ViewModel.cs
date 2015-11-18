@@ -241,6 +241,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 StatusMessage = "\tNo actions taken";
             }
+            _indexer.SaveChanges();
         }
 
         /// <summary>
@@ -341,16 +342,20 @@ namespace AssimilationSoftware.MediaSync.Core
                     break;
                 }
                 string filename = _fileManager.GetRelativePath(fullFileName, localIndex.LocalPath);
-                string filename_local = filename.Replace('\\', Path.DirectorySeparatorChar);
                 var indexFile = localIndex.GetFile(filename);
                 string targetfile = Path.Combine(localIndex.SharedPath, filename);
 
                 // If the file mismatches the local index and space is available...
                 if (!_fileManager.FilesMatch(fullFileName, indexFile))
                 {
+                    Report(new CopyCommand(fullFileName, targetfile));
                     _fileManager.CopyFile(fullFileName, targetfile);
                     // Update size cache.
                     _sizecache += (ulong)new FileInfo(fullFileName).Length;
+                    // Update the local and master indexes.
+                    var updatedHeader = _fileManager.CreateFileHeader(localIndex.LocalPath, filename);
+                    localIndex.UpdateFile(filename, updatedHeader);
+                    syncSet.MasterIndex.UpdateFile(filename, updatedHeader.Clone());
                     pushcount++;
                     StatusMessage = string.Format("\t\tConstructing copy queue: {1} {0}.", _fileManager.Count, (_fileManager.Count == 1 ? "item" : "items"));
                 }
@@ -359,6 +364,18 @@ namespace AssimilationSoftware.MediaSync.Core
                     //ReportMessage("Excluding file {0} because it is already everywhere.", file);
                 }
             }
+
+            foreach (var delfile in localIndex.Files.Where(f => !File.Exists(Path.Combine(localIndex.LocalPath, f.RelativePath))).ToList())
+            {
+                var masterindexfile = syncSet.MasterIndex.GetFile(delfile.RelativePath);
+                if (masterindexfile != null && _fileManager.FilesMatch(delfile, masterindexfile))
+                {
+                    Report(new DeleteFile(delfile.RelativePath));
+                    masterindexfile.IsDeleted = true;
+                    localIndex.Files.Remove(delfile);
+                }
+            }
+
             WaitForCopies();
             _fileManager.SetNormalAttributes(localIndex.SharedPath);
             return pushcount;
@@ -424,7 +441,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         // TODO: _fileManager.MoveFileNoOverwrite(...);
                         _fileManager.MoveFile(localFile, newname);
                         var fileInfo = new FileInfo(localFile);
-                        localIndex.UpdateFile(masterfile.RelativePath, _fileManager.CreateFileHeader(localIndex.LocalPath, masterfile.RelativePath));
+                        localIndex.UpdateFile(masterfile.RelativePath, _fileManager.CreateFileHeader(localIndex.LocalPath, _fileManager.GetRelativePath(localIndex.LocalPath, newname)));
                     }
 
                     // If the master index mismatches the local index and the local index matches the local file or the local file is missing, copy the file locally.
@@ -435,7 +452,19 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             _fileManager.CopyFile(sharedFile, localFile);
                             pullcount++;
-                            localIndex.UpdateFile(masterfile.RelativePath, _fileManager.CreateFileHeader(localIndex.LocalPath, masterfile.RelativePath));
+                            localIndex.UpdateFile(masterfile.RelativePath, masterfile.Clone());
+                        }
+                    }
+
+                    // File is just missing locally.
+                    if (localIndexFile == null && !File.Exists(localFile))
+                    {
+                        var sharedFile = Path.Combine(localIndex.SharedPath, masterfile.RelativePath);
+                        if (File.Exists(sharedFile))
+                        {
+                            _fileManager.CopyFile(sharedFile, localFile);
+                            pullcount++;
+                            localIndex.UpdateFile(masterfile.RelativePath, masterfile.Clone());
                         }
                     }
                 }
@@ -558,9 +587,16 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (estimate_time)
                     {
                         // Estimate time left via copies per second. Assumes even distribution of file sizes in queue.
-                        var cps = (first_count - _fileManager.Count) / (DateTime.Now - started_waiting).TotalSeconds;
-                        var timeleft = new TimeSpan(0, 0, _fileManager.Count / (int)cps);
-                        StatusMessage = string.Format("\t\tWaiting on {0} {1}... ({2:hh:mm:ss} remaining)", _fileManager.Count, (_fileManager.Count == 1 ? "copy" : "copies"), timeleft);
+                        var secondswaiting = (DateTime.Now - started_waiting).TotalSeconds;
+                        if (secondswaiting > 0)
+                        {
+                            var cps = (first_count - _fileManager.Count) / secondswaiting;
+                            if (cps > 0)
+                            {
+                                var timeleft = new TimeSpan(0, 0, _fileManager.Count / (int)cps);
+                                StatusMessage = string.Format("\t\tWaiting on {0} {1}... (~{2} remaining)", _fileManager.Count, (_fileManager.Count == 1 ? "copy" : "copies"), timeleft);
+                            }
+                        }
                     }
                     else
                     {

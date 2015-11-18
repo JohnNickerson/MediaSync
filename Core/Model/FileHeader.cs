@@ -40,6 +40,19 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public string ContentsHash { get; set; }
 
         public DateTime LastModified { get; set; }
+
+        internal FileHeader Clone()
+        {
+            return new FileHeader
+            {
+                ContentsHash = ContentsHash,
+                FileName = FileName,
+                IsDeleted = IsDeleted,
+                LastModified = LastModified,
+                RelativePath = RelativePath,
+                Size = Size
+            };
+        }
         #endregion
     }
 }

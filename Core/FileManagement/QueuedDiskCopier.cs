@@ -110,7 +110,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void MoveFile(string source, string target)
+        public void MoveFile(string source, string target, bool overwrite)
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
@@ -322,9 +322,8 @@ namespace AssimilationSoftware.MediaSync.Core
             return masterFile.Size == indexFile.Size && (masterFile.ContentsHash == null || indexFile.ContentsHash == null || masterFile.ContentsHash == indexFile.ContentsHash);
         }
 
-        public string GetConflictFileName(string basePath, string relativePath, string machine, DateTime now)
+        public string GetConflictFileName(string localfile, string machine, DateTime now)
         {
-            var localfile = Path.Combine(basePath, relativePath);
             var fileInfo = new FileInfo(localfile);
             var justname = fileInfo.Name.Remove(fileInfo.Name.Length - fileInfo.Extension.Length);
             var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}){3}", justname, machine, now, fileInfo.Extension));
@@ -372,6 +371,21 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 return absolutePath;
             }
+        }
+
+        public bool DirectoryExists(string path)
+        {
+            return Directory.Exists(path);
+        }
+
+        public string[] GetDirectories(string parentFolder)
+        {
+            return Directory.GetDirectories(parentFolder, "*", SearchOption.AllDirectories);
+        }
+
+        public bool FileExists(string file)
+        {
+            return File.Exists(file);
         }
         #endregion
 

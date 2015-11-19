@@ -13,7 +13,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
         }
 
-        void IFileManager.MoveFile(string source, string target)
+        void IFileManager.MoveFile(string source, string target, bool overwrite)
         {
         }
 
@@ -79,7 +79,7 @@ namespace AssimilationSoftware.MediaSync.Core
             throw new NotImplementedException();
         }
 
-        public string GetConflictFileName(string localPath, string relativePath, string machineId, DateTime now)
+        public string GetConflictFileName(string localFile, string machineId, DateTime now)
         {
             throw new NotImplementedException();
         }
@@ -95,6 +95,21 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
         public string GetRelativePath(string sharedfile, string sharedPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DirectoryExists(string sharedPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string[] GetDirectories(string parentFolder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool FileExists(string file)
         {
             throw new NotImplementedException();
         }

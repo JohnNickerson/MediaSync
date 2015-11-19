@@ -70,7 +70,17 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
+        public bool DirectoryExists(string sharedPath)
+        {
+            throw new NotImplementedException();
+        }
+
         public void EnsureFolder(string targetdir)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool FileExists(string file)
         {
             throw new NotImplementedException();
         }
@@ -85,7 +95,12 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public string GetConflictFileName(string localPath, string relativePath, string machineId, DateTime now)
+        public string GetConflictFileName(string localFile, string machineId, DateTime now)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string[] GetDirectories(string parentFolder)
         {
             throw new NotImplementedException();
         }
@@ -100,7 +115,7 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public void MoveFile(string source, string target)
+        public void MoveFile(string source, string target, bool overwrite)
         {
             throw new NotImplementedException();
         }

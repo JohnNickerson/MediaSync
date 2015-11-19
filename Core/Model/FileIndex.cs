@@ -52,10 +52,13 @@ namespace AssimilationSoftware.MediaSync.Core.Model
             return Files.FirstOrDefault(f => f.RelativePath.ToLower() == relativePath.ToLower());
         }
 
-        internal void UpdateFile(string relativePath, FileHeader fileHeader)
+        internal void UpdateFile(FileHeader fileHeader)
         {
-            Files.RemoveAll(f => f.RelativePath.ToLower() == relativePath.ToLower());
-            Files.Add(fileHeader);
+            if (fileHeader != null)
+            {
+                Files.RemoveAll(f => f.RelativePath.ToLower() == fileHeader.RelativePath.ToLower());
+                Files.Add(fileHeader);
+            }
         }
     }
 }

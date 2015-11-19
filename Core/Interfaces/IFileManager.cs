@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using AssimilationSoftware.MediaSync.Core.Model;
 namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
@@ -16,7 +17,7 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 		/// <param name="target">The new location to copy to.</param>
 		void CopyFile(string source, string target);
 
-        void MoveFile(string source, string target);
+        void MoveFile(string source, string target, bool overwrite);
 
         ulong SharedPathSize(string path);
 
@@ -28,9 +29,9 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         void SetNormalAttributes(string path);
 
-        string[] ListLocalFiles(string path, string[] searchpatterns);
+        string[] ListLocalFiles(string path, params string[] searchpatterns);
 
-        FileIndex CreateIndex(string path, string[] searchpatterns);
+        FileIndex CreateIndex(string path, params string[] searchpatterns);
 		#endregion
 
 		#region Properties
@@ -43,10 +44,13 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         bool FilesMatch(string literalFilePath, FileHeader indexFile);
         bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile);
-        string GetConflictFileName(string localPath, string relativePath, string machineId, DateTime now);
         string ComputeHash(string localFile);
         FileHeader CreateFileHeader(string localPath, string relativePath);
         string GetRelativePath(string sharedfile, string sharedPath);
+        bool DirectoryExists(string sharedPath);
+        string[] GetDirectories(string parentFolder);
+        bool FileExists(string file);
+        string GetConflictFileName(string localFile, string machineId, DateTime now);
         #endregion
     }
 }

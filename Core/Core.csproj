@@ -71,12 +71,8 @@
     <Compile Include="Commands\MoveCommand.cs" />
     <Compile Include="FileManagement\Hashing\MockHasher.cs" />
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
-    <Compile Include="Interfaces\IDataStore.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
-    <Compile Include="Mappers\Mock\MockDataStore.cs" />
-    <Compile Include="Mappers\PlainText\TextDataStore.cs" />
-    <Compile Include="Mappers\XML\XmlDataStore.cs" />
     <Compile Include="Mappers\XML\XmlSyncSetMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
@@ -100,6 +96,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Mappers\Mock\" />
+    <Folder Include="Mappers\PlainText\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

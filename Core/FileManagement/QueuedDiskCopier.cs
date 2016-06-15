@@ -311,6 +311,15 @@ namespace AssimilationSoftware.MediaSync.Core
             return index;
         }
 
+        /// <summary>
+        /// Compares a literal file to a calculated file header record.
+        /// </summary>
+        /// <param name="literalFilePath">The local path of the file to compare.</param>
+        /// <param name="indexFile">The file header info to compare.</param>
+        /// <returns>True for a match, false otherwise, including a null record.</returns>
+        /// <remarks>
+        /// TODO: Delegate to the other FilesMatch method, for consistency.
+        /// </remarks>
         public bool FilesMatch(string literalFilePath, FileHeader indexFile)
         {
             var fileDetails = new FileInfo(literalFilePath);

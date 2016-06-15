@@ -39,7 +39,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            var vm = new ViewModel(new XmlDataStore("SyncData.xml"), Settings.Default.MachineName, new QueuedDiskCopier(new Sha1Calculator()));
+            var vm = new ViewModel(new XmlSyncSetMapper("SyncData.xml"), Settings.Default.MachineName, new QueuedDiskCopier(new Sha1Calculator()));
             vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)
@@ -50,7 +50,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var addOptions = (AddProfileSubOptions)argsubs;
                         vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMB, addOptions.IgnorePatterns);
                         vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath, addOptions.Contributor, addOptions.Consumer);
-                        vm.SaveChanges();
                     }
                     #endregion
                     break;
@@ -59,7 +58,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var joinOptions = (JoinProfileSubOptions)argsubs;
                         vm.JoinProfile(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath, joinOptions.Contributor, joinOptions.Consumer);
-                        vm.SaveChanges();
                     }
                     #endregion
                     break;
@@ -69,7 +67,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var leaveOptions = (LeaveProfileSubOptions)argsubs;
                         vm.LeaveProfile(leaveOptions.ProfileName);
                         PrintProfilesWithParticipation(vm.Profiles);
-                        vm.SaveChanges();
                     }
                     #endregion
                     break;
@@ -119,7 +116,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var machineview = new MachineListConsoleView(vm);
                         machineview.Run();
                     }
-                    vm.SaveChanges();
                     #endregion
                     break;
                 case "run":

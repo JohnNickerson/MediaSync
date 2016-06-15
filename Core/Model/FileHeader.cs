@@ -35,12 +35,25 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// </remarks>
         public bool IsDeleted { get; set; }
 
+        /// <summary>
+        /// The size of the file, in bytes.
+        /// </summary>
         public long Size { get; set; }
 
+        /// <summary>
+        /// A hash of the file contents, used to determine if changes have been made.
+        /// </summary>
         public string ContentsHash { get; set; }
 
+        /// <summary>
+        /// The date and time when the file was last modified.
+        /// </summary>
         public DateTime LastModified { get; set; }
 
+        /// <summary>
+        /// Gets a copy of the file's metadata in a new object.
+        /// </summary>
+        /// <returns>A FileHeader just like this one.</returns>
         internal FileHeader Clone()
         {
             return new FileHeader

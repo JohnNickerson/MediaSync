@@ -17,12 +17,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// Bytes reserved for this profile on shared storage.
         /// </summary>
         public ulong ReserveSpace { get; set; }
-
-        /// <summary>
-        /// A search pattern for files to include.
-        /// </summary>
-        [Obsolete("Assume all files are included. Use IgnorePatterns to exclude files as required.")]
-        public List<string> SearchPatterns { get; set; }
         
         /// <summary>
         /// The name of the profile.
@@ -73,12 +67,5 @@ namespace AssimilationSoftware.MediaSync.Core.Model
             return Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower()).Count() > 0;
         }
         #endregion
-
-        // TODO: Move this. I don't think it belongs here.
-        public static void SetLocalMachineName(string name)
-        {
-            Settings.Default.MachineName = name;
-            Settings.Default.Save();
-        }
     }
 }

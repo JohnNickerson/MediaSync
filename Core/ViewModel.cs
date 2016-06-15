@@ -1,6 +1,5 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Commands;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
-using AssimilationSoftware.MediaSync.Core.Mappers.Mock;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
@@ -50,9 +49,6 @@ namespace AssimilationSoftware.MediaSync.Core
         #region Fields
         private int NumPeers;
 
-        [Obsolete("Too simplistic for performing updates and deletes.")]
-        private Dictionary<string, int> FileCounts;
-
         public bool VerboseMode;
 
         /// <summary>
@@ -60,25 +56,17 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         private IFileManager _fileManager;
 
-        private IDataStore _indexer;
+        private ISyncSetMapper _indexer;
 
         private List<string> _log;
         #endregion
 
         #region Constructors
-        public ViewModel(IDataStore datacontext, string machineId, IFileManager filemanager)
+        public ViewModel(ISyncSetMapper datacontext, string machineId, IFileManager filemanager)
         {
             _indexer = datacontext;
             _machineId = machineId;
             _fileManager = filemanager;
-        }
-
-        [Obsolete]
-        public void SetOptions(SyncSet opts)
-        {
-            NumPeers = 0;
-            FileCounts = new Dictionary<string, int>();
-            _log = new List<string>();
         }
         #endregion
 
@@ -91,8 +79,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.Name = name;
                 profile.ReserveSpace = reserve;
                 profile.IgnorePatterns = ignore.ToList();
-                _indexer.CreateSyncProfile(profile);
-                _indexer.SaveChanges();
+                _indexer.Update(profile);
             }
             else
             {
@@ -102,12 +89,12 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private bool ProfileExists(string name)
         {
-            return _indexer.GetAllSyncProfile().Any(x => x.Name.ToLower() == name.ToLower());
+            return _indexer.ReadAll().Any(x => x.Name.ToLower() == name.ToLower());
         }
 
         private SyncSet GetProfile(string name)
         {
-            return _indexer.GetAllSyncProfile().FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
+            return _indexer.ReadAll().FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
         }
 
         public void JoinProfile(string profileName, string localpath, string sharedpath, bool contributor, bool consumer)
@@ -128,7 +115,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     IsPush = contributor,
                     IsPull = consumer
                 });
-                _indexer.SaveChanges();
+                _indexer.Update(profile);
             }
         }
 
@@ -137,13 +124,8 @@ namespace AssimilationSoftware.MediaSync.Core
             if (profile.ContainsParticipant(this.MachineId))
             {
                 profile.Indexes.RemoveAll(p => p.MachineName == MachineId);
-                _indexer.SaveChanges();
+                _indexer.Update(profile);
             }
-        }
-
-        public void SaveChanges()
-        {
-            _indexer.SaveChanges();
         }
 
         public void LeaveProfile(string profileName)
@@ -154,7 +136,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public List<string> GetProfileNames()
         {
-            var names = _indexer.GetAllSyncProfile().Select(x => x.Name).Distinct();
+            var names = _indexer.ReadAll().Select(x => x.Name).Distinct();
             return names.ToList();
         }
 
@@ -162,7 +144,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             get
             {
-                return _indexer.GetAllSyncProfile().ToList();
+                return _indexer.ReadAll().ToList();
             }
         }
 
@@ -170,7 +152,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             get
             {
-                return _indexer.GetAllSyncProfile().SelectMany(p => p.Indexes).Select(p => p.MachineName).Distinct().ToList();
+                return _indexer.ReadAll().SelectMany(p => p.Indexes).Select(p => p.MachineName).Distinct().ToList();
             }
         }
 
@@ -198,8 +180,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     StatusMessage = string.Format("Processing profile {0}", opts.Name);
 
-                    // TODO: Remove this sub-self-reference.
-                    SetOptions(opts);
+                    NumPeers = 0;
+                    _log = new List<string>();
                     PropertyChanged += SyncServicePropertyChanged;
                     VerboseMode = Verbose;
                     try
@@ -241,7 +223,6 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 StatusMessage = "\tNo actions taken";
             }
-            _indexer.SaveChanges();
         }
 
         /// <summary>
@@ -250,12 +231,13 @@ namespace AssimilationSoftware.MediaSync.Core
         public void IndexFiles(SyncSet syncSet)
         {
             var _localSettings = syncSet.GetIndex(MachineId);
-            var index = _fileManager.CreateIndex(_localSettings.LocalPath, syncSet.SearchPatterns.ToArray());
+            var index = _fileManager.CreateIndex(_localSettings.LocalPath, "*.*");
             index.IsPull = _localSettings.IsPull;
             index.IsPush = _localSettings.IsPush;
             index.MachineName = _localSettings.MachineName;
             index.SharedPath = _localSettings.SharedPath;
-            _indexer.CreateFileIndex(index);
+            syncSet.Indexes.Add(index);
+            _indexer.Update(syncSet);
 
             // Compare this index with others.
             NumPeers = syncSet.Indexes.Count;
@@ -439,6 +421,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         var newname = _fileManager.GetConflictFileName(localFile, MachineId, DateTime.Now);
                         // TODO: _fileManager.MoveFileNoOverwrite(...);
+                        // TODO: Return the new file name from MoveFile().
                         _fileManager.MoveFile(localFile, newname, false);
                         localIndex.UpdateFile(_fileManager.CreateFileHeader(localIndex.LocalPath, _fileManager.GetRelativePath(localIndex.LocalPath, newname)));
                     }

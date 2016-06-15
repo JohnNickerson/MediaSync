@@ -1,5 +1,6 @@
 ﻿using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
+using AssimilationSoftware.MediaSync.Core.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -34,5 +35,37 @@ namespace UnitTesting
 
             Assert.IsNotNull(index);
         }
+
+        [TestMethod]
+        public void FilesMatch_HashMismatchShouldBeFalse()
+        {
+            // Arrange
+            var masterFile = new AssimilationSoftware.MediaSync.Core.Model.FileHeader
+            {
+                ContentsHash = "123",
+                FileName = "temp.txt",
+                IsDeleted = false,
+                LastModified = DateTime.Now,
+                RelativePath = "Thoughts\\temp.txt",
+                Size = 100
+            };
+            var indexFile = new FileHeader
+            {
+                ContentsHash = "456",
+                FileName = "temp.txt",
+                IsDeleted = false,
+                LastModified = DateTime.Now,
+                RelativePath = "Thoughts\\temp.txt",
+                Size = 100
+            };
+
+            // Act
+            var match = new QueuedDiskCopier(new MockHasher()).FilesMatch(masterFile, indexFile);
+
+
+            // Assert
+            Assert.IsFalse(match);
+        }
+        
     }
 }

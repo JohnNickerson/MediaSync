@@ -10,6 +10,20 @@ namespace UnitTesting.Mocks
 {
     class MockFileManager : IFileManager
     {
+        private List<FileHeader> _fakeFiles;
+
+        public MockFileManager(params FileHeader[] files)
+        {
+            if (files != null)
+            {
+                _fakeFiles = files.ToList();
+            }
+            else
+            {
+                _fakeFiles = new List<FileHeader>();
+            }
+        }
+
         public int Count
         {
             get
@@ -82,7 +96,7 @@ namespace UnitTesting.Mocks
 
         public bool FileExists(string file)
         {
-            throw new NotImplementedException();
+            return _fakeFiles.Any(f => f.FileName == file);
         }
 
         public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)

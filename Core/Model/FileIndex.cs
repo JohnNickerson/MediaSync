@@ -47,18 +47,23 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// </summary>
         public bool IsPush { get; set; }
 
-        internal FileHeader GetFile(string relativePath)
+        public FileHeader GetFile(string relativePath)
         {
             return Files.FirstOrDefault(f => f.RelativePath.ToLower() == relativePath.ToLower());
         }
 
-        internal void UpdateFile(FileHeader fileHeader)
+        public void UpdateFile(FileHeader fileHeader)
         {
             if (fileHeader != null)
             {
                 Files.RemoveAll(f => f.RelativePath.ToLower() == fileHeader.RelativePath.ToLower());
                 Files.Add(fileHeader);
             }
+        }
+
+        public void Remove(FileHeader localIndexFile)
+        {
+            Files.RemoveAll(f => f.RelativePath.ToLower() == localIndexFile.RelativePath.ToLower());
         }
     }
 }

@@ -19,8 +19,18 @@ namespace UnitTesting
         {
             var filemanager = new QueuedDiskCopier(new MockHasher());
 
+            // Arrange:
+            // Ensure the source file exists first.
+            var sourcefile = @"C:\Temp\mscopytest.txt";
+            File.WriteAllText(sourcefile, sourcefile);
+            // And ensure the target file does not yet exist.
             string targetfile = @"C:\Temp\mscopytesttarget.txt";
-            filemanager.CopyFile(@"C:\Temp\mscopytest.txt", targetfile);
+            if (File.Exists(targetfile)) File.Delete(targetfile);
+
+            filemanager.CopyFile(sourcefile, targetfile);
+
+            // Wait for the copy. This file manager runs copies on a background thread.
+            System.Threading.Thread.Sleep(1000);
 
             Assert.IsTrue(File.Exists(targetfile));
         }

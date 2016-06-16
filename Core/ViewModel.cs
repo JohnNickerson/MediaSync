@@ -398,9 +398,9 @@ namespace AssimilationSoftware.MediaSync.Core
         internal int PullFiles(SyncSet repo)
         {
             int pullcount = 0;
+            var localIndex = repo.GetIndex(MachineId);
             foreach (var masterfile in repo.MasterIndex.Files)
             {
-                var localIndex = repo.GetIndex(MachineId);
                 var localIndexFile = localIndex.GetFile(masterfile.RelativePath);
                 var localFile = Path.Combine(localIndex.LocalPath, masterfile.RelativePath);
                 if (masterfile.IsDeleted)
@@ -410,7 +410,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (_fileManager.FilesMatch(localFile, localIndexFile))
                     {
                         _fileManager.Delete(localFile);
-                        localIndex.Files.Remove(localIndexFile);
+                        localIndex.Remove(localIndexFile);
                     }
                 }
                 else
@@ -451,6 +451,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                 }
             }
+            repo.UpdateIndex(localIndex);
+            _indexer.Update(repo);
             WaitForCopies();
             return pullcount;
         }
@@ -509,8 +511,6 @@ namespace AssimilationSoftware.MediaSync.Core
             // Check for files found in all indexes and in storage, and remove them.
             ReportMessage("\tRemoving shared files that are in every client already.");
             PrunedCount = PruneFiles(syncSet);
-
-            // TODO: Find delete operations to pass on?
 
             // Where files are found wanting in other machines, push to shared storage.
             // If storage is full, do not copy any further.

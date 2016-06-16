@@ -66,6 +66,12 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         {
             return Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower()).Count() > 0;
         }
+
+        internal void UpdateIndex(FileIndex localIndex)
+        {
+            Indexes.Remove(GetIndex(localIndex.MachineName));
+            Indexes.Add(localIndex);
+        }
         #endregion
     }
 }

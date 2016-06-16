@@ -57,6 +57,9 @@ namespace UnitTesting
                 }
             };
             var mockIndexes = new Mocks.MockSyncSetMapper(ss);
+            // Create the local file, for testing.
+            File.WriteAllText(Path.Combine(@"C:\Temp", thefile.RelativePath), thefile.ContentsHash);
+            Assert.IsTrue(filesystem.FilesMatch(ss.MasterIndex.Files.Where(f => f.RelativePath == thefile.RelativePath).First(), thefile));
             
             var vm = new ViewModel(mockIndexes, "Home", filesystem);
 

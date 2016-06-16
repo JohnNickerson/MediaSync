@@ -101,7 +101,7 @@ namespace UnitTesting.Mocks
 
         public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)
         {
-            throw new NotImplementedException();
+            return masterfile.ContentsHash == localIndexFile.ContentsHash;
         }
 
         public bool FilesMatch(string literalFilePath, FileHeader indexFile)

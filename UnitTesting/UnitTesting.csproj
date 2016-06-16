@@ -51,6 +51,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="FileComparerTest.cs" />
+    <Compile Include="FileIndexTests.cs" />
     <Compile Include="FileManagerTests.cs" />
     <Compile Include="Mocks\MockFileManager.cs" />
     <Compile Include="Mocks\MockSyncSetMapper.cs" />

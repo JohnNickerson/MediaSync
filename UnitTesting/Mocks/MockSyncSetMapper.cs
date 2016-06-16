@@ -34,12 +34,12 @@ namespace UnitTesting.Mocks
 
         public List<SyncSet> ReadAll()
         {
-            throw new NotImplementedException();
+            return new List<SyncSet> { ss };
         }
 
         public void Update(SyncSet syncset)
         {
-            throw new NotImplementedException();
+            ss = syncset;
         }
 
         public void UpdateAll(List<SyncSet> syncsets)

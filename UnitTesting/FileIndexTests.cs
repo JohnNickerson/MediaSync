@@ -66,20 +66,16 @@ namespace UnitTesting
                 IsPush = true,
                 LocalPath = @"C:\Users\John\Downloads",
                 MachineName = "yoga",
-                SharedPath = @"E:\MediaSync\Shared\Downloads",
                 TimeStamp = DateTime.Now,
-                Files = new List<FileHeader>
-                {
-                    new FileHeader
+                Files = new Dictionary<string, FileHeader>(){ { "Test.txt", new FileHeader
                     {
                         ContentsHash = "1A",
-                        FileName=@"C:\Users\John\Downloads\Test.txt",
+                        BasePath=@"C:\Users\John\Downloads",
                         IsDeleted=false,
                         LastModified=DateTime.Now,
                         RelativePath="Test.txt",
                         Size=42
-                    }
-                }
+                    } } }
             };
         }
     }

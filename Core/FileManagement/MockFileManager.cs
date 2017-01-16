@@ -4,12 +4,17 @@ using System.Linq;
 using System.Text;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Model;
+using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
     class MockFileManager : IFileManager
     {
         void IFileManager.CopyFile(string source, string target)
+        {
+        }
+
+        void IFileManager.CopyFile(string basePath, string relativePath, string targetPath)
         {
         }
 
@@ -112,6 +117,11 @@ namespace AssimilationSoftware.MediaSync.Core
         public bool FileExists(string file)
         {
             throw new NotImplementedException();
+        }
+
+        public bool FileExists(string basepath, string relativePath)
+        {
+            return FileExists(Path.Combine(basepath, relativePath));
         }
     }
 }

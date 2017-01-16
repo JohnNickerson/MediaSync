@@ -79,6 +79,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 profile.Name = name;
                 profile.ReserveSpace = reserve;
                 profile.IgnorePatterns = ignore.ToList();
+                profile.Indexes = new List<FileIndex>();
+                profile.MasterIndex = new FileIndex
+                {
+                    Files = new Dictionary<string, FileHeader>()
+                };
                 _indexer.Update(profile);
             }
             else
@@ -347,14 +352,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
-            foreach (var delfile in localIndex.Files.Where(f => !_fileManager.FileExists(Path.Combine(localIndex.LocalPath, f.RelativePath))).ToList())
+            foreach (var delfile in localIndex.Files.Where(f => !_fileManager.FileExists(Path.Combine(localIndex.LocalPath, f.Key))).ToList())
             {
-                var masterindexfile = syncSet.MasterIndex.GetFile(delfile.RelativePath);
-                if (masterindexfile != null && _fileManager.FilesMatch(delfile, masterindexfile))
+                var masterindexfile = syncSet.MasterIndex.GetFile(delfile.Key);
+                if (masterindexfile != null && _fileManager.FilesMatch(delfile.Value, masterindexfile))
                 {
-                    Report(new DeleteFile(delfile.RelativePath));
+                    Report(new DeleteFile(delfile.Key));
                     masterindexfile.IsDeleted = true;
-                    localIndex.Files.Remove(delfile);
+                    localIndex.Files.Remove(delfile.Key);
                 }
             }
 
@@ -401,9 +406,9 @@ namespace AssimilationSoftware.MediaSync.Core
             var localIndex = repo.GetIndex(MachineId);
             foreach (var masterfile in repo.MasterIndex.Files)
             {
-                var localIndexFile = localIndex.GetFile(masterfile.RelativePath);
-                var localFile = Path.Combine(localIndex.LocalPath, masterfile.RelativePath);
-                if (masterfile.IsDeleted)
+                var localIndexFile = localIndex.GetFile(masterfile.Key);
+                var localFile = Path.Combine(localIndex.LocalPath, masterfile.Key);
+                if (masterfile.Value.IsDeleted)
                 {
                     // File has been deleted somewhere else. If it's still the same here, delete it here.
                     // Note: files deleted elsewhere and changed here will be handled later.
@@ -417,7 +422,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     // If the local file and both indexes are all mismatches, that's a conflict.
                     // Rename the local file and add the change to the index.
-                    if (localIndexFile != null && !_fileManager.FilesMatch(masterfile, localIndexFile) && _fileManager.FileExists(localFile) && !_fileManager.FilesMatch(localFile, localIndexFile))
+                    if (localIndexFile != null && !_fileManager.FilesMatch(masterfile.Value, localIndexFile) && _fileManager.FileExists(localFile) && !_fileManager.FilesMatch(localFile, localIndexFile))
                     {
                         var newname = _fileManager.GetConflictFileName(localFile, MachineId, DateTime.Now);
                         // TODO: _fileManager.MoveFileNoOverwrite(...);
@@ -427,26 +432,26 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
 
                     // If the master index mismatches the local index and the local index matches the local file or the local file is missing, copy the file locally.
-                    if (localIndexFile != null && !_fileManager.FilesMatch(masterfile, localIndexFile) && (!_fileManager.FileExists(localFile) || _fileManager.FilesMatch(localFile, localIndexFile)))
+                    if (localIndexFile != null && !_fileManager.FilesMatch(masterfile.Value, localIndexFile) && (!_fileManager.FileExists(localFile) || _fileManager.FilesMatch(localFile, localIndexFile)))
                     {
-                        var sharedFile = Path.Combine(localIndex.SharedPath, masterfile.RelativePath);
+                        var sharedFile = Path.Combine(localIndex.SharedPath, masterfile.Key);
                         if (_fileManager.FileExists(sharedFile))
                         {
                             _fileManager.CopyFile(sharedFile, localFile);
                             pullcount++;
-                            localIndex.UpdateFile(masterfile.Clone());
+                            localIndex.UpdateFile(masterfile.Value.Clone());
                         }
                     }
 
                     // File is just missing locally.
                     if (localIndexFile == null && !_fileManager.FileExists(localFile))
                     {
-                        var sharedFile = Path.Combine(localIndex.SharedPath, masterfile.RelativePath);
+                        var sharedFile = Path.Combine(localIndex.SharedPath, masterfile.Key);
                         if (_fileManager.FileExists(sharedFile))
                         {
                             _fileManager.CopyFile(sharedFile, localFile);
                             pullcount++;
-                            localIndex.UpdateFile(masterfile.Clone());
+                            localIndex.UpdateFile(masterfile.Value.Clone());
                         }
                     }
                 }
@@ -498,7 +503,207 @@ namespace AssimilationSoftware.MediaSync.Core
                 ReportMessage("Shared storage not available ({0}). Aborting.", SharedPath);
                 return;
             }
-            
+
+            // 1. Compare the master index to each remote index to determine each file's state.
+            #region Determine State
+            foreach (var mf in syncSet.MasterIndex.Files)
+            {
+                if (mf.Value.IsDeleted)
+                {
+                    if (syncSet.Indexes.Any(i => i.Files.ContainsKey(mf.Key)))
+                    {
+                        mf.Value.State = FileSyncState.Expiring;
+                    }
+                    else
+                    {
+                        mf.Value.State = FileSyncState.Destroyed;
+                    }
+                }
+                else if (syncSet.Indexes.All(i => i.Files.ContainsKey(mf.Key) && i.Files[mf.Key].ContentsHash == mf.Value.ContentsHash))
+                {
+                    mf.Value.State = FileSyncState.Synchronised;
+                }
+                else
+                {
+                    mf.Value.State = FileSyncState.Transit;
+                }
+            }
+            #endregion
+
+            // 2. Determine the necessary action for each file.
+            #region Take Action
+            var allfiles = new Dictionary<string, FileHeader>();
+            // Merge the local index, the master index and the local file system.
+            foreach (var f in syncSet.MasterIndex.Files) allfiles[f.Key] = f.Value;
+            foreach (var f in localindex.Files) allfiles[f.Key] = f.Value;
+            foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath)) allfiles[f] = _fileManager.CreateFileHeader(localindex.LocalPath, f);
+
+            foreach (var f in allfiles.Values)
+            {
+                if (syncSet.MasterIndex.Files.ContainsKey(f.RelativePath))
+                {
+                    var localheader = f;
+                    if (File.Exists(Path.Combine(localindex.LocalPath, f.RelativePath)))
+                    {
+                        _fileManager.CreateFileHeader(localindex.LocalPath, f.RelativePath);
+                    }
+                    switch (f.State)
+                    {
+                        case FileSyncState.Synchronised:
+                            if (_fileManager.FileExists(localindex.LocalPath, f.RelativePath))
+                            {
+                                if (localindex.MatchesFile(f))
+                                {
+                                    // Up to date. No action required.
+                                }
+                                else
+                                {
+                                    // Local update. Copy to shared. Update indexes.
+                                    if (_fileManager.SharedPathSize(SharedPath) + (ulong)f.Size < syncSet.ReserveSpace)
+                                    {
+                                        _fileManager.CopyFile(localindex.LocalPath, f.RelativePath, SharedPath);
+                                        localindex.Files[f.RelativePath] = localheader;
+                                        syncSet.MasterIndex.Files[f.RelativePath] = localheader;
+                                        PushedCount++;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Local delete. Mark deleted in master index. Remove from local index.
+                                syncSet.MasterIndex.Files[f.RelativePath].IsDeleted = true;
+                                localindex.Files.Remove(f.RelativePath);
+                            }
+                            break;
+                        case FileSyncState.Expiring:
+                            if (_fileManager.FileExists(localindex.LocalPath, f.RelativePath))
+                            {
+                                if (localindex.MatchesFile(localheader))
+                                {
+                                    // Remote delete. Delete file. Remove from local index.
+                                    _fileManager.Delete(Path.Combine(localheader.BasePath, localheader.RelativePath));
+                                    localindex.Files.Remove(f.RelativePath);
+                                }
+                                else
+                                {
+                                    // Update/delete conflict. Copy local to shared. Update local index. Mark not deleted in master index.
+                                    if (_fileManager.SharedPathSize(SharedPath) + (ulong)f.Size < syncSet.ReserveSpace)
+                                    {
+                                        _fileManager.CopyFile(localindex.LocalPath, f.RelativePath, SharedPath);
+                                        localindex.Files[f.RelativePath] = localheader;
+                                        syncSet.MasterIndex.Files[f.RelativePath].IsDeleted = false;
+                                        PushedCount++;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Already deleted. Just make sure it's not in the local index.
+                                if (localindex.Files.ContainsKey(f.RelativePath))
+                                {
+                                    localindex.Files.Remove(f.RelativePath);
+                                }
+                            }
+                            break;
+                        case FileSyncState.Transit:
+                            if (_fileManager.FileExists(localindex.LocalPath, f.RelativePath))
+                            {
+                                if (localindex.MatchesFile(localheader))
+                                {
+                                    if (syncSet.MasterIndex.MatchesFile(localindex.Files[f.RelativePath]))
+                                    {
+                                        // Up to date. No action.
+                                    }
+                                    else
+                                    {
+                                        // Remote update. Copy to local, update local index.
+                                        _fileManager.CopyFile(SharedPath, f.RelativePath, f.BasePath);
+                                        localindex.Files[f.RelativePath] = _fileManager.CreateFileHeader(f.BasePath, f.RelativePath);
+                                        PulledCount++;
+                                    }
+                                }
+                                else
+                                {
+                                    if (syncSet.MasterIndex.MatchesFile(localheader))
+                                    {
+                                        // Side-channel update. Repair the local index.
+                                        localindex.Files[f.RelativePath] = localheader;
+                                    }
+                                    else
+                                    {
+                                        if (syncSet.MasterIndex.MatchesFile(localindex.Files[f.RelativePath]))
+                                        {
+                                            // Local update. Copy to shared. Update local and master indexes.
+                                            if (_fileManager.SharedPathSize(SharedPath) + (ulong)f.Size < syncSet.ReserveSpace)
+                                            {
+                                                _fileManager.CopyFile(localheader.BasePath, localheader.RelativePath, SharedPath);
+                                                localindex.Files[localheader.RelativePath] = localheader;
+                                                syncSet.MasterIndex.Files[localheader.RelativePath] = localheader;
+                                                PushedCount++;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Update conflict. Rename the local file and add to the processing queue.
+                                            var newname = _fileManager.GetConflictFileName(Path.Combine(localheader.BasePath, localheader.RelativePath), MachineId, DateTime.Now);
+                                            localheader.RelativePath = _fileManager.GetRelativePath(newname, localheader.BasePath);
+                                            allfiles[localheader.RelativePath] = localheader;
+                                        }
+                                        // TODO: Detect out-of-date copies and treat them as remote updates.
+                                    }
+                                }
+                            }
+                            else if (_fileManager.FileExists(SharedPath, f.RelativePath))
+                            {
+                                // Update/delete conflict or remote create. Copy to local. Update local index.
+                                _fileManager.CopyFile(SharedPath, f.RelativePath, localindex.LocalPath);
+                                localindex.Files[f.RelativePath] = _fileManager.CreateFileHeader(SharedPath, f.RelativePath);
+                                PulledCount++;
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    StatusMessage = f.RelativePath;
+                    // Local create. Copy to shared. Add to indexes.
+                    if (_fileManager.SharedPathSize(SharedPath) + (ulong)f.Size < syncSet.ReserveSpace)
+                    {
+                        _fileManager.CopyFile(localindex.LocalPath, f.RelativePath, SharedPath);
+                        localindex.Files[f.RelativePath] = _fileManager.CreateFileHeader(localindex.LocalPath, f.RelativePath);
+                        syncSet.MasterIndex.Files[f.RelativePath] = localindex.Files[f.RelativePath];
+                        PushedCount++;
+                    }
+                    else
+                    {
+                        StatusMessage = "Out of shared space. Done copying for now.";
+                    }
+                }
+            }
+            #endregion
+
+            // 3. Clean up the master index and shared folder.
+            #region Tidy Up
+            foreach (var mf in syncSet.MasterIndex.Files)
+            {
+                if (mf.Value.IsDeleted)
+                {
+                    if (!syncSet.Indexes.Any(i => i.Files.ContainsKey(mf.Key)))
+                    {
+                        syncSet.MasterIndex.Files.Remove(mf.Key);
+                    }
+                }
+                else if (syncSet.Indexes.All(i => i.Files.ContainsKey(mf.Key) && i.Files[mf.Key].ContentsHash == mf.Value.ContentsHash))
+                {
+                    _fileManager.Delete(Path.Combine(SharedPath, mf.Key));
+                    PrunedCount++;
+                }
+            }
+            #endregion
+
+            _indexer.Update(syncSet);
+            return;
+
             // Check for files in storage wanted here, and copy them.
             // Doing this first ensures that any found everywhere can be removed early.
             PulledCount = 0;

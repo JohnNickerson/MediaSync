@@ -42,9 +42,9 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 		#region Constructors
 		public SyncSet()
 		{
-            Indexes = new List<FileIndex>();
-            MasterIndex = new FileIndex();
-            IgnorePatterns = new List<string>();
+            //Indexes = new List<FileIndex>();
+            //MasterIndex = new FileIndex();
+            //IgnorePatterns = new List<string>();
 		}
 		#endregion
 

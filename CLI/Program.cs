@@ -48,7 +48,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Add profile
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
-                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMB, addOptions.IgnorePatterns);
+                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMB * 1000000, addOptions.IgnorePatterns);
                         vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath, addOptions.Contributor, addOptions.Consumer);
                     }
                     #endregion
@@ -121,6 +121,8 @@ namespace AssimilationSoftware.MediaSync.CLI
                 case "run":
                     #region Run profiles
                     {
+                        // TODO: SearchSpecification for which profiles to run.
+                        // TODO: Confirm profile selections before running.
                         var runOptions = (RunSubOptions)argsubs;
                         vm.RunSync(runOptions.Verbose, runOptions.IndexOnly, new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged));
                     }

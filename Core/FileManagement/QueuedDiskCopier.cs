@@ -110,6 +110,11 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
+        public void CopyFile(string basePath, string relativePath, string targetPath)
+        {
+            CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
+        }
+
         public void MoveFile(string source, string target, bool overwrite)
         {
             if (!source.Equals(target) && !File.Exists(target))
@@ -182,10 +187,14 @@ namespace AssimilationSoftware.MediaSync.Core
             BeginThreads();
         }
 
-        public string[] ListLocalFiles(string path, string[] SearchPatterns)
+        public string[] ListLocalFiles(string path, params string[] SearchPatterns)
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
+            if (SearchPatterns == null || SearchPatterns.Length == 0)
+            {
+                SearchPatterns = new string[] { "*.*" };
+            }
             queue.Enqueue(path);
             // While the queue is not empty,
             while (queue.Count > 0)
@@ -293,15 +302,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 try
                 {
                     var fileinfo = new FileInfo(Path.Combine(index.LocalPath, file));
-                    index.Files.Add(new FileHeader
+                    var f = new FileHeader
                     {
                         ContentsHash = hasher.ComputeHash(fileinfo.FullName),
                         Size = fileinfo.Length,
-                        FileName = fileinfo.Name,
-                        RelativePath = file.Substring(0, file.Length - fileinfo.Name.Length),
+                        RelativePath = file,
                         IsDeleted = false,
-                    }
-                        );
+                    };
+                    index.Files.Add(f.RelativePath, f);
                 }
                 catch (Exception e)
                 {
@@ -395,6 +403,11 @@ namespace AssimilationSoftware.MediaSync.Core
         public bool FileExists(string file)
         {
             return File.Exists(file);
+        }
+
+        public bool FileExists(string basepath, string relativePath)
+        {
+            return FileExists(Path.Combine(basepath, relativePath));
         }
         #endregion
 

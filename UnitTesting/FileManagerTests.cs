@@ -53,7 +53,7 @@ namespace UnitTesting
             var masterFile = new AssimilationSoftware.MediaSync.Core.Model.FileHeader
             {
                 ContentsHash = "123",
-                FileName = "temp.txt",
+                BasePath = @"C:\Users\John\Documents",
                 IsDeleted = false,
                 LastModified = DateTime.Now,
                 RelativePath = "Thoughts\\temp.txt",
@@ -62,7 +62,7 @@ namespace UnitTesting
             var indexFile = new FileHeader
             {
                 ContentsHash = "456",
-                FileName = "temp.txt",
+                BasePath = @"C:\Users\John\Documents",
                 IsDeleted = false,
                 LastModified = DateTime.Now,
                 RelativePath = "Thoughts\\temp.txt",

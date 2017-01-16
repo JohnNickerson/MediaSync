@@ -9,7 +9,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
     {
         public FileIndex()
         {
-            Files = new List<FileHeader>();
+            //Files = new Dictionary<string, FileHeader>();
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The actual files that make up the index.
         /// </summary>
-        public List<FileHeader> Files { get; set; }
+        public Dictionary<string, FileHeader> Files { get; set; }
 
         /// <summary>
         /// The path on the local machine where the repository is stored.
@@ -49,21 +49,35 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public FileHeader GetFile(string relativePath)
         {
-            return Files.FirstOrDefault(f => f.RelativePath.ToLower() == relativePath.ToLower());
+            return Files[relativePath];
         }
 
         public void UpdateFile(FileHeader fileHeader)
         {
             if (fileHeader != null)
             {
-                Files.RemoveAll(f => f.RelativePath.ToLower() == fileHeader.RelativePath.ToLower());
-                Files.Add(fileHeader);
+                Files[fileHeader.RelativePath] = fileHeader;
             }
         }
 
         public void Remove(FileHeader localIndexFile)
         {
-            Files.RemoveAll(f => f.RelativePath.ToLower() == localIndexFile.RelativePath.ToLower());
+            if (Files.ContainsKey(localIndexFile.RelativePath))
+            {
+                Files.Remove(localIndexFile.RelativePath);
+            }
+        }
+
+        public bool MatchesFile(FileHeader file)
+        {
+            if (file == null)
+                return false;
+
+            if (!Files.ContainsKey(file.RelativePath) || Files[file.RelativePath] == null)
+                return false;
+
+            var indexfile = Files[file.RelativePath];
+            return file.Size == indexfile.Size && file.ContentsHash == indexfile.ContentsHash;
         }
     }
 }

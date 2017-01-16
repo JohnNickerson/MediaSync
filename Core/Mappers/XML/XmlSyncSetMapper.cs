@@ -23,8 +23,8 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 
         public void Delete(string name)
         {
-            var allsyncsets = ReadAll().Where(ss => ss.Name != name);
-            UpdateAll(allsyncsets.ToList());
+            var allsyncsets = ReadAll();
+            UpdateAll(allsyncsets.Where(ss => ss.Name != name).ToList());
         }
 
         public void Delete(SyncSet syncset)
@@ -34,10 +34,10 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 
         public SyncSet Read(string name)
         {
-            var allsyncsets = ReadAll().Where(ss => ss.Name == name);
-            if (allsyncsets.Any())
+            var allsyncsets = ReadAll();
+            if (allsyncsets.Any(ss => ss.Name == name))
             {
-                return allsyncsets.First();
+                return allsyncsets.Where(ss => ss.Name == name).First();
             }
             else
             {
@@ -59,7 +59,11 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 
         public void Update(SyncSet syncset)
         {
-            var allsyncsets = ReadAll().Where(ss => ss.Name != syncset.Name).ToList();
+            var allsyncsets = ReadAll();
+            if (allsyncsets.Any(ss => ss.Name == syncset.Name))
+            {
+                allsyncsets.RemoveAll(ss => ss.Name == syncset.Name);
+            }
             allsyncsets.Add(syncset);
             UpdateAll(allsyncsets.ToList());
         }

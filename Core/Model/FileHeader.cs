@@ -18,6 +18,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         #region Properties
         /// <summary>
+        /// The local base path, where the file is stored.
+        /// </summary>
+        public string BasePath { get; set; }
+
+        /// <summary>
         /// The path of the file, relative to the local base path.
         /// </summary>
         public string RelativePath { get; set; }
@@ -25,7 +30,13 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The name of the file.
         /// </summary>
-        public string FileName { get; set; }
+        public string FileName
+        {
+            get
+            {
+                return new FileInfo(Path.Combine(BasePath, RelativePath)).Name;
+            }
+        }
 
         /// <summary>
         /// A flag to indicate that the file was deleted.
@@ -46,6 +57,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public string ContentsHash { get; set; }
 
         /// <summary>
+        /// A synchronisation state, used for the master index.
+        /// </summary>
+        public FileSyncState State { get; set; }
+
+        /// <summary>
         /// The date and time when the file was last modified.
         /// </summary>
         public DateTime LastModified { get; set; }
@@ -59,13 +75,25 @@ namespace AssimilationSoftware.MediaSync.Core.Model
             return new FileHeader
             {
                 ContentsHash = ContentsHash,
-                FileName = FileName,
                 IsDeleted = IsDeleted,
                 LastModified = LastModified,
                 RelativePath = RelativePath,
-                Size = Size
+                Size = Size,
+                BasePath = BasePath,
+                State = State
             };
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Possible file synchronisation states.
+    /// </summary>
+    public enum FileSyncState
+    {
+        Synchronised,
+        Transit,
+        Expiring,
+        Destroyed
     }
 }

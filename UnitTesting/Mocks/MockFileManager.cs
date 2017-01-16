@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AssimilationSoftware.MediaSync.Core.Model;
+using System.IO;
 
 namespace UnitTesting.Mocks
 {
@@ -50,6 +51,11 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
+        public void CopyFile(string basePath, string relativePath, string targetPath)
+        {
+            CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
+        }
+
         public FileHeader CreateFileHeader(string localPath, string relativePath)
         {
             throw new NotImplementedException();
@@ -63,19 +69,19 @@ namespace UnitTesting.Mocks
                 IsPush = true,
                 LocalPath = path,
                 MachineName = "testmachine",
-                SharedPath = ".",
                 TimeStamp = DateTime.Now,
-                Files = new List<FileHeader>
+                Files = new Dictionary<string, FileHeader>()
                 {
+                    { "aaaa" ,
                     new FileHeader
                     {
-                        FileName = "oldversion.txt",
+                        BasePath = @"C:\Temp",
                         IsDeleted = false,
-                        RelativePath = ".",
+                        RelativePath = "oldversion.txt",
                         ContentsHash = "aaaa",
                         Size = 1000,
                     }
-                }
+                } }
             };
         }
 
@@ -97,6 +103,11 @@ namespace UnitTesting.Mocks
         public bool FileExists(string file)
         {
             return _fakeFiles.Any(f => f.FileName == file);
+        }
+
+        public bool FileExists(string basepath, string relativePath)
+        {
+            return FileExists(Path.Combine(basepath, relativePath));
         }
 
         public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)

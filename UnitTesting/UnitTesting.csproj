@@ -55,6 +55,7 @@
     <Compile Include="FileManagerTests.cs" />
     <Compile Include="Mocks\MockFileManager.cs" />
     <Compile Include="Mocks\MockSyncSetMapper.cs" />
+    <Compile Include="SyncSetTests.cs" />
     <Compile Include="ViewModelTests.cs" />
     <Compile Include="XmlSyncSetMapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

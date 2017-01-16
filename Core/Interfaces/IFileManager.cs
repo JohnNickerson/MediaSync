@@ -17,6 +17,14 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 		/// <param name="target">The new location to copy to.</param>
 		void CopyFile(string source, string target);
 
+        /// <summary>
+        /// Copies a file from one location to another.
+        /// </summary>
+        /// <param name="localPath">The base path where the file exists now.</param>
+        /// <param name="relativePath">The relative path to the file.</param>
+        /// <param name="sharedPath">The target path where the file should be copied.</param>
+        void CopyFile(string localPath, string relativePath, string sharedPath);
+
         void MoveFile(string source, string target, bool overwrite);
 
         ulong SharedPathSize(string path);
@@ -50,6 +58,7 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
         bool DirectoryExists(string sharedPath);
         string[] GetDirectories(string parentFolder);
         bool FileExists(string file);
+        bool FileExists(string localPath, string relativePath);
         string GetConflictFileName(string localFile, string machineId, DateTime now);
         #endregion
     }

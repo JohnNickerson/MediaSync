@@ -25,7 +25,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The actual files that make up the index.
         /// </summary>
-        public Dictionary<string, FileHeader> Files { get; set; }
+        public List<FileHeader> Files { get; set; }
 
         /// <summary>
         /// The path on the local machine where the repository is stored.
@@ -49,23 +49,37 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public FileHeader GetFile(string relativePath)
         {
-            return Files[relativePath];
+            var srch = Files.Where(f => f.RelativePath == relativePath);
+            if (srch.Any())
+            {
+                return srch.First();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void UpdateFile(FileHeader fileHeader)
         {
             if (fileHeader != null)
             {
-                Files[fileHeader.RelativePath] = fileHeader;
+                Files.RemoveAll(f => f.RelativePath == fileHeader.RelativePath);
+                Files.Add(fileHeader.Clone());
             }
         }
 
         public void Remove(FileHeader localIndexFile)
         {
-            if (Files.ContainsKey(localIndexFile.RelativePath))
+            if (Exists(localIndexFile.RelativePath))
             {
-                Files.Remove(localIndexFile.RelativePath);
+                Files.RemoveAll(f => f.RelativePath == localIndexFile.RelativePath);
             }
+        }
+
+        public bool Exists(string relativepath)
+        {
+            return Files.Any(f => f.RelativePath.ToLower() == relativepath.ToLower());
         }
 
         public bool MatchesFile(FileHeader file)
@@ -73,10 +87,10 @@ namespace AssimilationSoftware.MediaSync.Core.Model
             if (file == null)
                 return false;
 
-            if (!Files.ContainsKey(file.RelativePath) || Files[file.RelativePath] == null)
+            if (!Exists(file.RelativePath))
                 return false;
 
-            var indexfile = Files[file.RelativePath];
+            var indexfile = GetFile(file.RelativePath);
             return file.Size == indexfile.Size && file.ContentsHash == indexfile.ContentsHash;
         }
     }

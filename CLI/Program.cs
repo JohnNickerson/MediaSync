@@ -10,6 +10,7 @@ using AssimilationSoftware.MediaSync.CLI.Options;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
+using AssimilationSoftware.MediaSync.Core.Mappers.PlainText;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -39,7 +40,8 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            var vm = new ViewModel(new XmlSyncSetMapper("SyncData.xml"), Settings.Default.MachineName, new QueuedDiskCopier(new Sha1Calculator()));
+            var mapper = new XmlSyncSetMapper("SyncData.xml");
+            var vm = new ViewModel(mapper, Settings.Default.MachineName, new QueuedDiskCopier(new Sha1Calculator()));
             vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)
@@ -163,7 +165,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     System.Console.WriteLine(s.Log.Last());
                     break;
                 case "StatusMessage":
-                    System.Console.Write("\r{0}   ", s.StatusMessage);
+                    System.Console.WriteLine(s.StatusMessage);
                     break;
             }
         }

@@ -309,7 +309,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         RelativePath = file,
                         IsDeleted = false,
                     };
-                    index.Files.Add(f.RelativePath, f);
+                    index.UpdateFile(f);
                 }
                 catch (Exception e)
                 {

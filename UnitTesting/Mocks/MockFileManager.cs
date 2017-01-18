@@ -70,9 +70,8 @@ namespace UnitTesting.Mocks
                 LocalPath = path,
                 MachineName = "testmachine",
                 TimeStamp = DateTime.Now,
-                Files = new Dictionary<string, FileHeader>()
+                Files = new List<FileHeader>()
                 {
-                    { "aaaa" ,
                     new FileHeader
                     {
                         BasePath = @"C:\Temp",
@@ -81,7 +80,7 @@ namespace UnitTesting.Mocks
                         ContentsHash = "aaaa",
                         Size = 1000,
                     }
-                } }
+                }
             };
         }
 

@@ -14,7 +14,10 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement.Hashing
         {
             using (var cryptoProvider = new SHA1CryptoServiceProvider())
             {
-                return BitConverter.ToString(cryptoProvider.ComputeHash(new FileInfo(filename).OpenRead()));
+                var stream = new FileInfo(filename).OpenRead();
+                var hash = BitConverter.ToString(cryptoProvider.ComputeHash(stream));
+                stream.Close();
+                return hash;
 
                 // Buffered and cleaned version. Apparently slower.
                 //var stream = new BufferedStream(File.OpenRead(fileinfo.FullName), 1200000);

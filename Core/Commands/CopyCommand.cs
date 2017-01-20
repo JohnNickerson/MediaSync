@@ -20,7 +20,13 @@ namespace AssimilationSoftware.MediaSync.Core.Commands
 
         public override void Replay()
         {
-            File.Copy(Source, Target);
+            // Ensure the target folder exists.
+            var targetfolder = new FileInfo(Target).Directory.FullName;
+            if (!Directory.Exists(targetfolder))
+            {
+                Directory.CreateDirectory(targetfolder);
+            }
+            File.Copy(Source, Target, true);
         }
     }
 }

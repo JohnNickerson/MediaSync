@@ -363,6 +363,7 @@ namespace AssimilationSoftware.MediaSync.Core
             var fileInfo = new FileInfo(Path.Combine(localPath, relativePath));
             return new FileHeader
             {
+                BasePath = localPath,
                 RelativePath = relativePath,
                 ContentsHash = ComputeHash(fileInfo.FullName),
                 IsDeleted = false,

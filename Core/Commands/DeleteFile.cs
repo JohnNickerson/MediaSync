@@ -27,7 +27,14 @@ namespace AssimilationSoftware.MediaSync.Core.Commands
             else if (File.Exists(Path))
             {
                 // Just a file.
-                File.Delete(Path);
+                try
+                {
+                    File.Delete(Path);
+                }
+                catch (System.IO.IOException)
+                {
+                    // TODO: Report failure somehow.
+                }
             }
         }
     }

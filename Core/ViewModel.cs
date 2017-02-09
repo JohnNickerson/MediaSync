@@ -190,7 +190,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 if (opts.ContainsParticipant(_machineId))
                 {
-                    StatusMessage = string.Format("Processing profile {0}", opts.Name);
+                    StatusMessage = string.Format("\nProcessing profile {0}", opts.Name);
 
                     NumPeers = 0;
                     _log = new List<string>();
@@ -515,6 +515,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 return;
             }
 
+            if (syncSet.MasterIndex == null)
+            {
+                syncSet.MasterIndex = new Model.FileIndex();
+            }
+            if (syncSet.MasterIndex.Files == null)
+            {
+                syncSet.MasterIndex.Files = new List<Model.FileHeader>();
+            }
             // 1. Compare the master index to each remote index to determine each file's state.
             #region Determine State
             foreach (var mf in syncSet.MasterIndex.Files)
@@ -624,6 +632,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // Already deleted. Just make sure it's not in the local index.
                                 if (localindex.Exists(f.RelativePath))
                                 {
+                                    ReportMessage("SIDE-CHANNEL DELETE: {0}", f.RelativePath);
                                     localindex.Remove(f);
                                 }
                             }
@@ -642,7 +651,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                     }
                                     else
                                     {
-                                        StatusMessage = string.Format("TRANSIT [-> LOCAL]: {0}", f.RelativePath);
+                                        StatusMessage = string.Format("TRANSIT [LOCAL <-]: {0}", f.RelativePath);
                                         // Remote update. Copy to local, update local index.
                                         _fileManager.CopyFile(SharedPath, f.RelativePath, localindex.LocalPath);
                                         localindex.UpdateFile(_fileManager.CreateFileHeader(localindex.LocalPath, f.RelativePath));
@@ -654,6 +663,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                     if (syncSet.MasterIndex.MatchesFile(localheader))
                                     {
                                         // Side-channel update. Repair the local index.
+                                        ReportMessage("SIDE-CHANNEL UPDATED: {0}", f.RelativePath);
                                         localindex.UpdateFile(localheader);
                                     }
                                     else
@@ -681,12 +691,13 @@ namespace AssimilationSoftware.MediaSync.Core
                                             allFileList.Add(localheader);
                                         }
                                         // TODO: Detect out-of-date copies and treat them as remote updates.
+                                        // Use a history of contents hashes to detect old versions.
                                     }
                                 }
                             }
                             else if (_fileManager.FileExists(SharedPath, f.RelativePath))
                             {
-                                StatusMessage = string.Format("TRANSIT [-> LOCAL]: {0}", f.RelativePath);
+                                StatusMessage = string.Format("TRANSIT [LOCAL <-]: {0}", f.RelativePath);
                                 // Update/delete conflict or remote create. Copy to local. Update local index.
                                 _fileManager.CopyFile(SharedPath, f.RelativePath, localindex.LocalPath);
                                 localindex.UpdateFile(_fileManager.CreateFileHeader(SharedPath, f.RelativePath));
@@ -695,6 +706,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             else if (localindex.Exists(f.RelativePath))
                             {
                                 // File does not exist on local file system or in shared folder. Remove it from local index.
+                                ReportMessage("MISSING: {0}", f.RelativePath);
                                 localindex.Remove(f);
                             }
                             break;
@@ -702,7 +714,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 else
                 {
-                    StatusMessage = f.RelativePath;
                     // Local create. Copy to shared. Add to indexes.
                     if (_fileManager.SharedPathSize(SharedPath) + (ulong)f.Size < syncSet.ReserveSpace)
                     {
@@ -729,6 +740,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     if (!syncSet.Indexes.Any(i => i.Exists(mf.RelativePath)))
                     {
+                        ReportMessage("DESTROYED: {0}", mf.RelativePath);
                         syncSet.MasterIndex.Remove(mf);
                     }
                 }
@@ -766,48 +778,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
             _indexer.Update(syncSet);
             return;
-
-            // Check for files in storage wanted here, and copy them.
-            // Doing this first ensures that any found everywhere can be removed early.
-            PulledCount = 0;
-            if (localindex.IsPull)
-            {
-                ReportMessage("\tPulling files from shared space.");
-                PulledCount = PullFiles(syncSet);
-            }
-
-            // Check for files found in all indexes and in storage, and remove them.
-            ReportMessage("\tRemoving shared files that are in every client already.");
-            PrunedCount = PruneFiles(syncSet);
-
-            // Where files are found wanting in other machines, push to shared storage.
-            // If storage is full, do not copy any further.
-            PushedCount = 0;
-            if (localindex.IsPush)
-            {
-                ReportMessage("\tPushing files.");
-                PushedCount = PushFiles(syncSet);
-            }
-
-            // Report a summary of actions taken.
-            if (PulledCount + PushedCount + PrunedCount > 0)
-            {
-                ReportMessage("Pulled: {0}\tPushed: {1}\tPruned: {2}", PulledCount, PushedCount, PrunedCount);
-            }
-            else
-            {
-                ReportMessage("No actions taken.");
-            }
-
-            // Report any errors.
-            if (_fileManager.Errors.Count > 0)
-            {
-                ReportMessage("Errors encountered:");
-                for (int x = 0; x < _fileManager.Errors.Count; x++)
-                {
-                    ReportMessage(_fileManager.Errors[x].Message);
-                }
-            }
         }
 
         /// <summary>

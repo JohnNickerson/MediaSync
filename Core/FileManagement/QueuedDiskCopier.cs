@@ -129,19 +129,25 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private void BeginThreads()
         {
-            while (InProgressActions.Count < MaxActions && PendingFileActions.Count > 0)
+            while (InProgressActions.Count < MaxActions && 0 < PendingFileActions.Count)
             {
                 // Pop a pending action off the queue.
-                FileCommand op;
+                FileCommand op = null;
                 lock (PendingFileActions)
                 {
-                    op = PendingFileActions.Dequeue();
+                    if (PendingFileActions.Count > 0)
+                    {
+                        op = PendingFileActions.Dequeue();
+                    }
                 }
-                // Kick off a thread.
-                var cf = new Action(op.Replay);
-                lock (InProgressActions)
+                if (op != null)
                 {
-                    InProgressActions.Add(cf.BeginInvoke(FinishAction, cf));
+                    // Kick off a thread.
+                    var cf = new Action(op.Replay);
+                    lock (InProgressActions)
+                    {
+                        InProgressActions.Add(cf.BeginInvoke(FinishAction, cf));
+                    }
                 }
             }
         }
@@ -361,15 +367,22 @@ namespace AssimilationSoftware.MediaSync.Core
         public FileHeader CreateFileHeader(string localPath, string relativePath)
         {
             var fileInfo = new FileInfo(Path.Combine(localPath, relativePath));
-            return new FileHeader
+            if (File.Exists(fileInfo.FullName))
             {
-                BasePath = localPath,
-                RelativePath = relativePath,
-                ContentsHash = ComputeHash(fileInfo.FullName),
-                IsDeleted = false,
-                Size = fileInfo.Length,
-                LastModified = fileInfo.LastWriteTime
-            };
+                return new FileHeader
+                {
+                    BasePath = localPath,
+                    RelativePath = relativePath,
+                    ContentsHash = ComputeHash(fileInfo.FullName),
+                    IsDeleted = false,
+                    Size = fileInfo.Length,
+                    LastModified = fileInfo.LastWriteTime
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public string GetRelativePath(string absolutePath, string basePath)

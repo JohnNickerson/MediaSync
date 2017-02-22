@@ -626,6 +626,11 @@ namespace AssimilationSoftware.MediaSync.Core
                                     ReportMessage("SIDE-CHANNEL DELETE: {0}", f.RelativePath);
                                     NoAction.Add(f);
                                 }
+                                else
+                                {
+                                    ReportMessage("ALREADY DELETED: {0}", f.RelativePath);
+                                    NoAction.Add(f);
+                                }
                             }
                             break;
                         case FileSyncState.Transit:
@@ -686,6 +691,15 @@ namespace AssimilationSoftware.MediaSync.Core
                                 ReportMessage("MISSING: {0}", f.RelativePath);
                                 NoAction.Add(f);
                             }
+                            else
+                            {
+                                // Not on local drive.
+                                // Not in shared folder.
+                                // Not in local index.
+                                // Remote create that can't be propagated yet.
+                                ReportMessage("PHANTOM: {0}", f.RelativePath);
+                                NoAction.Add(f);
+                            }
                             break;
                     }
                 }
@@ -700,14 +714,16 @@ namespace AssimilationSoftware.MediaSync.Core
             StatusMessage = string.Format("{0} file(s) already in sync.", NoAction.Count);
 
             // 3. Process the action queue according to the mode and limitations in place.
+            var ErrorList = new List<string>();
             #region 3.1. Rename, Copy to Local, Delete local, Delete master
             if (localindex.IsPull)
             {
                 foreach (var r in RenameLocal)
                 {
                     var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
-                    r.RelativePath = _fileManager.GetRelativePath(newname, localindex.LocalPath);
-                    _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, r.RelativePath), false);
+                    var nurelpath = _fileManager.GetRelativePath(newname, localindex.LocalPath);
+                    _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, nurelpath), false);
+                    r.RelativePath = nurelpath;
                     CopyToShared.Add(r);
                     PulledCount++;
                 }
@@ -715,6 +731,12 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var c in CopyToLocal)
                 {
                     _fileManager.CopyFile(SharedPath, c.RelativePath, localindex.LocalPath);
+                    WaitForCopies();
+                    if (!syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(localindex.LocalPath, c.RelativePath)))
+                    {
+                        // File copy has failed. Report the error.
+                        ErrorList.Add(string.Format("File copy failed: {0}", c.RelativePath));
+                    }
                     PulledCount++;
                 }
                 foreach (var d in DeleteLocal)
@@ -738,9 +760,10 @@ namespace AssimilationSoftware.MediaSync.Core
             localindex.Files = new List<FileHeader>();
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
             {
-                localindex.Files.Add(_fileManager.CreateFileHeader(localindex.LocalPath, f));
+                localindex.UpdateFile(_fileManager.CreateFileHeader(localindex.LocalPath, f));
             }
             localindex.TimeStamp = DateTime.Now;
+            syncSet.UpdateIndex(localindex);
             #endregion
             #region 3.3 Clean up the master index and shared folder.
             foreach (var mf in syncSet.MasterIndex.Files.ToArray())
@@ -749,14 +772,32 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     if (!syncSet.Indexes.Any(i => i.Exists(mf.RelativePath)))
                     {
+                        // Marked deleted and has been removed from every replica.
                         ReportMessage("DESTROYED: {0}", mf.RelativePath);
                         syncSet.MasterIndex.Remove(mf);
                     }
                 }
-                else if (syncSet.Indexes.All(i => i.Exists(mf.RelativePath) && i.GetFile(mf.RelativePath).ContentsHash == mf.ContentsHash))
+                else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                 {
+                    // The shared file does not match the master index. It should be removed.
                     _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
                     PrunedCount++;
+                }
+                else if (syncSet.Indexes.All(i => i.Exists(mf.RelativePath) && i.GetFile(mf.RelativePath).ContentsHash == mf.ContentsHash))
+                {
+                    // Successfully transmitted to every replica. Remove from shared storage.
+                    _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
+                    PrunedCount++;
+                }
+                else if (!syncSet.Indexes.Any(i => i.Exists(mf.RelativePath)))
+                {
+                    // Simultaneous side-channel delete from every replica. This file is toast.
+                    syncSet.MasterIndex.Remove(mf);
+                }
+                else if (!syncSet.Indexes.Any(i => i.MatchesFile(syncSet.MasterIndex.GetFile(mf.RelativePath))))
+                {
+                    // Slightly more subtle. No physical matching version of this file exists any more.
+                    syncSet.MasterIndex.Remove(mf);
                 }
             }
             // Remove empty subfolders from the Shared folder.
@@ -808,6 +849,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Else there is no room yet. Better luck next time.
             }
             #endregion
+
+            foreach (var e in ErrorList)
+            {
+                ReportMessage(e);
+            }
 
             _indexer.Update(syncSet);
             return;

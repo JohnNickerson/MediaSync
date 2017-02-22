@@ -242,7 +242,11 @@ namespace AssimilationSoftware.MediaSync.Core
             // If some other files get mixed in, it could overrun the reserve space.
             foreach (string filename in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
             {
-                total += (ulong)new FileInfo(filename).Length;
+                try
+                {
+                    total += (ulong)new FileInfo(filename).Length;
+                }
+                catch (FileNotFoundException) { }
             }
 
             return total;

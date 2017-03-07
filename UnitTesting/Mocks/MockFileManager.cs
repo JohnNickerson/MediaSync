@@ -46,14 +46,14 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public void CopyFile(string source, string target)
+        public FileCommandResult CopyFile(string source, string target)
         {
             throw new NotImplementedException();
         }
 
-        public void CopyFile(string basePath, string relativePath, string targetPath)
+        public FileCommandResult CopyFile(string basePath, string relativePath, string targetPath)
         {
-            CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
+            return CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
         }
 
         public FileHeader CreateFileHeader(string localPath, string relativePath)

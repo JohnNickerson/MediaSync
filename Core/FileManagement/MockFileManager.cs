@@ -10,12 +10,14 @@ namespace AssimilationSoftware.MediaSync.Core
 {
     class MockFileManager : IFileManager
     {
-        void IFileManager.CopyFile(string source, string target)
+        FileCommandResult IFileManager.CopyFile(string source, string target)
         {
+            return FileCommandResult.Success;
         }
 
-        void IFileManager.CopyFile(string basePath, string relativePath, string targetPath)
+        FileCommandResult IFileManager.CopyFile(string basePath, string relativePath, string targetPath)
         {
+            return FileCommandResult.Success;
         }
 
         void IFileManager.MoveFile(string source, string target, bool overwrite)

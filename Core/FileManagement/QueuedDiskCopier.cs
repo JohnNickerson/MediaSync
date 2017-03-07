@@ -98,7 +98,7 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// </summary>
 		/// <param name="source">The source file to copy.</param>
 		/// <param name="target">The destination where the file will be copied to.</param>
-		public void CopyFile(string source, string target)
+		public FileCommandResult CopyFile(string source, string target)
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
@@ -108,11 +108,12 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 BeginThreads();
             }
+            return FileCommandResult.Async;
         }
 
-        public void CopyFile(string basePath, string relativePath, string targetPath)
+        public FileCommandResult CopyFile(string basePath, string relativePath, string targetPath)
         {
-            CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
+            return CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
         }
 
         public void MoveFile(string source, string target, bool overwrite)

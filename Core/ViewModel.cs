@@ -831,14 +831,13 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 if (sharedsize + (ulong)s.Size < syncSet.ReserveSpace)
                 {
-                    _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
-                    WaitForCopies();
+                    var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
                     // Check for success.
-                    if (_fileManager.FileExists(SharedPath, s.RelativePath))
+                    if (result == FileCommandResult.Success || result == FileCommandResult.Async)
                     {
+                        // Assume potential success on Async.
                         sharedsize += (ulong)s.Size;
-                        s.IsDeleted = false;
-                        syncSet.MasterIndex.UpdateFile(s);
+                        syncSet.MasterIndex.UpdateFile(_fileManager.CreateFileHeader(SharedPath, s.RelativePath));
                         PushedCount++;
                     }
                 }
@@ -848,6 +847,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 // Else there is no room yet. Better luck next time.
             }
+            WaitForCopies();
             #endregion
 
             foreach (var e in ErrorList)

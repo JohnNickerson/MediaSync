@@ -11,6 +11,7 @@ using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.Mappers.PlainText;
+using AssimilationSoftware.MediaSync.Core.FileManagement;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -41,7 +42,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
             var mapper = new XmlSyncSetMapper("SyncData.xml");
-            var vm = new ViewModel(mapper, Settings.Default.MachineName, new QueuedDiskCopier(new Sha1Calculator()));
+            var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
             vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)

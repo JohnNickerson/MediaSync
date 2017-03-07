@@ -74,6 +74,7 @@
     <Compile Include="Commands\MoveCommand.cs" />
     <Compile Include="FileManagement\Hashing\MockHasher.cs" />
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
+    <Compile Include="FileManagement\SimpleFileManager.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
     <Compile Include="Mappers\Binary\BinarySyncSetMapper.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
     <Compile Include="FileManagement\MockFileManager.cs" />
+    <Compile Include="Model\ParticipantMode.cs" />
     <Compile Include="Model\SplitPath.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

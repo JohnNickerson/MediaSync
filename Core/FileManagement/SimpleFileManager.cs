@@ -1,0 +1,255 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AssimilationSoftware.MediaSync.Core.Model;
+using System.IO;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+
+namespace AssimilationSoftware.MediaSync.Core.FileManagement
+{
+    public class SimpleFileManager : Interfaces.IFileManager
+    {
+        private IFileHashProvider _fileHasher;
+
+        public SimpleFileManager(IFileHashProvider fileHasher)
+        {
+            _fileHasher = fileHasher;
+            Errors = new List<Exception>();
+        }
+
+        public int Count
+        {
+            get
+            {
+                return 0; // No threading in this class.
+            }
+        }
+
+        public List<Exception> Errors { get; private set; }
+
+        public string ComputeHash(string localFile)
+        {
+            return _fileHasher.ComputeHash(localFile);
+        }
+
+        public FileCommandResult CopyFile(string source, string target)
+        {
+            try
+            {
+                File.Copy(source, target, true);
+                return FileCommandResult.Success;
+            }
+            catch (Exception e)
+            {
+                Errors.Add(e);
+                return FileCommandResult.Failure;
+            }
+        }
+
+        public FileCommandResult CopyFile(string localPath, string relativePath, string sharedPath)
+        {
+            return CopyFile(Path.Combine(localPath, relativePath), Path.Combine(sharedPath, relativePath));
+        }
+
+        public FileHeader CreateFileHeader(string localPath, string relativePath)
+        {
+            var fullpath = Path.Combine(localPath, relativePath);
+            var finfo = new FileInfo(fullpath);
+            return new FileHeader
+            {
+                BasePath = localPath,
+                ContentsHash = _fileHasher.ComputeHash(fullpath),
+                IsDeleted = false,
+                LastModified = finfo.LastWriteTime,
+                RelativePath = relativePath,
+                Size = finfo.Length
+            };
+        }
+
+        public FileIndex CreateIndex(string path, params string[] searchpatterns)
+        {
+            FileIndex index = new FileIndex
+            {
+                LocalPath = path,
+                TimeStamp = DateTime.Now
+            };
+
+            foreach (string file in ListLocalFiles(path, searchpatterns))
+            {
+                try
+                {
+                    var f = CreateFileHeader(index.LocalPath, file);
+                    index.UpdateFile(f);
+                }
+                catch (Exception e)
+                {
+                    Errors.Add(e);
+                }
+            }
+            return index;
+        }
+
+        public void Delete(string dir)
+        {
+            if (FileExists(dir))
+            {
+                File.Delete(dir);
+            }
+        }
+
+        public bool DirectoryExists(string sharedPath)
+        {
+            return Directory.Exists(sharedPath);
+        }
+
+        public void EnsureFolder(string targetdir)
+        {
+            if (!DirectoryExists(targetdir))
+            {
+                Directory.CreateDirectory(targetdir);
+            }
+        }
+
+        public bool FileExists(string file)
+        {
+            return File.Exists(file);
+        }
+
+        public bool FileExists(string localPath, string relativePath)
+        {
+            return FileExists(Path.Combine(localPath, relativePath));
+        }
+
+        public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)
+        {
+            return masterfile.Size == localIndexFile.Size
+                && (masterfile.ContentsHash == null 
+                || localIndexFile.ContentsHash == null 
+                || masterfile.ContentsHash == localIndexFile.ContentsHash);
+        }
+
+        public bool FilesMatch(string literalFilePath, FileHeader indexFile)
+        {
+            if (FileExists(literalFilePath))
+            {
+                var finfo = new FileInfo(literalFilePath);
+                return indexFile != null && indexFile.Size == finfo.Length && (indexFile.ContentsHash == null || indexFile.ContentsHash == ComputeHash(literalFilePath));
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public string GetConflictFileName(string localFile, string machineId, DateTime now)
+        {
+            var fileInfo = new FileInfo(localFile);
+            var justname = fileInfo.Name.Remove(fileInfo.Name.Length - fileInfo.Extension.Length);
+            var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}){3}", justname, machineId, now, fileInfo.Extension));
+            int ver = 0;
+            while (File.Exists(newname))
+            {
+                ver++;
+                newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}) ({3}){4}", justname, machineId, now, ver, fileInfo.Extension));
+            }
+            return newname;
+        }
+
+        public string[] GetDirectories(string parentFolder)
+        {
+            return Directory.GetDirectories(parentFolder, "*", SearchOption.AllDirectories);
+        }
+
+        public string GetRelativePath(string absolutePath, string basePath)
+        {
+            if (absolutePath.StartsWith(basePath))
+            {
+                if (basePath.EndsWith("\\"))
+                {
+                    return absolutePath.Remove(0, basePath.Length);
+                }
+                else
+                {
+                    return absolutePath.Remove(0, basePath.Length + 1);
+                }
+            }
+            else
+            {
+                return absolutePath;
+            }
+        }
+
+        public string[] ListLocalFiles(string path, params string[] searchpatterns)
+        {
+            List<string> result = new List<string>();
+            Queue<string> queue = new Queue<string>();
+            if (searchpatterns == null || searchpatterns.Length == 0)
+            {
+                searchpatterns = new string[] { "*.*" };
+            }
+            queue.Enqueue(path);
+            // While the queue is not empty,
+            while (queue.Count > 0)
+            {
+                // Dequeue a folder to process.
+                string folder = queue.Dequeue();
+                // Enqueue subfolders.
+                foreach (string subfolder in Directory.GetDirectories(folder))
+                {
+                    queue.Enqueue(subfolder);
+                }
+                // Add all image files to the index.
+                foreach (string search in searchpatterns)
+                {
+                    foreach (string file in Directory.GetFiles(folder, search))
+                    {
+                        // Remove the base path.
+                        string trunc_file = file.Remove(0, path.Length + 1).Replace("/", "\\");
+                        result.Add(trunc_file);
+                    }
+                }
+            }
+            return result.ToArray();
+        }
+
+        public void MoveFile(string source, string target, bool overwrite)
+        {
+            if (!FileExists(target) || overwrite)
+            {
+                File.Move(source, target);
+            }
+        }
+
+        public void SetNormalAttributes(string path)
+        {
+            foreach (string file in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+        }
+
+        public ulong SharedPathSize(string path)
+        {
+            // Calculate the actual size of the shared path.
+            ulong total = 0;
+            // Search for all files, not just matching ones.
+            // If some other files get mixed in, it could overrun the reserve space.
+            foreach (string filename in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    total += (ulong)new FileInfo(filename).Length;
+                }
+                catch (FileNotFoundException) { }
+            }
+            return total;
+        }
+
+        public bool ShouldCopy(string filename)
+        {
+            return true;
+        }
+    }
+}

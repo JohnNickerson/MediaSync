@@ -79,6 +79,10 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public bool Exists(string relativepath)
         {
+            if (Files == null)
+            {
+                return false;
+            }
             return Files.Any(f => f.RelativePath.ToLower() == relativepath.ToLower());
         }
 

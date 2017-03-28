@@ -38,8 +38,17 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         {
             try
             {
+                // ensure the target folder exists.
+                EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
-                return FileCommandResult.Success;
+                if (File.Exists(target))
+                {
+                    return FileCommandResult.Success;
+                }
+                else
+                {
+                    return FileCommandResult.Failure;
+                }
             }
             catch (Exception e)
             {
@@ -147,12 +156,12 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         {
             var fileInfo = new FileInfo(localFile);
             var justname = fileInfo.Name.Remove(fileInfo.Name.Length - fileInfo.Extension.Length);
-            var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}){3}", justname, machineId, now, fileInfo.Extension));
+            var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}-s conflicted copy {2:yyyy-MM-dd}){3}", justname, machineId, now, fileInfo.Extension));
             int ver = 0;
             while (File.Exists(newname))
             {
                 ver++;
-                newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}) ({3}){4}", justname, machineId, now, ver, fileInfo.Extension));
+                newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}-s conflicted copy {2:yyyy-MM-dd}) ({3}){4}", justname, machineId, now, ver, fileInfo.Extension));
             }
             return newname;
         }

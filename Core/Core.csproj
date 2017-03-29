@@ -72,7 +72,10 @@
     <Compile Include="Commands\CopyCommand.cs" />
     <Compile Include="Commands\DeleteFile.cs" />
     <Compile Include="Commands\MoveCommand.cs" />
+    <Compile Include="Extensions\TimeSpanExtensions.cs" />
+    <Compile Include="FileManagement\Hashing\CrcHasher.cs" />
     <Compile Include="FileManagement\Hashing\MockHasher.cs" />
+    <Compile Include="FileManagement\Hashing\MurMur3Hahser.cs" />
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="FileManagement\SimpleFileManager.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />

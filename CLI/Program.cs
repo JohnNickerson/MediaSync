@@ -12,6 +12,7 @@ using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.Mappers.PlainText;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
+using AssimilationSoftware.MediaSync.Core.Extensions;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -127,7 +128,9 @@ namespace AssimilationSoftware.MediaSync.CLI
                         // TODO: SearchSpecification for which profiles to run.
                         // TODO: Confirm profile selections before running.
                         var runOptions = (RunSubOptions)argsubs;
+                        var begin = DateTime.Now;
                         vm.RunSync(runOptions.Verbose, runOptions.IndexOnly, new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged));
+                        Console.WriteLine("Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     #endregion
                     break;

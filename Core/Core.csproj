@@ -79,6 +79,7 @@
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="FileManagement\SimpleFileManager.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
+    <Compile Include="Interfaces\IStatusLogger.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
     <Compile Include="Mappers\Binary\BinarySyncSetMapper.cs" />
     <Compile Include="Mappers\PlainText\JsonSyncSetMapper.cs" />

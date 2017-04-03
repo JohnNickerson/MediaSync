@@ -182,7 +182,7 @@ namespace AssimilationSoftware.MediaSync.Core
             MachineId = savemachine;
         }
 
-        public void RunSync(bool Verbose, bool IndexOnly, PropertyChangedEventHandler SyncServicePropertyChanged)
+        public void RunSync(bool IndexOnly, IStatusLogger logger)
         {
             PushedCount = 0;
             PulledCount = 0;
@@ -191,12 +191,13 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 if (opts.ContainsParticipant(_machineId))
                 {
-                    StatusMessage = string.Format("\nProcessing profile {0}", opts.Name);
+                    logger.Line(1);
+                    logger.Log(1, "Processing profile {0}", opts.Name);
 
                     NumPeers = 0;
                     _log = new List<string>();
                     //PropertyChanged += SyncServicePropertyChanged;
-                    VerboseMode = Verbose;
+                    VerboseMode = logger.LogLevel >= 4;
                     try
                     {
                         if (IndexOnly)
@@ -206,22 +207,22 @@ namespace AssimilationSoftware.MediaSync.Core
                         else
                         {
                             var begin = DateTime.Now;
-                            Sync(opts);
-                            Console.WriteLine("Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
+                            Sync(opts, logger);
+                            logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                         }
                     }
                     catch (Exception e)
                     {
                         // TODO: Change to status message property setting.
-                        System.Console.WriteLine("Could not sync.");
-                        System.Console.WriteLine(e.Message);
+                        logger.Log(0, "Could not sync.");
+                        logger.Log(0, e.Message);
                         var x = e;
                         while (x != null)
                         {
-                            System.Console.WriteLine(DateTime.Now);
-                            System.Console.WriteLine(x.Message);
-                            System.Console.WriteLine(x.StackTrace);
-                            System.Console.WriteLine("");
+                            logger.Log(0, DateTime.Now.ToString());
+                            logger.Log(0, x.Message);
+                            logger.Log(0, x.StackTrace);
+                            logger.Line(0);
 
                             x = x.InnerException;
                         }
@@ -229,15 +230,15 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 else
                 {
-                    StatusMessage = Environment.NewLine;
-                    StatusMessage = string.Format("Not participating in profile {0}", opts.Name);
+                    logger.Log(1, "Not participating in profile {0}", opts.Name);
                 }
             }
 
-            StatusMessage = "Finished.";
+            logger.Line(1);
+            logger.Log(1, "Finished.");
             if (PushedCount + PulledCount + PrunedCount == 0)
             {
-                StatusMessage = "\tNo actions taken";
+                logger.Log(1, "No actions taken");
             }
         }
 
@@ -289,6 +290,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
+        [Obsolete("Use IStatusLogger instead.")]
         private void ReportMessage(string format, params object[] args)
         {
             _log.Add(string.Format(format, args));
@@ -504,7 +506,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        public void Sync(SyncSet syncSet)
+        public void Sync(SyncSet syncSet, IStatusLogger logger)
         {
             // Check folders, just in case.
             var localindex = syncSet.GetIndex(MachineId) ?? new FileIndex();
@@ -515,7 +517,7 @@ namespace AssimilationSoftware.MediaSync.Core
             var SharedPath = localindex.SharedPath;
             if (!_fileManager.DirectoryExists(SharedPath))
             {
-                ReportMessage("Shared storage not available ({0}). Aborting.", SharedPath);
+                logger.Log(0, "Shared storage not available ({0}). Aborting.", SharedPath);
                 return;
             }
 
@@ -534,6 +536,10 @@ namespace AssimilationSoftware.MediaSync.Core
             var indexus = new Dictionary<string, ReplicaComparison>();
             foreach (var dex in syncSet.Indexes)
             {
+                if (dex.Files == null)
+                {
+                    dex.Files = new List<Model.FileHeader>();
+                }
                 foreach (var fyle in dex.Files)
                 {
                     var path = fyle.RelativePath.ToLower();
@@ -569,11 +575,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             #endregion
-            Console.WriteLine("\tMaster index processing: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(4, "\tMaster index processing: {0}", (DateTime.Now - begin).Verbalise());
 
             // 2. Determine the necessary action for each file.
             begin = DateTime.Now;
-            #region Take Action
+            #region Plan actions
             var allfiles = new Dictionary<string, FileHeader>();
             var allhashes = new Dictionary<string, LocalFileHashSet>();
             // Merge the local index, the master index and the local file system.
@@ -642,19 +648,19 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // [OPTIMISED] if (localindex.MatchesFile(localheader))
                                 {
                                     // Up to date. No action required.
-                                    //StatusMessage = string.Format("SYNCED: {0}", f.RelativePath);
+                                    logger.Log(4, "SYNCED: {0}", f.MasterHeader.RelativePath);
                                     NoAction.Add(f.MasterHeader);
                                 }
                                 else
                                 {
                                     // Local update. Copy to shared. Update indexes.
-                                    StatusMessage = string.Format("UPDATED [-> SHARE]: {0}", dex);
+                                    logger.Log(3, "UPDATED [-> SHARE]: {0}", dex);
                                     CopyToShared.Add(f.MasterHeader);
                                 }
                             }
                             else
                             {
-                                StatusMessage = string.Format("DELETED [DELETE ->]: {0}", dex);
+                                logger.Log(3, "DELETED [DELETE ->]: {0}", dex);
                                 // Local delete. Mark deleted in master index. Remove from local index.
                                 DeleteMaster.Add(f.MasterHeader);
                             }
@@ -666,14 +672,14 @@ namespace AssimilationSoftware.MediaSync.Core
                                 if (f.LocalIndexHash == f.LocalFileHash)
                                 // [OPTIMISED] if (localindex.MatchesFile(localheader))
                                 {
-                                    StatusMessage = string.Format("EXPIRED [<- DELETE]: {0}", dex);
+                                    logger.Log(3, "EXPIRED [<- DELETE]: {0}", dex);
                                     // Remote delete. Delete file. Remove from local index.
                                     DeleteLocal.Add(f.MasterHeader);
                                 }
                                 else
                                 {
                                     // Update/delete conflict. Copy local to shared. Update local index. Mark not deleted in master index.
-                                    StatusMessage = string.Format("UN-EXPIRED [-> SHARE]: {0}", dex);
+                                    logger.Log(2, "UN-EXPIRED [-> SHARE]: {0}", dex);
                                     CopyToShared.Add(f.MasterHeader);
                                 }
                             }
@@ -683,12 +689,12 @@ namespace AssimilationSoftware.MediaSync.Core
                                 if (f.LocalIndexHeader != null)
                                 // [OPTIMISED] if (localindex.Exists(f.RelativePath))
                                 {
-                                    ReportMessage("SIDE-CHANNEL DELETE: {0}", dex);
+                                    logger.Log(2, "SIDE-CHANNEL DELETE: {0}", dex);
                                     NoAction.Add(f.MasterHeader);
                                 }
                                 else
                                 {
-                                    ReportMessage("ALREADY DELETED: {0}", dex);
+                                    logger.Log(2, "ALREADY DELETED: {0}", dex);
                                     NoAction.Add(f.MasterHeader);
                                 }
                             }
@@ -703,13 +709,13 @@ namespace AssimilationSoftware.MediaSync.Core
                                     if (f.MasterHash == f.LocalIndexHash)
                                     // [OPTIMISED] if (syncSet.MasterIndex.MatchesFile(localindex.GetFile(f.RelativePath)))
                                     {
-                                        StatusMessage = string.Format("TRANSIT [-> SHARE]: {0}", dex);
+                                        logger.Log(3, "TRANSIT [-> SHARE]: {0}", dex);
                                         // Up to date locally. Copy to shared to propagate changes.
                                         CopyToShared.Add(f.MasterHeader);
                                     }
                                     else
                                     {
-                                        StatusMessage = string.Format("TRANSIT [LOCAL <-]: {0}", dex);
+                                        logger.Log(3, "TRANSIT [LOCAL <-]: {0}", dex);
                                         // Remote update. Copy to local, update local index.
                                         CopyToLocal.Add(f.MasterHeader);
                                     }
@@ -720,7 +726,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                     // [OPTIMISED] if (syncSet.MasterIndex.MatchesFile(localheader))
                                     {
                                         // Side-channel update. Repair the local index.
-                                        ReportMessage("SIDE-CHANNEL UPDATED: {0}", dex);
+                                        logger.Log(3, "SIDE-CHANNEL UPDATED: {0}", dex);
                                         NoAction.Add(f.MasterHeader);
                                     }
                                     else
@@ -729,12 +735,12 @@ namespace AssimilationSoftware.MediaSync.Core
                                         // [OPTIMISED] if (syncSet.MasterIndex.MatchesFile(localindex.GetFile(f.RelativePath)))
                                         {
                                             // Local update. Copy to shared. Update local and master indexes.
-                                            StatusMessage = string.Format("UPDATED [-> SHARE]: {0}", dex);
+                                            logger.Log(3, "UPDATED [-> SHARE]: {0}", dex);
                                             CopyToShared.Add(f.MasterHeader);
                                         }
                                         else
                                         {
-                                            StatusMessage = string.Format("CONFLICT [-> SHARE]: {0}", dex);
+                                            logger.Log(2, "CONFLICT [-> SHARE]: {0}", dex);
                                             // Update conflict. Rename the local file and add to the processing queue.
                                             RenameLocal.Add(f.MasterHeader);
                                             CopyToLocal.Add(f.MasterHeader);
@@ -746,7 +752,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else if (_fileManager.FileExists(SharedPath, dex))
                             {
-                                StatusMessage = string.Format("TRANSIT [LOCAL <-]: {0}", dex);
+                                logger.Log(3, "TRANSIT [LOCAL <-]: {0}", dex);
                                 // Update/delete conflict or remote create. Copy to local. Update local index.
                                 CopyToLocal.Add(f.MasterHeader);
                             }
@@ -754,7 +760,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             // [OPTIMISED] else if (localindex.Exists(f.RelativePath))
                             {
                                 // File does not exist on local file system or in shared folder. Remove it from local index.
-                                ReportMessage("MISSING: {0}", dex);
+                                logger.Log(3, "MISSING: {0}", dex);
                                 NoAction.Add(f.MasterHeader);
                             }
                             else
@@ -763,7 +769,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // Not in shared folder.
                                 // Not in local index.
                                 // Remote create that can't be propagated yet.
-                                ReportMessage("PHANTOM: {0}", dex);
+                                logger.Log(3, "PHANTOM: {0}", dex);
                                 NoAction.Add(f.MasterHeader);
                             }
                             break;
@@ -772,13 +778,18 @@ namespace AssimilationSoftware.MediaSync.Core
                 else
                 {
                     // Local create. Copy to shared. Add to indexes.
-                    StatusMessage = string.Format("NEW [-> SHARE]: {0}", dex);
+                    logger.Log(3, "NEW [-> SHARE]: {0}", dex);
                     CopyToShared.Add(f.LocalFileHeader);
                 }
             }
             #endregion
-            StatusMessage = string.Format("{0} file(s) already in sync.", NoAction.Count);
-            Console.WriteLine("\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(CopyToLocal.Count == 0 ? 3 : 1, "{0} file(s) to copy to this machine.", CopyToLocal.Count);
+            logger.Log(CopyToShared.Count == 0 ? 3 : 1, "{0} file(s) to copy to shared storage.", CopyToShared.Count);
+            logger.Log(RenameLocal.Count == 0 ? 3 : 1, "{0} file(s) to rename to avoid conflicts.", RenameLocal.Count);
+            logger.Log(DeleteLocal.Count == 0 ? 3 : 1, "{0} file(s) to delete locally.", DeleteLocal.Count);
+            logger.Log(DeleteMaster.Count == 0 ? 3 : 1, "{0} file(s) to delete remotely.", DeleteMaster.Count);
+            logger.Log(NoAction.Count == 0 ? 3 : 1, "{0} file(s) already in sync.", NoAction.Count);
+            logger.Log(4, "\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
 
             // 3. Process the action queue according to the mode and limitations in place.
             var ErrorList = new List<string>();
@@ -825,7 +836,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             #endregion
             WaitForCopies();
-            Console.WriteLine("\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
             begin = DateTime.Now;
             #region 3.2. Regenerate the local index.
             localindex.Files = new List<FileHeader>();
@@ -836,7 +847,7 @@ namespace AssimilationSoftware.MediaSync.Core
             localindex.TimeStamp = DateTime.Now;
             syncSet.UpdateIndex(localindex);
             #endregion
-            Console.WriteLine("\tLocal index regeneration: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(4, "\tLocal index regeneration: {0}", (DateTime.Now - begin).Verbalise());
             begin = DateTime.Now;
             #region 3.3 Clean up the master index and shared folder.
             // Pre-examine the indexes, for efficiency.
@@ -872,7 +883,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     //[OPTIMISED] if (!syncSet.Indexes.Any(i => i.Exists(mf.RelativePath)))
                     {
                         // Marked deleted and has been removed from every replica.
-                        ReportMessage("DESTROYED: {0}", mf.RelativePath);
+                        logger.Log(4, "DESTROYED: {0}", mf.RelativePath);
                         syncSet.MasterIndex.Remove(mf);
                     }
                 }
@@ -922,12 +933,12 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("Could not delete {0}: {1}", t, e.Message);
+                        logger.Log(0, "Could not delete {0}: {1}", t, e.Message);
                     }
                 }
             }
             #endregion
-            Console.WriteLine("\tMaster index cleanup: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(4, "\tMaster index cleanup: {0}", (DateTime.Now - begin).Verbalise());
             begin = DateTime.Now;
             #region 3.4. Copy to shared
             var sharedsize = _fileManager.SharedPathSize(SharedPath);
@@ -953,16 +964,16 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             WaitForCopies();
             #endregion
-            Console.WriteLine("\tOutbound actions: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(4, "\tOutbound actions: {0}", (DateTime.Now - begin).Verbalise());
 
             foreach (var e in ErrorList)
             {
-                ReportMessage(e);
+                logger.Log(0, e);
             }
 
             begin = DateTime.Now;
             _indexer.Update(syncSet);
-            Console.WriteLine("\tSave data: {0}", (DateTime.Now - begin).Verbalise());
+            logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
             return;
         }
 
@@ -1031,6 +1042,7 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
         private string _statusMessage;
+        [Obsolete("Use IStatusLogger instead.")]
         public string StatusMessage
         {
             get

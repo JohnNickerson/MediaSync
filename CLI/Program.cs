@@ -128,9 +128,10 @@ namespace AssimilationSoftware.MediaSync.CLI
                         // TODO: SearchSpecification for which profiles to run.
                         // TODO: Confirm profile selections before running.
                         var runOptions = (RunSubOptions)argsubs;
+                        var logger = new ConsoleLogger(runOptions.LogLevel);
                         var begin = DateTime.Now;
-                        vm.RunSync(runOptions.Verbose, runOptions.IndexOnly, new System.ComponentModel.PropertyChangedEventHandler(SyncServicePropertyChanged));
-                        Console.WriteLine("Total time taken: {0}", (DateTime.Now - begin).Verbalise());
+                        vm.RunSync(runOptions.IndexOnly, logger);
+                        logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     #endregion
                     break;

@@ -187,8 +187,10 @@ namespace AssimilationSoftware.MediaSync.Core
             PushedCount = 0;
             PulledCount = 0;
             PrunedCount = 0;
-            foreach (SyncSet opts in this.Profiles)
+            var profiles = _indexer.ReadAll();
+            for (int i = 0; i < profiles.Count; i++)
             {
+                SyncSet opts = profiles[i];
                 if (opts.ContainsParticipant(_machineId))
                 {
                     logger.Line(1);
@@ -201,7 +203,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     try
                     {
                         var begin = DateTime.Now;
-                        Sync(opts, logger, IndexOnly);
+                        Sync(ref opts, logger, IndexOnly);
+                        profiles[i] = opts;
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     catch (Exception e)
@@ -227,6 +230,12 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
+            if (!IndexOnly)
+            {
+                var begin = DateTime.Now;
+                _indexer.UpdateAll(profiles);
+                logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
+            }
             logger.Line(1);
             logger.Log(1, "Finished.");
             if (PushedCount + PulledCount + PrunedCount == 0)
@@ -339,7 +348,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        public void Sync(SyncSet syncSet, IStatusLogger logger, bool preview = false)
+        public void Sync(ref SyncSet syncSet, IStatusLogger logger, bool preview = false)
         {
             // Check folders, just in case.
             var localindex = syncSet.GetIndex(MachineId) ?? new FileIndex();
@@ -807,12 +816,12 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(0, e);
             }
 
-            if (!preview)
-            {
-                begin = DateTime.Now;
-                _indexer.Update(syncSet);
-                logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
-            }
+            //if (!preview)
+            //{
+            //    begin = DateTime.Now;
+            //    _indexer.Update(syncSet);
+            //    logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
+            //}
             return;
         }
 

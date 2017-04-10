@@ -266,13 +266,14 @@ namespace AssimilationSoftware.MediaSync.Core
         /// Deletes a file or directory.
         /// </summary>
         /// <param name="dir">The full path to the file or directory to remove.</param>
-        void IFileManager.Delete(string dir)
+        FileCommandResult IFileManager.Delete(string dir)
         {
             lock (PendingFileActions)
             {
                 PendingFileActions.Enqueue(new DeleteFile(dir));
             }
             BeginThreads();
+            return FileCommandResult.Async;
         }
         /// <summary>
         /// Ensures that a given path exists, creating it if necessary.

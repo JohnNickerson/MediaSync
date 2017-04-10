@@ -31,7 +31,7 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         bool ShouldCopy(string filename);
 
-        void Delete(string dir);
+        FileCommandResult Delete(string file);
 
         void EnsureFolder(string targetdir);
 

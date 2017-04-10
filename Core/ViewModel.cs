@@ -132,19 +132,19 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void LeaveProfile(SyncSet profile)
+        public void LeaveProfile(SyncSet profile, string machine)
         {
-            if (profile.ContainsParticipant(this.MachineId))
+            if (profile.ContainsParticipant(machine))
             {
-                profile.Indexes.RemoveAll(p => p.MachineName == MachineId);
+                profile.Indexes.RemoveAll(p => p.MachineName == machine);
                 _indexer.Update(profile);
             }
         }
 
-        public void LeaveProfile(string profileName)
+        public void LeaveProfile(string profileName, string machine)
         {
             var profile = GetProfile(profileName);
-            LeaveProfile(profile);
+            LeaveProfile(profile, machine);
         }
 
         public List<string> GetProfileNames()
@@ -171,15 +171,10 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void RemoveMachine(string machine)
         {
-            var savemachine = MachineId;
-            MachineId = machine;
-
             foreach (var p in Profiles)
             {
-                LeaveProfile(p.Name);
+                LeaveProfile(p.Name, machine);
             }
-
-            MachineId = savemachine;
         }
 
         public void RunSync(bool IndexOnly, IStatusLogger logger)
@@ -242,6 +237,11 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 logger.Log(1, "No actions taken");
             }
+        }
+
+        public void RemoveProfile(string profileName)
+        {
+            _indexer.UpdateAll(Profiles.Where(p => p.Name.ToLower() != profileName.ToLower()).ToList());
         }
 
         /// <summary>
@@ -422,38 +422,39 @@ namespace AssimilationSoftware.MediaSync.Core
             // 2. Determine the necessary action for each file.
             begin = DateTime.Now;
             #region Plan actions
-            var allfiles = new Dictionary<string, FileHeader>();
             var allhashes = new Dictionary<string, LocalFileHashSet>();
             // Merge the local index, the master index and the local file system.
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
             {
-                allfiles[f] = _fileManager.CreateFileHeader(localindex.LocalPath, f);
-                allhashes[f] = new Core.ViewModel.LocalFileHashSet { LocalFileHeader = allfiles[f], LocalFileHash = allfiles[f].ContentsHash };
+                var hed = _fileManager.CreateFileHeader(localindex.LocalPath, f);
+                allhashes[f.ToLower()] = new Core.ViewModel.LocalFileHashSet
+                {
+                    LocalFileHeader = hed,
+                    LocalFileHash = hed.ContentsHash
+                };
             }
             foreach (var f in localindex.Files)
             {
-                allfiles[f.RelativePath] = f;
-                if (allhashes.ContainsKey(f.RelativePath))
+                if (allhashes.ContainsKey(f.RelativePath.ToLower()))
                 {
-                    allhashes[f.RelativePath].LocalIndexHeader = f;
-                    allhashes[f.RelativePath].LocalIndexHash = f.ContentsHash;
+                    allhashes[f.RelativePath.ToLower()].LocalIndexHeader = f;
+                    allhashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash;
                 }
                 else
                 {
-                    allhashes[f.RelativePath] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash };
+                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash };
                 }
             }
             foreach (var f in syncSet.MasterIndex.Files)
             {
-                allfiles[f.RelativePath] = f;
-                if (allhashes.ContainsKey(f.RelativePath))
+                if (allhashes.ContainsKey(f.RelativePath.ToLower()))
                 {
-                    allhashes[f.RelativePath].MasterHeader = f;
-                    allhashes[f.RelativePath].MasterHash = f.ContentsHash;
+                    allhashes[f.RelativePath.ToLower()].MasterHeader = f;
+                    allhashes[f.RelativePath.ToLower()].MasterHash = f.ContentsHash;
                 }
                 else
                 {
-                    allhashes[f.RelativePath] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash };
+                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash };
                 }
             }
 
@@ -468,26 +469,16 @@ namespace AssimilationSoftware.MediaSync.Core
             // Copy the collection for looping, so we can modify it in case of conflicts.
             var allFileList = allhashes.Keys.ToList();
             foreach (var dex in allhashes.Keys)
-            // [OPTIMISED] for (int dex = 0; dex < allFileList.Count; dex++)
             {
                 var f = allhashes[dex];
-                // [OPTIMISED] var f = allFileList[dex];
                 if (f.MasterHeader != null)
-                // [OPTIMISED] if (syncSet.MasterIndex.Exists(f.RelativePath))
                 {
-                    //var localheader = f;
-                    //if (File.Exists(Path.Combine(localindex.LocalPath, dex)))
-                    //{
-                    //    localheader = _fileManager.CreateFileHeader(localindex.LocalPath, dex);
-                    //}
                     switch (f.MasterHeader.State)
                     {
                         case FileSyncState.Synchronised:
                             if (f.LocalFileHeader != null)
-                            // [OPTIMISED] if (_fileManager.FileExists(localindex.LocalPath, f.RelativePath))
                             {
                                 if (f.LocalIndexHash == f.LocalFileHash)
-                                // [OPTIMISED] if (localindex.MatchesFile(localheader))
                                 {
                                     // Up to date. No action required.
                                     logger.Log(4, "SYNCED: {0}", f.MasterHeader.RelativePath);
@@ -497,7 +488,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 {
                                     // Local update. Copy to shared. Update indexes.
                                     logger.Log(3, "UPDATED [-> SHARE]: {0}", dex);
-                                    CopyToShared.Add(f.MasterHeader);
+                                    CopyToShared.Add(f.LocalFileHeader);
                                 }
                             }
                             else
@@ -509,10 +500,8 @@ namespace AssimilationSoftware.MediaSync.Core
                             break;
                         case FileSyncState.Expiring:
                             if (f.LocalFileHeader != null)
-                            // [OPTIMISED] if (_fileManager.FileExists(localindex.LocalPath, f.RelativePath))
                             {
                                 if (f.LocalIndexHash == f.LocalFileHash)
-                                // [OPTIMISED] if (localindex.MatchesFile(localheader))
                                 {
                                     logger.Log(3, "EXPIRED [<- DELETE]: {0}", dex);
                                     // Remote delete. Delete file. Remove from local index.
@@ -522,14 +511,13 @@ namespace AssimilationSoftware.MediaSync.Core
                                 {
                                     // Update/delete conflict. Copy local to shared. Update local index. Mark not deleted in master index.
                                     logger.Log(2, "UN-EXPIRED [-> SHARE]: {0}", dex);
-                                    CopyToShared.Add(f.MasterHeader);
+                                    CopyToShared.Add(f.LocalFileHeader);
                                 }
                             }
                             else
                             {
                                 // Already deleted. Just make sure it's not in the local index.
                                 if (f.LocalIndexHeader != null)
-                                // [OPTIMISED] if (localindex.Exists(f.RelativePath))
                                 {
                                     logger.Log(2, "SIDE-CHANNEL DELETE: {0}", dex);
                                     NoAction.Add(f.MasterHeader);
@@ -543,17 +531,14 @@ namespace AssimilationSoftware.MediaSync.Core
                             break;
                         case FileSyncState.Transit:
                             if (f.LocalFileHeader != null)
-                            // [OPTIMISED] if (_fileManager.FileExists(localindex.LocalPath, f.RelativePath))
                             {
                                 if (f.LocalIndexHash == f.LocalFileHash)
-                                // [OPTIMISED] if (localindex.MatchesFile(localheader))
                                 {
                                     if (f.MasterHash == f.LocalIndexHash)
-                                    // [OPTIMISED] if (syncSet.MasterIndex.MatchesFile(localindex.GetFile(f.RelativePath)))
                                     {
                                         logger.Log(3, "TRANSIT [-> SHARE]: {0}", dex);
                                         // Up to date locally. Copy to shared to propagate changes.
-                                        CopyToShared.Add(f.MasterHeader);
+                                        CopyToShared.Add(f.LocalFileHeader);
                                     }
                                     else
                                     {
@@ -565,7 +550,6 @@ namespace AssimilationSoftware.MediaSync.Core
                                 else
                                 {
                                     if (f.MasterHash == f.LocalFileHash)
-                                    // [OPTIMISED] if (syncSet.MasterIndex.MatchesFile(localheader))
                                     {
                                         // Side-channel update. Repair the local index.
                                         logger.Log(3, "SIDE-CHANNEL UPDATED: {0}", dex);
@@ -574,11 +558,10 @@ namespace AssimilationSoftware.MediaSync.Core
                                     else
                                     {
                                         if (f.MasterHash == f.LocalIndexHash)
-                                        // [OPTIMISED] if (syncSet.MasterIndex.MatchesFile(localindex.GetFile(f.RelativePath)))
                                         {
                                             // Local update. Copy to shared. Update local and master indexes.
                                             logger.Log(3, "UPDATED [-> SHARE]: {0}", dex);
-                                            CopyToShared.Add(f.MasterHeader);
+                                            CopyToShared.Add(f.LocalFileHeader);
                                         }
                                         else
                                         {
@@ -599,7 +582,6 @@ namespace AssimilationSoftware.MediaSync.Core
                                 CopyToLocal.Add(f.MasterHeader);
                             }
                             else if (f.LocalIndexHeader != null)
-                            // [OPTIMISED] else if (localindex.Exists(f.RelativePath))
                             {
                                 // File does not exist on local file system or in shared folder. Remove it from local index.
                                 logger.Log(3, "MISSING: {0}", dex);
@@ -617,7 +599,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             break;
                     }
                 }
-                else
+                else if (f.LocalFileHeader != null)
                 {
                     // Local create. Copy to shared. Add to indexes.
                     logger.Log(3, "NEW [-> SHARE]: {0}", dex);
@@ -724,7 +706,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (mf.IsDeleted)
                     {
                         if (!indexus.ContainsKey(key))
-                        //[OPTIMISED] if (!syncSet.Indexes.Any(i => i.Exists(mf.RelativePath)))
                         {
                             // Marked deleted and has been removed from every replica.
                             logger.Log(4, "DESTROYED: {0}", mf.RelativePath);
@@ -738,20 +719,17 @@ namespace AssimilationSoftware.MediaSync.Core
                         PrunedCount++;
                     }
                     else if (indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
-                    //[OPTIMISED] else if (syncSet.Indexes.All(i => i.Exists(mf.RelativePath) && i.GetFile(mf.RelativePath).ContentsHash == mf.ContentsHash))
                     {
                         // Successfully transmitted to every replica. Remove from shared storage.
                         _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
                         PrunedCount++;
                     }
                     else if (!indexus.ContainsKey(key))
-                    //[OPTIMISED] else if (!syncSet.Indexes.Any(i => i.Exists(mf.RelativePath)))
                     {
                         // Simultaneous side-channel delete from every replica. This file is toast.
                         syncSet.MasterIndex.Remove(mf);
                     }
                     else if (!indexus[key].AllHashes.Any(h => h == mf.ContentsHash))
-                    //[OPTIMISED] else if (!syncSet.Indexes.Any(i => i.MatchesFile(mf)))
                     {
                         // Slightly more subtle. No physical matching version of this file exists any more.
                         syncSet.MasterIndex.Remove(mf);
@@ -788,23 +766,35 @@ namespace AssimilationSoftware.MediaSync.Core
                 var sharedsize = _fileManager.SharedPathSize(SharedPath);
                 foreach (var s in CopyToShared)
                 {
-                    if (sharedsize + (ulong)s.Size < syncSet.ReserveSpace)
+                    if (s != null)
                     {
-                        var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
-                        // Check for success.
-                        if (result == FileCommandResult.Success || result == FileCommandResult.Async)
+                        if (sharedsize + (ulong)s.Size < syncSet.ReserveSpace)
                         {
-                            // Assume potential success on Async.
-                            sharedsize += (ulong)s.Size;
-                            syncSet.MasterIndex.UpdateFile(_fileManager.CreateFileHeader(SharedPath, s.RelativePath));
-                            PushedCount++;
+                            logger.Log(4, "Copying {0} to {1}", s.RelativePath, SharedPath);
+                            var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
+                            // Check for success.
+                            if (result == FileCommandResult.Success || result == FileCommandResult.Async)
+                            {
+                                // Assume potential success on Async.
+                                sharedsize += (ulong)s.Size;
+                                syncSet.MasterIndex.UpdateFile(_fileManager.CreateFileHeader(SharedPath, s.RelativePath));
+                                PushedCount++;
+                            }
+                            else
+                            {
+                                logger.Log(0, "Could not copy {0}", s.RelativePath);
+                            }
                         }
+                        else if ((ulong)s.Size > syncSet.ReserveSpace)
+                        {
+                            // TODO: split the file and copy in pieces, because it will never fit.
+                        }
+                        // Else there is no room yet. Better luck next time.
                     }
-                    else if ((ulong)s.Size > syncSet.ReserveSpace)
+                    else
                     {
-                        // TODO: split the file and copy in pieces
+                        logger.Log(0, "Error: Null file name scheduled for copying to shared storage.");
                     }
-                    // Else there is no room yet. Better luck next time.
                 }
                 WaitForCopies();
                 #endregion

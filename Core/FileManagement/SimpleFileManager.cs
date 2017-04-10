@@ -41,6 +41,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 // ensure the target folder exists.
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
+                // Is this too quick? Why are file copies of conflict renames being reported as failed?
                 if (File.Exists(target))
                 {
                     return FileCommandResult.Success;
@@ -100,11 +101,16 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             return index;
         }
 
-        public void Delete(string dir)
+        public FileCommandResult Delete(string dir)
         {
-            if (FileExists(dir))
+            try
             {
                 File.Delete(dir);
+                return FileCommandResult.Success;
+            }
+            catch
+            {
+                return FileCommandResult.Failure;
             }
         }
 

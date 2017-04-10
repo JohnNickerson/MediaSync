@@ -56,8 +56,9 @@ namespace AssimilationSoftware.MediaSync.Core
         }
 
 
-        void IFileManager.Delete(string dir)
+        FileCommandResult IFileManager.Delete(string dir)
         {
+            return FileCommandResult.Success;
         }
 
 

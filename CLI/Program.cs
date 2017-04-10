@@ -69,7 +69,11 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Leave profile
                     {
                         var leaveOptions = (LeaveProfileSubOptions)argsubs;
-                        vm.LeaveProfile(leaveOptions.ProfileName);
+                        if (leaveOptions.MachineName == "this")
+                        {
+                            leaveOptions.MachineName = Settings.Default.MachineName;
+                        }
+                        vm.LeaveProfile(leaveOptions.ProfileName, leaveOptions.MachineName);
                         PrintProfilesWithParticipation(vm.Profiles);
                     }
                     #endregion
@@ -78,25 +82,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region List profiles
                     {
                         var listOptions = (ListProfilesSubOptions)argsubs;
-                        // Print a summary of profiles.
-                        System.Console.WriteLine(string.Empty);
-                        System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
-                        System.Console.WriteLine(string.Empty);
-                        foreach (SyncSet p in vm.Profiles)
-                        {
-                            var star = p.ContainsParticipant(Settings.Default.MachineName);
-                            System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.Name);
-                            // Show participating paths if detailed view is selected.
-                            if (listOptions.Verbose && star)
-                            {
-                                var party = p.GetIndex(Settings.Default.MachineName);
-                                System.Console.WriteLine("\t\t{0}", party.LocalPath);
-                                System.Console.WriteLine("\t\t{0}", party.SharedPath);
-                                // Indicate give/consumer status.
-                                System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.IsPush ? "" : "Not "), (party.IsPull ? "" : "Not "));
-                            }
-                        }
-                        System.Console.WriteLine(string.Empty);
+                        new ProfileListConsoleView(vm).Run(listOptions.Verbose);
                     }
                     #endregion
                     break;
@@ -122,6 +108,15 @@ namespace AssimilationSoftware.MediaSync.CLI
                     }
                     #endregion
                     break;
+                case "remove-profile":
+                    #region Remove an entire profile
+                    {
+                        var removeOptions = (RemoveProfileOptions)argsubs;
+                        vm.RemoveProfile(removeOptions.ProfileName);
+                        new ProfileListConsoleView(vm).Run(false);
+                    }
+                    break;
+                    #endregion
                 case "run":
                     #region Run profiles
                     {

@@ -84,7 +84,7 @@ namespace UnitTesting.Mocks
             };
         }
 
-        public void Delete(string dir)
+        public FileCommandResult Delete(string dir)
         {
             throw new NotImplementedException();
         }

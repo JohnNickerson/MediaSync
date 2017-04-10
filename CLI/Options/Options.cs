@@ -37,6 +37,9 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         [VerbOption("remove-machine", HelpText = "Removes a machine from a profile")]
         public RemoveMachineSubOptions RemoveMachineVerb { get; set; }
 
+        [VerbOption("remove-profile", HelpText = "Removes an entire profile from the configuration")]
+        public RemoveProfileOptions RemoveProfileVerb { get; set; }
+
         [VerbOption("run", HelpText = "Runs all profiles")]
         public RunSubOptions RunVerb { get; set; }
 

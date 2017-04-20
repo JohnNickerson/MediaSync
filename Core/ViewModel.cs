@@ -567,7 +567,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                         {
                                             logger.Log(2, "CONFLICT [-> SHARE]: {0}", dex);
                                             // Update conflict. Rename the local file and add to the processing queue.
-                                            RenameLocal.Add(f.MasterHeader);
+                                            RenameLocal.Add(f.MasterHeader.Clone());
                                             CopyToLocal.Add(f.MasterHeader);
                                         }
                                         // TODO: Detect out-of-date copies and treat them as remote updates.
@@ -735,6 +735,16 @@ namespace AssimilationSoftware.MediaSync.Core
                         syncSet.MasterIndex.Remove(mf);
                     }
                 }
+                // Clean up shared storage
+                // For every file now in shared storage,
+                foreach (var sharefile in _fileManager.ListLocalFiles(SharedPath))
+                {
+                    // Delete unless it meets all of the following criteria:
+                    // -- Exists in master index
+                    // -- Master index version is in Transit state
+                    // -- Shared file matches master index hash
+                }
+
                 // Remove empty subfolders from the Shared folder.
                 // Somehow I always find myself rewriting this exact code.
                 if (Directory.Exists(SharedPath))

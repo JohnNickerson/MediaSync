@@ -139,7 +139,7 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public void MoveFile(string source, string target, bool overwrite)
+        public FileCommandResult MoveFile(string source, string target, bool overwrite)
         {
             throw new NotImplementedException();
         }

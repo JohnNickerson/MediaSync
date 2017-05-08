@@ -116,7 +116,7 @@ namespace AssimilationSoftware.MediaSync.Core
             return CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
         }
 
-        public void MoveFile(string source, string target, bool overwrite)
+        public FileCommandResult MoveFile(string source, string target, bool overwrite)
         {
             if (!source.Equals(target) && !File.Exists(target))
             {
@@ -126,6 +126,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 BeginThreads();
             }
+            return FileCommandResult.Async;
         }
 
         private void BeginThreads()

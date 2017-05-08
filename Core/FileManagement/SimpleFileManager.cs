@@ -105,6 +105,8 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         {
             try
             {
+                // Make sure no file attributes stand in our way.
+                File.SetAttributes(dir, FileAttributes.Normal);
                 File.Delete(dir);
                 return FileCommandResult.Success;
             }
@@ -229,12 +231,21 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             return result.ToArray();
         }
 
-        public void MoveFile(string source, string target, bool overwrite)
+        public FileCommandResult MoveFile(string source, string target, bool overwrite)
         {
             if (!FileExists(target) || overwrite)
             {
-                File.Move(source, target);
+                try
+                {
+                    File.Move(source, target);
+                }
+                catch (Exception e)
+                {
+                    Errors.Add(e);
+                    return FileCommandResult.Failure;
+                }
             }
+            return FileCommandResult.Success;
         }
 
         public void SetNormalAttributes(string path)

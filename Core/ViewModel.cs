@@ -627,10 +627,17 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
                         var nurelpath = _fileManager.GetRelativePath(newname, localindex.LocalPath);
-                        _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, nurelpath), false);
-                        r.RelativePath = nurelpath;
-                        CopyToShared.Add(r);
-                        PulledCount++;
+                        var fmr = _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, nurelpath), false);
+                        if (fmr == FileCommandResult.Failure)
+                        {
+                            ErrorList.Add(string.Format("File rename failed: {0}", r.RelativePath));
+                        }
+                        else
+                        {
+                            r.RelativePath = nurelpath;
+                            CopyToShared.Add(r);
+                            PulledCount++;
+                        }
                     }
                     WaitForCopies(); // Because if there are pending file moves, we could get a conflict overwrite here.
                     foreach (var c in CopyToLocal)
@@ -638,7 +645,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         var fcr = _fileManager.CopyFile(SharedPath, c.RelativePath, localindex.LocalPath);
                         if (fcr == FileCommandResult.Failure)
                         {
-                            ErrorList.Add(string.Format("File copy failed: {0}", c.RelativePath));
+                            ErrorList.Add(string.Format("Inbound file copy failed: {0}", c.RelativePath));
                         }
                         else
                         {
@@ -716,13 +723,11 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // The shared file does not match the master index. It should be removed.
                         _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
-                        PrunedCount++;
                     }
-                    else if (indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
+                    else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
                     {
                         // Successfully transmitted to every replica. Remove from shared storage.
                         _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
-                        PrunedCount++;
                     }
                     else if (!indexus.ContainsKey(key))
                     {
@@ -736,13 +741,29 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                 }
                 // Clean up shared storage
+                var minx = syncSet.MasterIndex;
+                var shareCleanMeta = from s in _fileManager.ListLocalFiles(SharedPath)
+                                     join m in minx.Files on s.ToLower() equals m.RelativePath.ToLower() into masters
+                                     from j in masters.DefaultIfEmpty(new FileHeader { State = FileSyncState.Destroyed })
+                                     select new
+                                     {
+                                         FullPath = Path.Combine(SharedPath, s),
+                                         State = j.State,
+                                         HashMatch = _fileManager.ComputeHash(Path.Combine(SharedPath, s)) == j.ContentsHash
+                                     };
                 // For every file now in shared storage,
-                foreach (var sharefile in _fileManager.ListLocalFiles(SharedPath))
+                foreach (var s in shareCleanMeta)
                 {
-                    // Delete unless it meets all of the following criteria:
-                    // -- Exists in master index
-                    // -- Master index version is in Transit state
-                    // -- Shared file matches master index hash
+                    if (s.State == FileSyncState.Transit && s.HashMatch)
+                    {
+                        // Valid shared file.
+                    }
+                    else
+                    {
+                        // Shared file mismatches master index or is missing. Get rid of it.
+                        _fileManager.Delete(s.FullPath);
+                        logger.Log(4, "SHARE CLEANUP: {0}", s.FullPath);
+                    }
                 }
 
                 // Remove empty subfolders from the Shared folder.
@@ -792,7 +813,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else
                             {
-                                logger.Log(0, "Could not copy {0}", s.RelativePath);
+                                logger.Log(0, "Outbound file copy failed: {0}", s.RelativePath);
                             }
                         }
                         else if ((ulong)s.Size > syncSet.ReserveSpace)

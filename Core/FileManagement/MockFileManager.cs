@@ -20,8 +20,9 @@ namespace AssimilationSoftware.MediaSync.Core
             return FileCommandResult.Success;
         }
 
-        void IFileManager.MoveFile(string source, string target, bool overwrite)
+        FileCommandResult IFileManager.MoveFile(string source, string target, bool overwrite)
         {
+            return FileCommandResult.Success;
         }
 
         int IFileManager.Count

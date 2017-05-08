@@ -25,7 +25,14 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
         /// <param name="sharedPath">The target path where the file should be copied.</param>
         FileCommandResult CopyFile(string localPath, string relativePath, string sharedPath);
 
-        void MoveFile(string source, string target, bool overwrite);
+        /// <summary>
+        /// Moves a file from one location to another.
+        /// </summary>
+        /// <param name="source">The source location to move from.</param>
+        /// <param name="target">The target location to move the file to.</param>
+        /// <param name="overwrite">True to allow the method to overwrite an existing file, if present.</param>
+        /// <returns>A value indicating whether the move was successful.</returns>
+        FileCommandResult MoveFile(string source, string target, bool overwrite);
 
         ulong SharedPathSize(string path);
 

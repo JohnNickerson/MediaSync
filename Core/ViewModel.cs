@@ -424,15 +424,6 @@ namespace AssimilationSoftware.MediaSync.Core
             #region Plan actions
             var allhashes = new Dictionary<string, LocalFileHashSet>();
             // Merge the local index, the master index and the local file system.
-            foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
-            {
-                var hed = _fileManager.CreateFileHeader(localindex.LocalPath, f);
-                allhashes[f.ToLower()] = new Core.ViewModel.LocalFileHashSet
-                {
-                    LocalFileHeader = hed,
-                    LocalFileHash = hed.ContentsHash
-                };
-            }
             foreach (var f in localindex.Files)
             {
                 if (allhashes.ContainsKey(f.RelativePath.ToLower()))
@@ -455,6 +446,36 @@ namespace AssimilationSoftware.MediaSync.Core
                 else
                 {
                     allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash };
+                }
+            }
+            foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
+            {
+                // This action can fail if the file is in use.
+                try
+                {
+                    var hed = _fileManager.CreateFileHeader(localindex.LocalPath, f);
+                    if (allhashes.ContainsKey(f.ToLower()))
+                    {
+                        allhashes[f.ToLower()].LocalFileHeader = hed;
+                        allhashes[f.ToLower()].LocalFileHash = hed.ContentsHash;
+                    }
+                    else
+                    {
+                        allhashes[f.ToLower()] = new LocalFileHashSet
+                        {
+                            LocalFileHeader = hed,
+                            LocalFileHash = hed.ContentsHash
+                        };
+                    }
+                }
+                catch
+                {
+                    // Assume a file access exception. Skip this file by removing it and hope for better luck next run.
+                    if (allhashes.ContainsKey(f.ToLower()))
+                    {
+                        allhashes.Remove(f.ToLower());
+                    }
+                    logger.Log(0, "Skipping locked file: {0}", f);
                 }
             }
 
@@ -675,7 +696,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 localindex.Files = new List<FileHeader>();
                 foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
                 {
-                    localindex.UpdateFile(_fileManager.CreateFileHeader(localindex.LocalPath, f));
+                    try
+                    {
+                        localindex.UpdateFile(_fileManager.CreateFileHeader(localindex.LocalPath, f));
+                    }
+                    catch { }
                 }
                 localindex.TimeStamp = DateTime.Now;
                 syncSet.UpdateIndex(localindex);
@@ -710,34 +735,41 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var mf in syncSet.MasterIndex.Files.ToArray())
                 {
                     var key = mf.RelativePath.ToLower();
-                    if (mf.IsDeleted)
+                    try
                     {
-                        if (!indexus.ContainsKey(key))
+                        if (mf.IsDeleted)
                         {
-                            // Marked deleted and has been removed from every replica.
-                            logger.Log(4, "DESTROYED: {0}", mf.RelativePath);
+                            if (!indexus.ContainsKey(key))
+                            {
+                                // Marked deleted and has been removed from every replica.
+                                logger.Log(4, "DESTROYED: {0}", mf.RelativePath);
+                                syncSet.MasterIndex.Remove(mf);
+                            }
+                        }
+                        else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
+                        {
+                            // The shared file does not match the master index. It should be removed.
+                            _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
+                        }
+                        else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
+                        {
+                            // Successfully transmitted to every replica. Remove from shared storage.
+                            _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
+                        }
+                        else if (!indexus.ContainsKey(key))
+                        {
+                            // Simultaneous side-channel delete from every replica. This file is toast.
+                            syncSet.MasterIndex.Remove(mf);
+                        }
+                        else if (!indexus[key].AllHashes.Any(h => h == mf.ContentsHash))
+                        {
+                            // Slightly more subtle. No physical matching version of this file exists any more.
                             syncSet.MasterIndex.Remove(mf);
                         }
                     }
-                    else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
+                    catch
                     {
-                        // The shared file does not match the master index. It should be removed.
-                        _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
-                    }
-                    else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
-                    {
-                        // Successfully transmitted to every replica. Remove from shared storage.
-                        _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
-                    }
-                    else if (!indexus.ContainsKey(key))
-                    {
-                        // Simultaneous side-channel delete from every replica. This file is toast.
-                        syncSet.MasterIndex.Remove(mf);
-                    }
-                    else if (!indexus[key].AllHashes.Any(h => h == mf.ContentsHash))
-                    {
-                        // Slightly more subtle. No physical matching version of this file exists any more.
-                        syncSet.MasterIndex.Remove(mf);
+                        // TODO: Try to tighten the focus of this error trap to just the create header call.
                     }
                 }
                 // Clean up shared storage
@@ -808,7 +840,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             {
                                 // Assume potential success on Async.
                                 sharedsize += (ulong)s.Size;
-                                syncSet.MasterIndex.UpdateFile(_fileManager.CreateFileHeader(SharedPath, s.RelativePath));
+                                syncSet.MasterIndex.UpdateFile(s);
                                 PushedCount++;
                             }
                             else

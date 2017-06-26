@@ -596,6 +596,12 @@ namespace AssimilationSoftware.MediaSync.Core
                                     }
                                 }
                             }
+                            else if (f.LocalIndexHeader != null && f.LocalIndexHash == f.MasterHash)
+                            {
+                                // Deleted while in transit - that is, before all machines had a copy.
+                                logger.Log(2, "DELETED [-> CANCEL TRANSIT]: {0}", dex);
+                                DeleteMaster.Add(f.MasterHeader);
+                            }
                             else if (_fileManager.FileExists(SharedPath, dex))
                             {
                                 logger.Log(3, "TRANSIT [LOCAL <-]: {0}", dex);

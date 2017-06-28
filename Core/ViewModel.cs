@@ -540,12 +540,12 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // Already deleted. Just make sure it's not in the local index.
                                 if (f.LocalIndexHeader != null)
                                 {
-                                    logger.Log(2, "SIDE-CHANNEL DELETE: {0}", dex);
+                                    logger.Log(4, "SIDE-CHANNEL DELETE: {0}", dex);
                                     NoAction.Add(f.MasterHeader);
                                 }
                                 else
                                 {
-                                    logger.Log(2, "ALREADY DELETED: {0}", dex);
+                                    logger.Log(4, "ALREADY DELETED: {0}", dex);
                                     NoAction.Add(f.MasterHeader);
                                 }
                             }
@@ -573,7 +573,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                     if (f.MasterHash == f.LocalFileHash)
                                     {
                                         // Side-channel update. Repair the local index.
-                                        logger.Log(3, "SIDE-CHANNEL UPDATED: {0}", dex);
+                                        logger.Log(4, "SIDE-CHANNEL UPDATED: {0}", dex);
                                         NoAction.Add(f.MasterHeader);
                                     }
                                     else
@@ -611,7 +611,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             else if (f.LocalIndexHeader != null)
                             {
                                 // File does not exist on local file system or in shared folder. Remove it from local index.
-                                logger.Log(3, "MISSING: {0}", dex);
+                                logger.Log(4, "MISSING: {0}", dex);
                                 NoAction.Add(f.MasterHeader);
                             }
                             else
@@ -620,7 +620,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 // Not in shared folder.
                                 // Not in local index.
                                 // Remote create that can't be propagated yet.
-                                logger.Log(3, "PHANTOM: {0}", dex);
+                                logger.Log(4, "PHANTOM: {0}", dex);
                                 NoAction.Add(f.MasterHeader);
                             }
                             break;

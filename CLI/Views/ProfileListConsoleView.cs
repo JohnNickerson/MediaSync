@@ -34,8 +34,6 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                     var party = p.GetIndex(Settings.Default.MachineName);
                     System.Console.WriteLine("\t\t{0}", party.LocalPath);
                     System.Console.WriteLine("\t\t{0}", party.SharedPath);
-                    // Indicate give/consumer status.
-                    System.Console.WriteLine("\t\t{0}Contributing, {1}Consuming", (party.IsPush ? "" : "Not "), (party.IsPull ? "" : "Not "));
                 }
             }
             System.Console.WriteLine(string.Empty);

@@ -37,16 +37,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// </summary>
         public string SharedPath { get; set; }
 
-        /// <summary>
-        /// Indicates whether this machine, for this index, replicates file changes from remote repositories.
-        /// </summary>
-        public bool IsPull { get; set; }
-
-        /// <summary>
-        /// Indeicates whether this machine, for this index, replicates its own changes for other repositories to copy.
-        /// </summary>
-        public bool IsPush { get; set; }
-
         public FileHeader GetFile(string relativePath)
         {
             var srch = Files.Where(f => f.RelativePath == relativePath);

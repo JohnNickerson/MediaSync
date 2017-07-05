@@ -103,7 +103,7 @@ namespace AssimilationSoftware.MediaSync.Core
             return _indexer.ReadAll().FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
         }
 
-        public void JoinProfile(string profileName, string localpath, string sharedpath, bool contributor, bool consumer)
+        public void JoinProfile(string profileName, string localpath, string sharedpath)
         {
             var profile = GetProfile(profileName);
             if (profile == null)
@@ -112,11 +112,11 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
-                JoinProfile(profile, localpath, sharedpath, contributor, consumer);
+                JoinProfile(profile, localpath, sharedpath);
             }
         }
 
-        public void JoinProfile(SyncSet profile, string localpath, string sharedpath, bool contributor, bool consumer)
+        public void JoinProfile(SyncSet profile, string localpath, string sharedpath)
         {
             if (!profile.ContainsParticipant(this.MachineId))
             {
@@ -124,9 +124,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     MachineName = this.MachineId,
                     LocalPath = localpath,
-                    SharedPath = sharedpath,
-                    IsPush = contributor,
-                    IsPull = consumer
+                    SharedPath = sharedpath
                 });
                 _indexer.Update(profile);
             }
@@ -251,8 +249,6 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             var _localSettings = syncSet.GetIndex(MachineId);
             var index = _fileManager.CreateIndex(_localSettings.LocalPath, "*.*");
-            index.IsPull = _localSettings.IsPull;
-            index.IsPush = _localSettings.IsPush;
             index.MachineName = _localSettings.MachineName;
             index.SharedPath = _localSettings.SharedPath;
             syncSet.Indexes.Add(index);
@@ -648,8 +644,6 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 begin = DateTime.Now;
                 #region 3.1. Rename, Copy to Local, Delete local, Delete master
-                if (localindex.IsPull)
-                {
                     foreach (var r in RenameLocal)
                     {
                         var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
@@ -684,16 +678,14 @@ namespace AssimilationSoftware.MediaSync.Core
                         _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
                         PulledCount++; // I mean, kind of, right?
                     }
-                }
-                if (localindex.IsPush)
-                {
+
+                    // Push.
                     foreach (var m in DeleteMaster)
                     {
                         m.IsDeleted = true;
                         syncSet.MasterIndex.UpdateFile(m);
                         PushedCount++;
                     }
-                }
                 #endregion
                 WaitForCopies();
                 logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());

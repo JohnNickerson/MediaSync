@@ -16,11 +16,5 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 
         [Option('s', "shared", HelpText = "The path (on this machine) to the shared file space")]
         public string SharedPath { get; set; }
-
-        [Option("consumer", HelpText = "True to set this machine as a consuming participant (others -> local)", DefaultValue = false)]
-        public bool Consumer { get; set; }
-
-        [Option("contributor", HelpText = "True to set this machine as a contributing participant (local -> others)", DefaultValue = false)]
-        public bool Contributor { get; set; }
     }
 }

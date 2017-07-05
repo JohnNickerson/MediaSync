@@ -17,14 +17,8 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         [Option('s', "shared", HelpText = "The path (on this machine) to the shared file space", Required = true)]
         public string SharedPath { get; set; }
 
-        [Option("consumer", HelpText = "True to set this machine as a consuming participant (others -> local)", DefaultValue = false)]
-        public bool Consumer { get; set; }
-
         [Option('r', "reserve", HelpText = "Maximum megabytes to use for this profile in the shared space", DefaultValue = 500u)]
         public ulong ReserveSpaceMB { get; set; }
-
-        [Option("contributor", HelpText = "True to set this machine as a contributing participant (local -> others)", DefaultValue = false)]
-        public bool Contributor { get; set; }
 
         [Option('i', "ignore", HelpText = "A list of file search patterns to exclude.", DefaultValue = new string[] { })]
         public string[] IgnorePatterns { get; set; }

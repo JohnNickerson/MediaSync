@@ -65,8 +65,6 @@ namespace UnitTesting.Mocks
         {
             return new FileIndex
             {
-                IsPull = true,
-                IsPush = true,
                 LocalPath = path,
                 MachineName = "testmachine",
                 TimeStamp = DateTime.Now,

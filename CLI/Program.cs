@@ -53,7 +53,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
                         vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMB * 1000000, addOptions.IgnorePatterns);
-                        vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath, addOptions.Contributor, addOptions.Consumer);
+                        vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath);
                     }
                     #endregion
                     break;
@@ -61,7 +61,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Join profile
                     {
                         var joinOptions = (JoinProfileSubOptions)argsubs;
-                        vm.JoinProfile(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath, joinOptions.Contributor, joinOptions.Consumer);
+                        vm.JoinProfile(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath);
                     }
                     #endregion
                     break;

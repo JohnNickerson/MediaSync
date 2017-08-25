@@ -630,12 +630,16 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
             #endregion
-            logger.Log(CopyToLocal.Count == 0 ? 3 : 1, "{0} file(s) to copy to this machine.", CopyToLocal.Count);
-            logger.Log(CopyToShared.Count == 0 ? 3 : 1, "{0} file(s) to copy to shared storage.", CopyToShared.Count);
-            logger.Log(RenameLocal.Count == 0 ? 3 : 1, "{0} file(s) to rename to avoid conflicts.", RenameLocal.Count);
-            logger.Log(DeleteLocal.Count == 0 ? 3 : 1, "{0} file(s) to delete locally.", DeleteLocal.Count);
-            logger.Log(DeleteMaster.Count == 0 ? 3 : 1, "{0} file(s) to delete remotely.", DeleteMaster.Count);
-            logger.Log(NoAction.Count == 0 ? 3 : 1, "{0} file(s) already in sync.", NoAction.Count);
+
+            logger.Log(1, "");
+            logger.Log(1, "             | Local   | Shared  |");
+            logger.Log(1, "-------------+---------+---------+");
+            logger.Log(1, "Copy To      | {0,7} | {1,7} |", CopyToLocal.Count, CopyToShared.Count);
+            logger.Log(1, "Delete       | {0,7} | {1,7} |", DeleteLocal.Count, DeleteMaster.Count);
+            logger.Log(1, "Conflicted   | {0,7} |         |", RenameLocal.Count);
+            logger.Log(1, "No Change    | {0,7} |         |", NoAction.Count);
+            logger.Log(1, "");
+
             logger.Log(4, "\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
 
             // 3. Process the action queue according to the mode and limitations in place.

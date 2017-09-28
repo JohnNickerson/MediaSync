@@ -87,5 +87,12 @@ namespace AssimilationSoftware.MediaSync.Core.Model
             var indexfile = GetFile(file.RelativePath);
             return file.Size == indexfile.Size && file.ContentsHash == indexfile.ContentsHash;
         }
+
+        internal void Copy(string from, string to)
+        {
+            var f = GetFile(from).Clone();
+            f.RelativePath = to;
+            Files.Add(f);
+        }
     }
 }

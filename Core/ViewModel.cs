@@ -629,6 +629,41 @@ namespace AssimilationSoftware.MediaSync.Core
                     CopyToShared.Add(f.LocalFileHeader);
                 }
             }
+            // Look for renames: hash matches on create/delete queue pairs.
+            // Create local, delete local -> renamed in master.
+            var MoveMaster = new Dictionary<string, string>();
+            var MoveLocal = new Dictionary<string, string>();
+            foreach (var cl in CopyToLocal.ToArray())
+            {
+                foreach (var dm in DeleteLocal.ToArray())
+                {
+                    if (cl.ContentsHash == dm.ContentsHash)
+                    {
+                        // Remove from both queues.
+                        CopyToLocal.Remove(cl);
+                        DeleteLocal.Remove(dm);
+                        // Add to the local rename queue.
+                        MoveLocal[dm.RelativePath] = cl.RelativePath;
+                        break;
+                    }
+                }
+            }
+            // Delete master, copy to master -> renamed local.
+            foreach (var cm in CopyToShared.ToArray())
+            {
+                foreach (var dl in DeleteMaster.ToArray())
+                {
+                    if (cm.ContentsHash == dl.ContentsHash)
+                    {
+                        // Remove from the copy queue.
+                        // (if it gets removed from the delete master queue, other repos won't detect the move)
+                        CopyToShared.Remove(cm);
+                        // Add to the master rename queue.
+                        MoveMaster[dl.RelativePath] = cm.RelativePath;
+                        break;
+                    }
+                }
+            }
             #endregion
 
             logger.Log(1, "");
@@ -636,6 +671,7 @@ namespace AssimilationSoftware.MediaSync.Core
             logger.Log(1, "-------------+---------+---------+");
             logger.Log(1, "Copy To      | {0,7} | {1,7} |", CopyToLocal.Count, CopyToShared.Count);
             logger.Log(1, "Delete       | {0,7} | {1,7} |", DeleteLocal.Count, DeleteMaster.Count);
+            logger.Log(1, "Moved        | {0,7} | {1,7} |", MoveLocal.Count, MoveMaster.Count);
             logger.Log(1, "Conflicted   | {0,7} |         |", RenameLocal.Count);
             logger.Log(1, "No Change    | {0,7} |         |", NoAction.Count);
             logger.Log(1, "");
@@ -647,7 +683,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (!preview)
             {
                 begin = DateTime.Now;
-                #region 3.1. Rename, Copy to Local, Delete local, Delete master
+                #region 3.1. Rename, Copy to Local, Delete local, Move local, Delete master
                     foreach (var r in RenameLocal)
                     {
                         var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
@@ -682,9 +718,19 @@ namespace AssimilationSoftware.MediaSync.Core
                         _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
                         PulledCount++; // I mean, kind of, right?
                     }
+                foreach (var m in MoveLocal)
+                {
+                    _fileManager.MoveFile(Path.Combine(localindex.LocalPath, m.Key), Path.Combine(localindex.LocalPath, m.Value), false);
+                    PulledCount++;
+                }
 
-                    // Push.
-                    foreach (var m in DeleteMaster)
+                // Push.
+                foreach (var m in MoveMaster)
+                {
+                    syncSet.MasterIndex.Copy(m.Key, m.Value);
+                    PushedCount++;
+                }
+                foreach (var m in DeleteMaster)
                     {
                         m.IsDeleted = true;
                         syncSet.MasterIndex.UpdateFile(m);

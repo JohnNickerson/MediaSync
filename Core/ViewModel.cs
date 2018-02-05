@@ -48,8 +48,6 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Fields
-        private int NumPeers;
-
         public bool VerboseMode;
 
         /// <summary>
@@ -189,7 +187,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     logger.Line(1);
                     logger.Log(1, "Processing profile {0}", opts.Name);
 
-                    NumPeers = 0;
                     _log = new List<string>();
                     //PropertyChanged += SyncServicePropertyChanged;
                     VerboseMode = logger.LogLevel >= 4;
@@ -253,9 +250,6 @@ namespace AssimilationSoftware.MediaSync.Core
             index.SharedPath = _localSettings.SharedPath;
             syncSet.Indexes.Add(index);
             _indexer.Update(syncSet);
-
-            // Compare this index with others.
-            NumPeers = syncSet.Indexes.Count;
         }
 
         /// <summary>
@@ -695,6 +689,9 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
                 begin = DateTime.Now;
                 #region 3.2. Regenerate the local index.
+                // Keep a copy of the old index in case of read failures.
+                var oldex = new FileIndex { Files = new List<FileHeader>() };
+                oldex.Files.AddRange(localindex.Files);
                 localindex.Files = new List<FileHeader>();
                 foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
                 {
@@ -702,7 +699,11 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         localindex.UpdateFile(_fileManager.CreateFileHeader(localindex.LocalPath, f));
                     }
-                    catch { }
+                    catch
+                    {
+                        // Keep the old file.
+                        localindex.UpdateFile(oldex.GetFile(f));
+                    }
                 }
                 localindex.TimeStamp = DateTime.Now;
                 syncSet.UpdateIndex(localindex);

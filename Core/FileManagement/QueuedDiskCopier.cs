@@ -216,6 +216,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (new DirectoryInfo(subfolder).Name != ".SyncArchive")
                     {
                         queue.Enqueue(subfolder);
+                        result.Add(subfolder.Remove(0, path.Length + 1).Replace("/", "\\"));
                     }
                 }
                 // Add all image files to the index.
@@ -383,7 +384,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     ContentsHash = ComputeHash(fileInfo.FullName),
                     IsDeleted = false,
                     Size = fileInfo.Length,
-                    LastModified = fileInfo.LastWriteTime
+                    LastModified = fileInfo.LastWriteTime,
+                    IsFolder = DirectoryExists(Path.Combine(localPath, relativePath))
                 };
             }
             else

@@ -65,16 +65,33 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         public FileHeader CreateFileHeader(string localPath, string relativePath)
         {
             var fullpath = Path.Combine(localPath, relativePath);
-            var finfo = new FileInfo(fullpath);
-            return new FileHeader
+            if (DirectoryExists(fullpath))
             {
-                BasePath = localPath,
-                ContentsHash = _fileHasher.ComputeHash(fullpath),
-                IsDeleted = false,
-                LastModified = finfo.LastWriteTime,
-                RelativePath = relativePath,
-                Size = finfo.Length
-            };
+                var dinfo = new DirectoryInfo(fullpath);
+                return new FileHeader
+                {
+                    BasePath = localPath,
+                    ContentsHash = string.Empty,
+                    IsDeleted = false,
+                    LastModified = dinfo.LastWriteTime,
+                    RelativePath = relativePath,
+                    IsFolder = DirectoryExists(fullpath)
+                };
+            }
+            else
+            {
+                var finfo = new FileInfo(fullpath);
+                return new FileHeader
+                {
+                    BasePath = localPath,
+                    ContentsHash = _fileHasher.ComputeHash(fullpath),
+                    IsDeleted = false,
+                    LastModified = finfo.LastWriteTime,
+                    RelativePath = relativePath,
+                    Size = finfo.Length,
+                    IsFolder = DirectoryExists(fullpath)
+                };
+            }
         }
 
         public FileIndex CreateIndex(string path, params string[] searchpatterns)
@@ -104,9 +121,16 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         {
             try
             {
-                // Make sure no file attributes stand in our way.
-                File.SetAttributes(dir, FileAttributes.Normal);
-                File.Delete(dir);
+                if (DirectoryExists(dir))
+                {
+                    Directory.Delete(dir);
+                }
+                else
+                {
+                    // Make sure no file attributes stand in our way.
+                    File.SetAttributes(dir, FileAttributes.Normal);
+                    File.Delete(dir);
+                }
                 return FileCommandResult.Success;
             }
             catch
@@ -115,9 +139,9 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             }
         }
 
-        public bool DirectoryExists(string sharedPath)
+        public bool DirectoryExists(string path)
         {
-            return Directory.Exists(sharedPath);
+            return Directory.Exists(path);
         }
 
         public void EnsureFolder(string targetdir)
@@ -215,6 +239,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 foreach (string subfolder in Directory.GetDirectories(folder))
                 {
                     queue.Enqueue(subfolder);
+                    result.Add(subfolder.Remove(0, path.Length + 1).Replace("/", "\\"));
                 }
                 // Add all image files to the index.
                 foreach (string search in searchpatterns)

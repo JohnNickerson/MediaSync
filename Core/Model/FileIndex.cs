@@ -85,7 +85,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
                 return false;
 
             var indexfile = GetFile(file.RelativePath);
-            return file.Size == indexfile.Size && file.ContentsHash == indexfile.ContentsHash;
+            return file.IsFolder == indexfile.IsFolder && file.Size == indexfile.Size && file.ContentsHash == indexfile.ContentsHash;
         }
     }
 }

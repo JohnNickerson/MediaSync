@@ -47,6 +47,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public bool IsDeleted { get; set; }
 
         /// <summary>
+        /// Indicates whether this is a folder.
+        /// </summary>
+        public bool IsFolder { get; set; }
+
+        /// <summary>
         /// The size of the file, in bytes.
         /// </summary>
         public long Size { get; set; }
@@ -80,7 +85,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
                 RelativePath = RelativePath,
                 Size = Size,
                 BasePath = BasePath,
-                State = State
+                State = State,
+                IsFolder = IsFolder
             };
         }
         #endregion

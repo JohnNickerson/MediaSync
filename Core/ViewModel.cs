@@ -419,11 +419,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 if (allhashes.ContainsKey(f.RelativePath.ToLower()))
                 {
                     allhashes[f.RelativePath.ToLower()].LocalIndexHeader = f;
-                    allhashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash;
+                    allhashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash + f.IsFolder;
                 }
                 else
                 {
-                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash };
+                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + f.IsFolder };
                 }
             }
             foreach (var f in syncSet.MasterIndex.Files)
@@ -431,11 +431,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 if (allhashes.ContainsKey(f.RelativePath.ToLower()))
                 {
                     allhashes[f.RelativePath.ToLower()].MasterHeader = f;
-                    allhashes[f.RelativePath.ToLower()].MasterHash = f.ContentsHash;
+                    allhashes[f.RelativePath.ToLower()].MasterHash = f.ContentsHash + f.IsFolder;
                 }
                 else
                 {
-                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash };
+                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash + f.IsFolder };
                 }
             }
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
@@ -447,25 +447,25 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (allhashes.ContainsKey(f.ToLower()))
                     {
                         allhashes[f.ToLower()].LocalFileHeader = hed;
-                        allhashes[f.ToLower()].LocalFileHash = hed.ContentsHash;
+                        allhashes[f.ToLower()].LocalFileHash = hed.ContentsHash + hed.IsFolder;
                     }
                     else
                     {
                         allhashes[f.ToLower()] = new LocalFileHashSet
                         {
                             LocalFileHeader = hed,
-                            LocalFileHash = hed.ContentsHash
+                            LocalFileHash = hed.ContentsHash + hed.IsFolder
                         };
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Assume a file access exception. Skip this file by removing it and hope for better luck next run.
                     if (allhashes.ContainsKey(f.ToLower()))
                     {
                         allhashes.Remove(f.ToLower());
                     }
-                    logger.Log(0, "Skipping locked file: {0}", f);
+                    logger.Log(0, "Skipping locked file: {0} ({1})", f, ex.Message);
                 }
             }
 
@@ -592,7 +592,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 logger.Log(2, "DELETED [-> CANCEL TRANSIT]: {0}", dex);
                                 DeleteMaster.Add(f.MasterHeader);
                             }
-                            else if (_fileManager.FileExists(SharedPath, dex))
+                            else if (_fileManager.FileExists(SharedPath, dex) || f.MasterHeader.IsFolder)
                             {
                                 logger.Log(3, "TRANSIT [LOCAL <-]: {0}", dex);
                                 // Update/delete conflict or remote create. Copy to local. Update local index.
@@ -659,7 +659,12 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                     }
                     WaitForCopies(); // Because if there are pending file moves, we could get a conflict overwrite here.
-                    foreach (var c in CopyToLocal)
+                foreach (var d in CopyToLocal.Where(i => i.IsFolder))
+                {
+                    _fileManager.EnsureFolder(Path.Combine(localindex.LocalPath, d.RelativePath));
+                    PulledCount++;
+                }
+                foreach (var c in CopyToLocal.Where(i => !i.IsFolder))
                     {
                         var fcr = _fileManager.CopyFile(SharedPath, c.RelativePath, localindex.LocalPath);
                         if (fcr == FileCommandResult.Failure)
@@ -837,18 +842,26 @@ namespace AssimilationSoftware.MediaSync.Core
                         if (sharedsize + (ulong)s.Size < syncSet.ReserveSpace)
                         {
                             logger.Log(4, "Copying {0} to {1}", s.RelativePath, SharedPath);
-                            var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
-                            // Check for success.
-                            if (result == FileCommandResult.Success || result == FileCommandResult.Async)
+                            if (s.IsFolder)
                             {
-                                // Assume potential success on Async.
-                                sharedsize += (ulong)s.Size;
                                 syncSet.MasterIndex.UpdateFile(s);
                                 PushedCount++;
                             }
                             else
                             {
-                                logger.Log(0, "Outbound file copy failed: {0}", s.RelativePath);
+                                var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
+                                // Check for success.
+                                if (result == FileCommandResult.Success || result == FileCommandResult.Async)
+                                {
+                                    // Assume potential success on Async.
+                                    sharedsize += (ulong)s.Size;
+                                    syncSet.MasterIndex.UpdateFile(s);
+                                    PushedCount++;
+                                }
+                                else
+                                {
+                                    logger.Log(0, "Outbound file copy failed: {0}", s.RelativePath);
+                                }
                             }
                         }
                         else if ((ulong)s.Size > syncSet.ReserveSpace)

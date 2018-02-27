@@ -1,4 +1,5 @@
-﻿using AssimilationSoftware.MediaSync.CLI.Properties;
+﻿using AssimilationSoftware.Cuneiform;
+using AssimilationSoftware.MediaSync.CLI.Properties;
 using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
@@ -20,22 +21,55 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
 
         internal void Run(bool showpaths)
         {
-            // Print a summary of profiles.
-            System.Console.WriteLine(string.Empty);
-            System.Console.WriteLine("Current profiles ('*' indicates this machine is participating)");
-            System.Console.WriteLine(string.Empty);
+            Table table = new Table();
+            table.AddColumns("Machine");
             foreach (SyncSet p in vm.Profiles)
             {
-                var star = p.ContainsParticipant(Settings.Default.MachineName);
-                System.Console.WriteLine("{0}\t{1}", (star ? "*" : ""), p.Name);
-                // Show participating paths if detailed view is selected.
-                if (showpaths && star)
+                var col = new Column { Heading = p.Name };
+                if (showpaths)
                 {
-                    var party = p.GetIndex(Settings.Default.MachineName);
-                    System.Console.WriteLine("\t\t{0}", party.LocalPath);
-                    System.Console.WriteLine("\t\t{0}", party.SharedPath);
+                    col.Alignment = ColumnAlignment.Left;
+                }
+                else
+                {
+                    col.Alignment = ColumnAlignment.Centre;
+                }
+                table.Columns.Add(col);
+            }
+            foreach (var m in vm.Machines)
+            {
+                var row = new Cuneiform.Row();
+                row.Data.Add(m);
+                var sharow = new Row();
+                sharow.Data.Add(null);
+                foreach (SyncSet p in vm.Profiles)
+                {
+                    if (p.ContainsParticipant(m))
+                    {
+                        if (showpaths)
+                        {
+                            var party = p.GetIndex(m);
+                            row.Data.Add(party.LocalPath);
+                            sharow.Data.Add(party.SharedPath);
+                        }
+                        else
+                        {
+                            row.Data.Add("*");
+                        }
+                    }
+                    else
+                    {
+                        row.Data.Add(null);
+                        sharow.Data.Add(null);
+                    }
+                }
+                table.Rows.Add(row);
+                if (showpaths)
+                {
+                    table.Rows.Add(sharow);
                 }
             }
+            Console.WriteLine(table.ToDisplayString());
             System.Console.WriteLine(string.Empty);
         }
     }

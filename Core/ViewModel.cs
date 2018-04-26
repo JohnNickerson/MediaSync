@@ -782,7 +782,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 // Clean up shared storage
                 var minx = syncSet.MasterIndex;
-                var shareCleanMeta = from s in _fileManager.ListLocalFiles(SharedPath)
+                var shareCleanMeta = from s in _fileManager.ListLocalFiles(SharedPath).Where(k => File.Exists(k))
                                      join m in minx.Files on s.ToLower() equals m.RelativePath.ToLower() into masters
                                      from j in masters.DefaultIfEmpty(new FileHeader { State = FileSyncState.Destroyed })
                                      select new

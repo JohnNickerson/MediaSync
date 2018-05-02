@@ -1,8 +1,6 @@
 bin
 obj
 .vs
-*.exe
-*.vshost
 *.suo
 *.user
-TestResults
+packages

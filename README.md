@@ -3,6 +3,7 @@ MediaSync is a multi-master sync program designed to work from a flash drive. Us
 
 # Features
 - Space limits: reserve as much or as little space for your sync file copies as you like.
-- Copies only changed files
+- Copies only changed files.
 - Zero-footprint on synchronised machines: the index metadata is stored on the flash drive.
 - Data-preserving: both file versions are retained when conflicts are detected.
+- Sync empty folders in addition to files.

@@ -22,7 +22,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         [VerbOption("init", HelpText = "Initialises general settings")]
         public InitSubOptions InitVerb { get; set; }
 
-        [VerbOption("join-profile", HelpText = "Join a sync profile")]
+        [VerbOption("join-profile", HelpText = "Join (or retarget) a sync profile")]
         public JoinProfileSubOptions JoinVerb { get; set; }
 
         [VerbOption("leave-profile", HelpText = "Leave a sync profile")]

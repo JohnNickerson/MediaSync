@@ -8,7 +8,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 {
     class JoinProfileSubOptions
     {
-        [Option('p', "profile", HelpText = "The name of the profile to join")]
+        [Option('p', "profile", HelpText = "The name of the profile to join or modify")]
         public string ProfileName { get; set; }
 
         [Option('l', "local", HelpText = "The path of the local file collection")]

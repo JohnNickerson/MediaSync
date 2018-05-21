@@ -126,6 +126,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 });
                 _indexer.Update(profile);
             }
+            else
+            {
+                var i = profile.GetIndex(MachineId);
+                i.LocalPath = localpath;
+                i.SharedPath = sharedpath;
+                profile.UpdateIndex(i);
+                _indexer.Update(profile);
+            }
         }
 
         public void LeaveProfile(SyncSet profile, string machine)

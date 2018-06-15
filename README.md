@@ -7,3 +7,7 @@ MediaSync is a multi-master sync program designed to work from a flash drive. Us
 - Zero-footprint on synchronised machines: the index metadata is stored on the flash drive.
 - Data-preserving: both file versions are retained when conflicts are detected.
 - Sync empty folders in addition to files.
+
+# Releases
+2018-06-08: v2.0.9
+	- Use the "join-profile" command to update folder locations for an existing profile.

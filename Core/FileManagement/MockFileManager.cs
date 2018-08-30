@@ -103,6 +103,22 @@ namespace AssimilationSoftware.MediaSync.Core
             throw new NotImplementedException();
         }
 
+		/// <summary>
+		/// Attempts to create a file header record for a given local file, if present.
+		/// </summary>
+		/// <returns>A FileHeader instance if possible, or null if the file does not exist.</returns>
+		public FileHeader TryCreateFileHeader(string localPath, string relativePath)
+		{
+			try
+			{
+				return CreateFileHeader(localPath, relativePath);
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
         public string GetRelativePath(string sharedfile, string sharedPath)
         {
             throw new NotImplementedException();

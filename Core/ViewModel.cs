@@ -449,6 +449,7 @@ namespace AssimilationSoftware.MediaSync.Core
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
             {
                 // This action can fail if the file is in use.
+				// TODO: Windows Shadow Volume integration?
                 try
                 {
                     var hed = _fileManager.CreateFileHeader(localindex.LocalPath, f);
@@ -634,7 +635,7 @@ namespace AssimilationSoftware.MediaSync.Core
             #endregion
 
             logger.Log(1, "");
-            logger.Log(1, "             | Local   | Shared  |");
+            logger.Log(1, "{0}{1} | Local   | Shared  |", syncSet.Name, new string(' ', Math.Max(0, 12-syncSet.Name.Length)));
             logger.Log(1, "-------------+---------+---------+");
             logger.Log(1, "Copy To      | {0,7} | {1,7} |", CopyToLocal.Count, CopyToShared.Count);
             logger.Log(1, "Delete       | {0,7} | {1,7} |", DeleteLocal.Count, DeleteMaster.Count);
@@ -650,53 +651,53 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 begin = DateTime.Now;
                 #region 3.1. Rename, Copy to Local, Delete local, Delete master
-                    foreach (var r in RenameLocal)
+                foreach (var r in RenameLocal)
+                {
+                    var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
+                    var nurelpath = _fileManager.GetRelativePath(newname, localindex.LocalPath);
+                    var fmr = _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, nurelpath), false);
+                    if (fmr == FileCommandResult.Failure)
                     {
-                        var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
-                        var nurelpath = _fileManager.GetRelativePath(newname, localindex.LocalPath);
-                        var fmr = _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, nurelpath), false);
-                        if (fmr == FileCommandResult.Failure)
-                        {
-                            ErrorList.Add(string.Format("File rename failed: {0}", r.RelativePath));
-                        }
-                        else
-                        {
-                            r.RelativePath = nurelpath;
-                            CopyToShared.Add(r);
-                            PulledCount++;
-                        }
+                        ErrorList.Add(string.Format("File rename failed: {0}", r.RelativePath));
                     }
-                    WaitForCopies(); // Because if there are pending file moves, we could get a conflict overwrite here.
+                    else
+                    {
+                        r.RelativePath = nurelpath;
+                        CopyToShared.Add(r);
+                        PulledCount++;
+                    }
+                }
+                WaitForCopies(); // Because if there are pending file moves, we could get a conflict overwrite here.
                 foreach (var d in CopyToLocal.Where(i => i.IsFolder))
                 {
                     _fileManager.EnsureFolder(Path.Combine(localindex.LocalPath, d.RelativePath));
                     PulledCount++;
                 }
                 foreach (var c in CopyToLocal.Where(i => !i.IsFolder))
+                {
+                    var fcr = _fileManager.CopyFile(SharedPath, c.RelativePath, localindex.LocalPath);
+                    if (fcr == FileCommandResult.Failure)
                     {
-                        var fcr = _fileManager.CopyFile(SharedPath, c.RelativePath, localindex.LocalPath);
-                        if (fcr == FileCommandResult.Failure)
-                        {
-                            ErrorList.Add(string.Format("Inbound file copy failed: {0}", c.RelativePath));
-                        }
-                        else
-                        {
-                            PulledCount++;
-                        }
+                        ErrorList.Add(string.Format("Inbound file copy failed: {0}", c.RelativePath));
                     }
-                    foreach (var d in DeleteLocal)
+                    else
                     {
-                        _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
-                        PulledCount++; // I mean, kind of, right?
+                        PulledCount++;
                     }
+                }
+                foreach (var d in DeleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
+                {
+                    _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
+                    PulledCount++; // I mean, kind of, right?
+                }
 
-                    // Push.
-                    foreach (var m in DeleteMaster)
-                    {
-                        m.IsDeleted = true;
-                        syncSet.MasterIndex.UpdateFile(m);
-                        PushedCount++;
-                    }
+                // Push.
+                foreach (var m in DeleteMaster)
+                {
+                    m.IsDeleted = true;
+                    syncSet.MasterIndex.UpdateFile(m);
+                    PushedCount++;
+                }
                 #endregion
                 WaitForCopies();
                 logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
@@ -751,6 +752,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var mf in syncSet.MasterIndex.Files.ToArray())
                 {
                     var key = mf.RelativePath.ToLower();
+					var shrfilehed = _fileManager.TryCreateFileHeader(SharedPath, mf.RelativePath); // Returns null if not found.
                     try
                     {
                         if (mf.IsDeleted)
@@ -762,7 +764,8 @@ namespace AssimilationSoftware.MediaSync.Core
                                 syncSet.MasterIndex.Remove(mf);
                             }
                         }
-                        else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
+						else if (shrfilehed != null && !syncSet.MasterIndex.MatchesFile(shrfilehed))
+                        // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                         {
                             // The shared file does not match the master index. It should be removed.
                             _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
@@ -785,14 +788,19 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     catch
                     {
-                        // TODO: Try to tighten the focus of this error trap to just the create header call.
+                        // TODO: Avoid throwing exceptions from fileManager.Delete operations. If the file doesn't exist, that's success, not failure.
                     }
                 }
                 // Clean up shared storage
                 var minx = syncSet.MasterIndex;
                 var shareCleanMeta = from s in _fileManager.ListLocalFiles(SharedPath).Where(k => File.Exists(k))
                                      join m in minx.Files on s.ToLower() equals m.RelativePath.ToLower() into masters
-                                     from j in masters.DefaultIfEmpty(new FileHeader { State = FileSyncState.Destroyed })
+                                     from j in masters.DefaultIfEmpty(new FileHeader
+                                                                         {
+                                                                             BasePath = SharedPath,
+                                                                             RelativePath = s,
+                                                                             State = FileSyncState.Destroyed
+                                                                         })
                                      select new
                                      {
                                          FullPath = Path.Combine(SharedPath, s),
@@ -852,6 +860,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             logger.Log(4, "Copying {0} to {1}", s.RelativePath, SharedPath);
                             if (s.IsFolder)
                             {
+								s.IsDeleted = false; // To un-delete folders that were being removed, but have been re-created.
                                 syncSet.MasterIndex.UpdateFile(s);
                                 PushedCount++;
                             }

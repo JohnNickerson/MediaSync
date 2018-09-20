@@ -61,6 +61,11 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
+        public FileHeader TryCreateFileHeader(string localPath, string relativePath)
+        {
+            throw new NotImplementedException();
+        }
+
         public FileIndex CreateIndex(string path, string[] searchpatterns)
         {
             return new FileIndex

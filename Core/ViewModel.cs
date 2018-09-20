@@ -8,9 +8,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -106,7 +104,7 @@ namespace AssimilationSoftware.MediaSync.Core
             var profile = GetProfile(profileName);
             if (profile == null)
             {
-                StatusMessage = String.Format("Profile does not exist: {0}", profile);
+                StatusMessage = String.Format("Profile does not exist: {0}", profileName);
             }
             else
             {
@@ -116,11 +114,11 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void JoinProfile(SyncSet profile, string localpath, string sharedpath)
         {
-            if (!profile.ContainsParticipant(this.MachineId))
+            if (!profile.ContainsParticipant(MachineId))
             {
                 profile.Indexes.Add(new FileIndex
                 {
-                    MachineName = this.MachineId,
+                    MachineName = MachineId,
                     LocalPath = localpath,
                     SharedPath = sharedpath
                 });
@@ -181,7 +179,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void RunSync(bool IndexOnly, IStatusLogger logger)
+        public void RunSync(bool indexOnly, IStatusLogger logger)
         {
             PushedCount = 0;
             PulledCount = 0;
@@ -201,7 +199,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     try
                     {
                         var begin = DateTime.Now;
-                        Sync(ref opts, logger, IndexOnly);
+                        Sync(ref opts, logger, indexOnly);
                         profiles[i] = opts;
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
@@ -228,7 +226,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
-            if (!IndexOnly)
+            if (!indexOnly)
             {
                 var begin = DateTime.Now;
                 _indexer.UpdateAll(profiles);
@@ -263,9 +261,9 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Removes empty folders from the shared path.
         /// </summary>
-        internal void ClearEmptyFolders(string SharedPath)
+        internal void ClearEmptyFolders(string sharedPath)
         {
-            string inbox = SharedPath;
+            string inbox = sharedPath;
             // Sort by descending length to get leaf nodes first.
             foreach (string dir in from s in _fileManager.GetDirectories(inbox)
                                    orderby s.Length descending
@@ -354,20 +352,20 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 localindex.Files = new List<FileHeader>();
             }
-            var SharedPath = localindex.SharedPath;
-            if (!_fileManager.DirectoryExists(SharedPath))
+            var sharedPath = localindex.SharedPath;
+            if (!_fileManager.DirectoryExists(sharedPath))
             {
-                logger.Log(0, "Shared storage not available ({0}). Aborting.", SharedPath);
+                logger.Log(0, "Shared storage not available ({0}). Aborting.", sharedPath);
                 return;
             }
 
             if (syncSet.MasterIndex == null)
             {
-                syncSet.MasterIndex = new Model.FileIndex();
+                syncSet.MasterIndex = new FileIndex();
             }
             if (syncSet.MasterIndex.Files == null)
             {
-                syncSet.MasterIndex.Files = new List<Model.FileHeader>();
+                syncSet.MasterIndex.Files = new List<FileHeader>();
             }
             // 1. Compare the master index to each remote index to determine each file's state.
             var begin = DateTime.Now;
@@ -378,7 +376,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 if (dex.Files == null)
                 {
-                    dex.Files = new List<Model.FileHeader>();
+                    dex.Files = new List<FileHeader>();
                 }
                 foreach (var fyle in dex.Files)
                 {
@@ -601,7 +599,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 logger.Log(2, "DELETED [-> CANCEL TRANSIT]: {0}", dex);
                                 DeleteMaster.Add(f.MasterHeader);
                             }
-                            else if (_fileManager.FileExists(SharedPath, dex) || f.MasterHeader.IsFolder)
+                            else if (_fileManager.FileExists(sharedPath, dex) || f.MasterHeader.IsFolder)
                             {
                                 logger.Log(3, "TRANSIT [LOCAL <-]: {0}", dex);
                                 // Update/delete conflict or remote create. Copy to local. Update local index.
@@ -675,7 +673,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 foreach (var c in CopyToLocal.Where(i => !i.IsFolder))
                 {
-                    var fcr = _fileManager.CopyFile(SharedPath, c.RelativePath, localindex.LocalPath);
+                    var fcr = _fileManager.CopyFile(sharedPath, c.RelativePath, localindex.LocalPath);
                     if (fcr == FileCommandResult.Failure)
                     {
                         ErrorList.Add(string.Format("Inbound file copy failed: {0}", c.RelativePath));
@@ -752,7 +750,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var mf in syncSet.MasterIndex.Files.ToArray())
                 {
                     var key = mf.RelativePath.ToLower();
-					var shrfilehed = _fileManager.TryCreateFileHeader(SharedPath, mf.RelativePath); // Returns null if not found.
+					var shrfilehed = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
                     try
                     {
                         if (mf.IsDeleted)
@@ -768,19 +766,19 @@ namespace AssimilationSoftware.MediaSync.Core
                         // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                         {
                             // The shared file does not match the master index. It should be removed.
-                            _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
+                            _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
-                        else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
+                        else if (_fileManager.FileExists(sharedPath, mf.RelativePath) && indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
                         {
                             // Successfully transmitted to every replica. Remove from shared storage.
-                            _fileManager.Delete(Path.Combine(SharedPath, mf.RelativePath));
+                            _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
                         else if (!indexus.ContainsKey(key))
                         {
                             // Simultaneous side-channel delete from every replica. This file is toast.
                             syncSet.MasterIndex.Remove(mf);
                         }
-                        else if (!indexus[key].AllHashes.Any(h => h == mf.ContentsHash))
+                        else if (indexus[key].AllHashes.All(h => h != mf.ContentsHash))
                         {
                             // Slightly more subtle. No physical matching version of this file exists any more.
                             syncSet.MasterIndex.Remove(mf);
@@ -791,44 +789,27 @@ namespace AssimilationSoftware.MediaSync.Core
                         // TODO: Avoid throwing exceptions from fileManager.Delete operations. If the file doesn't exist, that's success, not failure.
                     }
                 }
-                // Clean up shared storage
+                // Clean up shared storage. We already looked for master/shared mismatches.
                 var minx = syncSet.MasterIndex;
-                var shareCleanMeta = from s in _fileManager.ListLocalFiles(SharedPath).Where(k => File.Exists(k))
-                                     join m in minx.Files on s.ToLower() equals m.RelativePath.ToLower() into masters
-                                     from j in masters.DefaultIfEmpty(new FileHeader
-                                                                         {
-                                                                             BasePath = SharedPath,
-                                                                             RelativePath = s,
-                                                                             State = FileSyncState.Destroyed
-                                                                         })
-                                     select new
-                                     {
-                                         FullPath = Path.Combine(SharedPath, s),
-                                         State = j.State,
-                                         HashMatch = _fileManager.ComputeHash(Path.Combine(SharedPath, s)) == j.ContentsHash
-                                     };
+                var shareCleanMeta = from s in _fileManager.ListLocalFiles(sharedPath)
+                                     where File.Exists(Path.Combine(sharedPath, s)) &&
+                                           minx.Files.All(m => !string.Equals(m.RelativePath, s, StringComparison.CurrentCultureIgnoreCase))
+                                     select s;
                 // For every file now in shared storage,
                 foreach (var s in shareCleanMeta)
                 {
-                    if (s.State == FileSyncState.Transit && s.HashMatch)
-                    {
-                        // Valid shared file.
-                    }
-                    else
-                    {
-                        // Shared file mismatches master index or is missing. Get rid of it.
-                        _fileManager.Delete(s.FullPath);
-                        logger.Log(4, "SHARE CLEANUP: {0}", s.FullPath);
-                    }
+                    // Shared file is missing from master index. Get rid of it.
+                    _fileManager.Delete(Path.Combine(sharedPath, s));
+                    logger.Log(4, "SHARE CLEANUP: {0}", s);
                 }
 
                 // Remove empty subfolders from the Shared folder.
                 // Somehow I always find myself rewriting this exact code.
-                if (Directory.Exists(SharedPath))
+                if (Directory.Exists(sharedPath))
                 {
                     // Sort by length descending to get leaf nodes first.
-                    var alldirs = from s in Directory.GetDirectories(SharedPath, "*", SearchOption.AllDirectories)
-                                  where s != SharedPath // Don't kill the root folder.
+                    var alldirs = from s in Directory.GetDirectories(sharedPath, "*", SearchOption.AllDirectories)
+                                  where s != sharedPath // Don't kill the root folder.
                                   orderby s.Length descending
                                   select s;
                     foreach (string t in alldirs)
@@ -850,14 +831,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(4, "\tMaster index cleanup: {0}", (DateTime.Now - begin).Verbalise());
                 begin = DateTime.Now;
                 #region 3.4. Copy to shared
-                var sharedsize = _fileManager.SharedPathSize(SharedPath);
+                var sharedsize = _fileManager.SharedPathSize(sharedPath);
                 foreach (var s in CopyToShared)
                 {
                     if (s != null)
                     {
                         if (sharedsize + (ulong)s.Size < syncSet.ReserveSpace)
                         {
-                            logger.Log(4, "Copying {0} to {1}", s.RelativePath, SharedPath);
+                            logger.Log(4, "Copying {0} to {1}", s.RelativePath, sharedPath);
                             if (s.IsFolder)
                             {
 								s.IsDeleted = false; // To un-delete folders that were being removed, but have been re-created.
@@ -866,7 +847,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else
                             {
-                                var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, SharedPath);
+                                var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, sharedPath);
                                 // Check for success.
                                 if (result == FileCommandResult.Success || result == FileCommandResult.Async)
                                 {
@@ -908,7 +889,6 @@ namespace AssimilationSoftware.MediaSync.Core
             //    _indexer.Update(syncSet);
             //    logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
             //}
-            return;
         }
 
         /// <summary>

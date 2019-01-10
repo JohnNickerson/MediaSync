@@ -137,7 +137,7 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public string[] ListLocalFiles(string path, string[] searchpatterns)
+        public string[] ListLocalFiles(string path, string[] searchPatterns)
         {
             throw new NotImplementedException();
         }

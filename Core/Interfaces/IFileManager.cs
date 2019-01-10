@@ -44,7 +44,7 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         void SetNormalAttributes(string path);
 
-        string[] ListLocalFiles(string path, params string[] searchpatterns);
+        string[] ListLocalFiles(string path, params string[] searchPatterns);
 
         FileIndex CreateIndex(string path, params string[] searchpatterns);
 

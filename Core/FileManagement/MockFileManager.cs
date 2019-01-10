@@ -33,7 +33,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        string[] IFileManager.ListLocalFiles(string path, string[] search)
+        string[] IFileManager.ListLocalFiles(string path, string[] searchPatterns)
         {
             return new string[] { };
         }

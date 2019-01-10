@@ -10,9 +10,15 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class FileHeader
     {
+        #region Fields
+        private readonly IFileHashProvider _hasher;
+        private string _contentsHash;
+        #endregion
+
         #region Constructors
-        public FileHeader()
+        public FileHeader(IFileHashProvider hasher = null)
         {
+            _hasher = hasher;
         }
         #endregion
 
@@ -30,13 +36,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The name of the file.
         /// </summary>
-        public string FileName
-        {
-            get
-            {
-                return new FileInfo(Path.Combine(BasePath, RelativePath)).Name;
-            }
-        }
+        public string FileName => new FileInfo(Path.Combine(BasePath, RelativePath)).Name;
 
         /// <summary>
         /// A flag to indicate that the file was deleted.
@@ -59,7 +59,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// A hash of the file contents, used to determine if changes have been made.
         /// </summary>
-        public string ContentsHash { get; set; }
+        public string ContentsHash
+        {
+            get => _contentsHash ?? (_contentsHash = _hasher?.ComputeHash(Path.Combine(BasePath, RelativePath)));
+            set => _contentsHash = value;
+        }
 
         /// <summary>
         /// A synchronisation state, used for the master index.

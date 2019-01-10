@@ -195,13 +195,13 @@ namespace AssimilationSoftware.MediaSync.Core
             BeginThreads();
         }
 
-        public string[] ListLocalFiles(string path, params string[] SearchPatterns)
+        public string[] ListLocalFiles(string path, params string[] searchPatterns)
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
-            if (SearchPatterns == null || SearchPatterns.Length == 0)
+            if (searchPatterns == null || searchPatterns.Length == 0)
             {
-                SearchPatterns = new string[] { "*.*" };
+                searchPatterns = new string[] { "*.*" };
             }
             queue.Enqueue(path);
             // While the queue is not empty,
@@ -220,7 +220,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                 }
                 // Add all image files to the index.
-                foreach (string search in SearchPatterns)
+                foreach (string search in searchPatterns)
                 {
                     foreach (string file in Directory.GetFiles(folder, search))
                     {

@@ -81,10 +81,10 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             else
             {
                 var finfo = new FileInfo(fullpath);
-                return new FileHeader
+                return new FileHeader(_fileHasher)
                 {
                     BasePath = localPath,
-                    ContentsHash = _fileHasher.ComputeHash(fullpath),
+                    //ContentsHash = _fileHasher.ComputeHash(fullpath),
                     IsDeleted = false,
                     LastModified = finfo.LastWriteTime,
                     RelativePath = relativePath,
@@ -237,13 +237,13 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             }
         }
 
-        public string[] ListLocalFiles(string path, params string[] searchpatterns)
+        public string[] ListLocalFiles(string path, params string[] searchPatterns)
         {
             List<string> result = new List<string>();
             Queue<string> queue = new Queue<string>();
-            if (searchpatterns == null || searchpatterns.Length == 0)
+            if (searchPatterns == null || searchPatterns.Length == 0)
             {
-                searchpatterns = new string[] { "*.*" };
+                searchPatterns = new string[] { "*.*" };
             }
             queue.Enqueue(path);
             // While the queue is not empty,
@@ -258,7 +258,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     result.Add(subfolder.Remove(0, path.Length + 1).Replace("/", "\\"));
                 }
                 // Add all image files to the index.
-                foreach (string search in searchpatterns)
+                foreach (string search in searchPatterns)
                 {
                     foreach (string file in Directory.GetFiles(folder, search))
                     {

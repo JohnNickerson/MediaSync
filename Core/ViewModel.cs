@@ -179,7 +179,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void RunSync(bool indexOnly, IStatusLogger logger)
+        public void RunSync(bool indexOnly, IStatusLogger logger, bool quickMode = false)
         {
             PushedCount = 0;
             PulledCount = 0;
@@ -199,7 +199,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     try
                     {
                         var begin = DateTime.Now;
-                        Sync(ref opts, logger, indexOnly);
+                        Sync(ref opts, logger, indexOnly, quickMode);
                         profiles[i] = opts;
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
@@ -344,7 +344,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        public void Sync(ref SyncSet syncSet, IStatusLogger logger, bool preview = false)
+        public void Sync(ref SyncSet syncSet, IStatusLogger logger, bool preview = false, bool quickMode = false)
         {
             // Check folders, just in case.
             var localindex = syncSet.GetIndex(MachineId) ?? new FileIndex();

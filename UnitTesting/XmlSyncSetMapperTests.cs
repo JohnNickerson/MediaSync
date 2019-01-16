@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.Core.Model;
 

@@ -1,13 +1,9 @@
-﻿using AssimilationSoftware.MediaSync.Core;
-using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
+﻿using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using AssimilationSoftware.MediaSync.Core.FileManagement;
 
 namespace UnitTesting
 {
@@ -17,7 +13,7 @@ namespace UnitTesting
         [TestMethod]
         public void CopyFile()
         {
-            var filemanager = new QueuedDiskCopier(new MockHasher());
+            var fileManager = new QueuedDiskCopier(new MockHasher());
 
             // Arrange:
             // Ensure the source file exists first.
@@ -27,7 +23,7 @@ namespace UnitTesting
             string targetfile = @"C:\Temp\mscopytesttarget.txt";
             if (File.Exists(targetfile)) File.Delete(targetfile);
 
-            filemanager.CopyFile(sourcefile, targetfile);
+            fileManager.CopyFile(sourcefile, targetfile);
 
             // Wait for the copy. This file manager runs copies on a background thread.
             System.Threading.Thread.Sleep(1000);
@@ -41,7 +37,7 @@ namespace UnitTesting
             var filemanager = new QueuedDiskCopier(new MockHasher());
 
             string folder = @"C:\temp";
-            var index = filemanager.CreateIndex(folder, new string[] { "*.txt" });
+            var index = filemanager.CreateIndex(folder, new[] { "*.txt" });
 
             Assert.IsNotNull(index);
         }
@@ -50,7 +46,7 @@ namespace UnitTesting
         public void FilesMatch_HashMismatchShouldBeFalse()
         {
             // Arrange
-            var masterFile = new AssimilationSoftware.MediaSync.Core.Model.FileHeader
+            var masterFile = new FileHeader
             {
                 ContentsHash = "123",
                 BasePath = @"C:\Users\John\Documents",

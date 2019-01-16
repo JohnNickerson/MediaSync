@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AssimilationSoftware.MediaSync.Core.Extensions
 {
@@ -33,12 +30,12 @@ namespace AssimilationSoftware.MediaSync.Core.Extensions
             }
             else if (duration.TotalHours >= 1)
             {
-                // hours + mins
+                // hours + minutes
                 summary.AppendFormat("{0}h {1}m", Math.Floor(duration.TotalHours), duration.Minutes);
             }
             else if (duration.TotalMinutes >= 1)
             {
-                // mins + secs
+                // minutes + secs
                 summary.AppendFormat("{0}m {1}s", Math.Floor(duration.TotalMinutes), duration.Seconds);
             }
             else

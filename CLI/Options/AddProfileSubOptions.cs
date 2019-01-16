@@ -1,8 +1,4 @@
 ﻿using CommandLine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace AssimilationSoftware.MediaSync.CLI.Options
 {
@@ -18,7 +14,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         public string SharedPath { get; set; }
 
         [Option('r', "reserve", HelpText = "Maximum megabytes to use for this profile in the shared space", DefaultValue = 500u)]
-        public ulong ReserveSpaceMB { get; set; }
+        public ulong ReserveSpaceMb { get; set; }
 
         [Option('i', "ignore", HelpText = "A list of file search patterns to exclude.", DefaultValue = new string[] { })]
         public string[] IgnorePatterns { get; set; }

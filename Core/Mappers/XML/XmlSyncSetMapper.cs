@@ -1,9 +1,6 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AssimilationSoftware.MediaSync.Core.Model;
 using Polenter.Serialization;
 using System.IO;
@@ -12,8 +9,8 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 {
     public class XmlSyncSetMapper : ISyncSetMapper
     {
-        private string _filename;
-        private SharpSerializer _serialiser;
+        private readonly string _filename;
+        private readonly SharpSerializer _serialiser;
 
         public XmlSyncSetMapper(string filename)
         {
@@ -27,9 +24,9 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             UpdateAll(allsyncsets.Where(ss => ss.Name != name).ToList());
         }
 
-        public void Delete(SyncSet syncset)
+        public void Delete(SyncSet syncSet)
         {
-            Delete(syncset.Name);
+            Delete(syncSet.Name);
         }
 
         public SyncSet Read(string name)
@@ -37,7 +34,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             var allsyncsets = ReadAll();
             if (allsyncsets.Any(ss => ss.Name == name))
             {
-                return allsyncsets.Where(ss => ss.Name == name).First();
+                return allsyncsets.First(ss => ss.Name == name);
             }
             else
             {
@@ -57,20 +54,20 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             }
         }
 
-        public void Update(SyncSet syncset)
+        public void Update(SyncSet syncSet)
         {
             var allsyncsets = ReadAll();
-            if (allsyncsets.Any(ss => ss.Name == syncset.Name))
+            if (allsyncsets.Any(ss => ss.Name == syncSet.Name))
             {
-                allsyncsets.RemoveAll(ss => ss.Name == syncset.Name);
+                allsyncsets.RemoveAll(ss => ss.Name == syncSet.Name);
             }
-            allsyncsets.Add(syncset);
+            allsyncsets.Add(syncSet);
             UpdateAll(allsyncsets.ToList());
         }
 
-        public void UpdateAll(List<SyncSet> syncsets)
+        public void UpdateAll(List<SyncSet> syncSets)
         {
-            _serialiser.Serialize(syncsets, _filename);
+            _serialiser.Serialize(syncSets, _filename);
         }
     }
 }

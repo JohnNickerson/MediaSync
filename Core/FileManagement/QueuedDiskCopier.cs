@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Text.RegularExpressions;
-using AssimilationSoftware.MediaSync.Core.Model;
-using AssimilationSoftware.MediaSync.Core.Interfaces;
-using AssimilationSoftware.MediaSync.Core.Properties;
-using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using System.Diagnostics;
+using System.IO;
 using AssimilationSoftware.MediaSync.Core.Commands;
+using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Model;
 
-namespace AssimilationSoftware.MediaSync.Core
+namespace AssimilationSoftware.MediaSync.Core.FileManagement
 {
 	/// <summary>
 	/// A class to handle asynchronous file copying.
@@ -50,32 +46,27 @@ namespace AssimilationSoftware.MediaSync.Core
 		/// <summary>
 		/// A list of in-progress file copy actions.
 		/// </summary>
-		private List<IAsyncResult> InProgressActions;
+		private readonly List<IAsyncResult> InProgressActions;
 
 		/// <summary>
 		/// Sync operations waiting to go ahead.
 		/// </summary>
-		private Queue<FileCommand> PendingFileActions;
+		private readonly Queue<FileCommand> PendingFileActions;
 
 		/// <summary>
 		/// The maximum number of simultaneous copies to perform.
 		/// </summary>
-		private int MaxActions;
+		private readonly int MaxActions;
 
-        private List<Exception> _errors;
-        private IFileHashProvider _fileHasher;
+        private readonly List<Exception> _errors;
+        private readonly IFileHashProvider _fileHasher;
 
         /// <summary>
         /// A list of errors that occurred during copies.
         /// </summary>
-        List<Exception> IFileManager.Errors
-        {
-            get
-            {
-                return _errors;
-            }
-        }
-		#endregion
+        List<Exception> IFileManager.Errors => _errors;
+
+        #endregion
 
 		#region Constructors
 		/// <summary>
@@ -201,7 +192,7 @@ namespace AssimilationSoftware.MediaSync.Core
             Queue<string> queue = new Queue<string>();
             if (searchPatterns == null || searchPatterns.Length == 0)
             {
-                searchPatterns = new string[] { "*.*" };
+                searchPatterns = new[] { "*.*" };
             }
             queue.Enqueue(path);
             // While the queue is not empty,
@@ -225,8 +216,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     foreach (string file in Directory.GetFiles(folder, search))
                     {
                         // Remove the base path.
-                        string trunc_file = file.Remove(0, path.Length + 1).Replace("/", "\\");
-                        result.Add(trunc_file);
+                        string truncFile = file.Remove(0, path.Length + 1).Replace("/", "\\");
+                        result.Add(truncFile);
                     }
                 }
             }
@@ -258,7 +249,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Determines whether the given file should be copied, according to the exclusion filter rules.
         /// </summary>
-        /// <param name="file">The file name to check.</param>
+        /// <param name="filename">The file name to check.</param>
         /// <returns>True if the file should be copied, false otherwise.</returns>
         bool IFileManager.ShouldCopy(string filename)
         {
@@ -303,7 +294,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public FileIndex CreateIndex(string path, string[] SearchPatterns)
+        public FileIndex CreateIndex(string path, string[] searchPatterns)
         {
             FileIndex index = new FileIndex {
                 LocalPath=path,
@@ -311,7 +302,7 @@ namespace AssimilationSoftware.MediaSync.Core
             };
             IFileHashProvider hasher = new Sha1Calculator();
 
-            foreach (string file in ListLocalFiles(path, SearchPatterns))
+            foreach (string file in ListLocalFiles(path, searchPatterns))
             {
                 try
                 {
@@ -357,6 +348,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             var fileInfo = new FileInfo(localfile);
             var justname = fileInfo.Name.Remove(fileInfo.Name.Length - fileInfo.Extension.Length);
+            Debug.Assert(fileInfo.DirectoryName != null, "fileInfo.DirectoryName != null");
             var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}'s conflicted copy {2:yyyy-MM-dd}){3}", justname, machine, now, fileInfo.Extension));
             int ver = 0;
             while (File.Exists(newname))
@@ -454,14 +446,9 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Gets the number of pending copy operations.
         /// </summary>
-        int IFileManager.Count
-		{
-			get
-			{
-				return InProgressActions.Count + PendingFileActions.Count;
-			}
-		}
-		#endregion
+        int IFileManager.Count => InProgressActions.Count + PendingFileActions.Count;
+
+        #endregion
 
     }
 }

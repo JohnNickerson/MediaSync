@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using AssimilationSoftware.MediaSync.Core.Model;
 namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {

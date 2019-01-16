@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
@@ -11,7 +6,6 @@ using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.WpfGui.Properties;
-using AssimilationSoftware.TodoSort.WpfGui;
 
 namespace AssimilationSoftware.MediaSync.WpfGui
 {
@@ -34,6 +28,8 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             Profiles = new List<SyncSet>();
         }
 
+        public string ThisMachine { get; set; }
+
         public void RunAllExecute()
         {
             // Run the profiles in another thread.
@@ -49,7 +45,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             // Open the configuration window.
         }
 
-        public List<Core.Model.SyncSet> Profiles { get; set; }
+        public List<SyncSet> Profiles { get; set; }
 
         public string OutputText
         {

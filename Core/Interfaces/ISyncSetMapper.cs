@@ -1,9 +1,5 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Model;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
@@ -11,14 +7,14 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
     {
         SyncSet Read(string name);
 
-        void Update(SyncSet syncset);
+        void Update(SyncSet syncSet);
 
-        void Delete(SyncSet syncset);
+        void Delete(SyncSet syncSet);
 
         void Delete(string name);
 
         List<SyncSet> ReadAll();
 
-        void UpdateAll(List<SyncSet> syncsets);
+        void UpdateAll(List<SyncSet> syncSets);
     }
 }

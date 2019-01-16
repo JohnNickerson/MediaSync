@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.FileManagement
 {
-    public class SimpleFileManager : Interfaces.IFileManager
+    public class SimpleFileManager : IFileManager
     {
-        private IFileHashProvider _fileHasher;
+        private readonly IFileHashProvider _fileHasher;
 
         public SimpleFileManager(IFileHashProvider fileHasher)
         {
@@ -19,15 +17,9 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             Errors = new List<Exception>();
         }
 
-        public int Count
-        {
-            get
-            {
-                return 0; // No threading in this class.
-            }
-        }
+        public int Count => 0;
 
-        public List<Exception> Errors { get; private set; }
+        public List<Exception> Errors { get; }
 
         public string ComputeHash(string localFile)
         {
@@ -84,7 +76,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 return new FileHeader(_fileHasher)
                 {
                     BasePath = localPath,
-                    //ContentsHash = _fileHasher.ComputeHash(fullpath),
                     IsDeleted = false,
                     LastModified = finfo.LastWriteTime,
                     RelativePath = relativePath,
@@ -203,6 +194,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         {
             var fileInfo = new FileInfo(localFile);
             var justname = Path.GetFileNameWithoutExtension(localFile);
+            Debug.Assert(fileInfo.DirectoryName != null, "fileInfo.DirectoryName != null");
             var newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}-s conflicted copy {2:yyyy-MM-dd}){3}", justname, machineId, now, fileInfo.Extension));
             int ver = 0;
             while (File.Exists(newname))
@@ -243,7 +235,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             Queue<string> queue = new Queue<string>();
             if (searchPatterns == null || searchPatterns.Length == 0)
             {
-                searchPatterns = new string[] { "*.*" };
+                searchPatterns = new[] { "*.*" };
             }
             queue.Enqueue(path);
             // While the queue is not empty,
@@ -263,8 +255,8 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     foreach (string file in Directory.GetFiles(folder, search))
                     {
                         // Remove the base path.
-                        string trunc_file = file.Remove(0, path.Length + 1).Replace("/", "\\");
-                        result.Add(trunc_file);
+                        string truncFile = file.Remove(0, path.Length + 1).Replace("/", "\\");
+                        result.Add(truncFile);
                     }
                 }
             }

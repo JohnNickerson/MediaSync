@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System.IO;
 
@@ -11,35 +9,16 @@ namespace UnitTesting.Mocks
 {
     class MockFileManager : IFileManager
     {
-        private List<FileHeader> _fakeFiles;
+        private readonly List<FileHeader> _fakeFiles;
 
         public MockFileManager(params FileHeader[] files)
         {
-            if (files != null)
-            {
-                _fakeFiles = files.ToList();
-            }
-            else
-            {
-                _fakeFiles = new List<FileHeader>();
-            }
+            _fakeFiles = files != null ? files.ToList() : new List<FileHeader>();
         }
 
-        public int Count
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int Count => throw new NotImplementedException();
 
-        public List<Exception> Errors
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public List<Exception> Errors => throw new NotImplementedException();
 
         public string ComputeHash(string localFile)
         {

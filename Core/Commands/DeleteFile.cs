@@ -1,10 +1,4 @@
-﻿using AssimilationSoftware.MediaSync.Core.Model;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core.Commands
 {
@@ -14,7 +8,7 @@ namespace AssimilationSoftware.MediaSync.Core.Commands
 
         public DeleteFile(string dir)
         {
-            this.Path = dir;
+            Path = dir;
         }
 
         public override void Replay()
@@ -31,7 +25,7 @@ namespace AssimilationSoftware.MediaSync.Core.Commands
                 {
                     File.Delete(Path);
                 }
-                catch (System.IO.IOException)
+                catch (IOException)
                 {
                     // TODO: Report failure somehow.
                 }

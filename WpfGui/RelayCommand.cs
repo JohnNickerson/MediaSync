@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace AssimilationSoftware.TodoSort.WpfGui
+namespace AssimilationSoftware.MediaSync.WpfGui
 {
     public class RelayCommand<T> : ICommand
     {

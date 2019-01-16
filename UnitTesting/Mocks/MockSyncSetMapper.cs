@@ -1,9 +1,6 @@
 ﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AssimilationSoftware.MediaSync.Core.Model;
 
 namespace UnitTesting.Mocks
@@ -22,7 +19,7 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public void Delete(SyncSet syncset)
+        public void Delete(SyncSet syncSet)
         {
             throw new NotImplementedException();
         }
@@ -37,12 +34,12 @@ namespace UnitTesting.Mocks
             return new List<SyncSet> { ss };
         }
 
-        public void Update(SyncSet syncset)
+        public void Update(SyncSet syncSet)
         {
-            ss = syncset;
+            ss = syncSet;
         }
 
-        public void UpdateAll(List<SyncSet> syncsets)
+        public void UpdateAll(List<SyncSet> syncSets)
         {
             throw new NotImplementedException();
         }

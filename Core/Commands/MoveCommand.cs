@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Core.Commands
 {
@@ -14,8 +9,8 @@ namespace AssimilationSoftware.MediaSync.Core.Commands
 
         public MoveCommand(string source, string target)
         {
-            this.Source = source;
-            this.Target = target;
+            Source = source;
+            Target = target;
         }
 
         public override void Replay()

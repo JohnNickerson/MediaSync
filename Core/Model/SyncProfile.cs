@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
-using System.IO;
-using System.Configuration;
-using System.Data;
-using AssimilationSoftware.MediaSync.Core.Properties;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
@@ -40,19 +34,14 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         #endregion
 
 		#region Constructors
-		public SyncSet()
-		{
-            //Indexes = new List<FileIndex>();
-            //MasterIndex = new FileIndex();
-            //IgnorePatterns = new List<string>();
-		}
-		#endregion
+
+        #endregion
 
         #region Methods
         public FileIndex GetIndex(string machine)
         {
             var localsettings = Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower());
-            if (localsettings.Count() > 0)
+            if (localsettings.Any())
             {
                 return localsettings.First();
             }
@@ -64,7 +53,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public bool ContainsParticipant(string machine)
         {
-            return Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower()).Count() > 0;
+            return Indexes.Any(p => p.MachineName.ToLower() == machine.ToLower());
         }
 
         internal void UpdateIndex(FileIndex localIndex)

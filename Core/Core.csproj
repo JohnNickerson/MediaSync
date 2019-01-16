@@ -73,16 +73,13 @@
     <Compile Include="Commands\DeleteFile.cs" />
     <Compile Include="Commands\MoveCommand.cs" />
     <Compile Include="Extensions\TimeSpanExtensions.cs" />
-    <Compile Include="FileManagement\Hashing\CrcHasher.cs" />
     <Compile Include="FileManagement\Hashing\MockHasher.cs" />
-    <Compile Include="FileManagement\Hashing\MurMur3Hahser.cs" />
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="FileManagement\SimpleFileManager.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
     <Compile Include="Interfaces\IStatusLogger.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
     <Compile Include="Mappers\Binary\BinarySyncSetMapper.cs" />
-    <Compile Include="Mappers\PlainText\JsonSyncSetMapper.cs" />
     <Compile Include="Mappers\XML\XmlSyncSetMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
@@ -111,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Mappers\Mock\" />
+    <Folder Include="Mappers\PlainText\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

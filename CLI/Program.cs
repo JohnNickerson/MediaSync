@@ -4,13 +4,11 @@ using System.Linq;
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using AssimilationSoftware.MediaSync.CLI.Properties;
-using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
-using AssimilationSoftware.MediaSync.Core.Mappers.PlainText;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
 using AssimilationSoftware.MediaSync.Core.Extensions;
 
@@ -52,7 +50,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Add profile
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
-                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMB * 1000000, addOptions.IgnorePatterns);
+                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMb * 1000000, addOptions.IgnorePatterns);
                         vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath);
                     }
                     #endregion
@@ -141,15 +139,8 @@ namespace AssimilationSoftware.MediaSync.CLI
         {
             foreach (SyncSet p in profiles)
             {
-                if (p.ContainsParticipant(Settings.Default.MachineName))
-                {
-                    System.Console.Write("*\t");
-                }
-                else
-                {
-                    System.Console.Write("\t");
-                }
-                System.Console.WriteLine(p.Name);
+                Console.Write(p.ContainsParticipant(Settings.Default.MachineName) ? "*\t" : "\t");
+                Console.WriteLine(p.Name);
             }
         }
 
@@ -162,10 +153,10 @@ namespace AssimilationSoftware.MediaSync.CLI
             switch (e.PropertyName)
             {
                 case "Log":
-                    System.Console.WriteLine(s.Log.Last());
+                    Console.WriteLine(s.Log.Last());
                     break;
                 case "StatusMessage":
-                    System.Console.WriteLine(s.StatusMessage);
+                    Console.WriteLine(s.StatusMessage);
                     break;
             }
         }

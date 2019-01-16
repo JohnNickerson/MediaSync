@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Model;
-using System.IO;
 
-namespace AssimilationSoftware.MediaSync.Core
+namespace AssimilationSoftware.MediaSync.Core.FileManagement
 {
     class MockFileManager : IFileManager
     {
@@ -25,26 +23,14 @@ namespace AssimilationSoftware.MediaSync.Core
             return FileCommandResult.Success;
         }
 
-        int IFileManager.Count
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        int IFileManager.Count => 0;
 
         string[] IFileManager.ListLocalFiles(string path, string[] searchPatterns)
         {
             return new string[] { };
         }
 
-        List<Exception> IFileManager.Errors
-        {
-            get
-            {
-                return new List<Exception>();
-            }
-        }
+        List<Exception> IFileManager.Errors => new List<Exception>();
 
         ulong IFileManager.SharedPathSize(string path)
         {

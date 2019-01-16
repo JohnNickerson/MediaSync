@@ -11,3 +11,8 @@ MediaSync is a multi-master sync program designed to work from a flash drive. Us
 # Releases
 2018-06-08: v2.0.9
 	- Use the "join-profile" command to update folder locations for an existing profile.
+2018-09-13: v2.0.10
+	- Added profile name displays to table output.
+	- Bug and stability fixes.
+2018-10-04: v2.0.11
+	- Shared folder cleanup now removes unindexed files.

@@ -1,5 +1,4 @@
-﻿using AssimilationSoftware.MediaSync.Core.Commands;
-using AssimilationSoftware.MediaSync.Core.Extensions;
+﻿using AssimilationSoftware.MediaSync.Core.Extensions;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Model;
 using System;
@@ -199,6 +198,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     catch (Exception e)
                     {
+                        // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
                         // TODO: Change to status message property setting.
                         logger.Log(0, "Could not sync.");
                         logger.Log(0, e.Message);
@@ -237,102 +237,6 @@ namespace AssimilationSoftware.MediaSync.Core
         public void RemoveProfile(string profileName)
         {
             _indexer.UpdateAll(Profiles.Where(p => p.Name.ToLower() != profileName.ToLower()).ToList());
-        }
-
-        /// <summary>
-        /// Creates an index file for this machine.
-        /// </summary>
-        public void IndexFiles(SyncSet syncSet)
-        {
-            var localSettings = syncSet.GetIndex(MachineId);
-            var index = _fileManager.CreateIndex(localSettings.LocalPath, "*.*");
-            index.MachineName = localSettings.MachineName;
-            index.SharedPath = localSettings.SharedPath;
-            syncSet.Indexes.Add(index);
-            _indexer.Update(syncSet);
-        }
-
-        /// <summary>
-        /// Removes empty folders from the shared path.
-        /// </summary>
-        internal void ClearEmptyFolders(string sharedPath)
-        {
-            string inbox = sharedPath;
-            // Sort by descending length to get leaf nodes first.
-            foreach (string dir in from s in _fileManager.GetDirectories(inbox)
-                                   orderby s.Length descending
-                                   select s)
-            {
-                if (_fileManager.ListLocalFiles(dir).Length == 0 && _fileManager.GetDirectories(dir).Length == 0)
-                {
-                    // Empty folder. Remove it.
-                    try
-                    {
-                        if (VerboseMode)
-                        {
-                            Report(new DeleteFile(dir));
-                        }
-                        _fileManager.Delete(dir);
-                    }
-                    catch
-                    {
-                        ReportMessage("Could not delete apparently empty folder: {0}", dir);
-                    }
-                }
-            }
-        }
-
-        [Obsolete("Use IStatusLogger instead.")]
-        private void ReportMessage(string format, params object[] args)
-        {
-            _log.Add(string.Format(format, args));
-            NotifyPropertiesChanged("Log");
-        }
-
-        private void Report(FileCommand op)
-        {
-            if (op is CopyCommand)
-            {
-                _log.Add(string.Format("Copying:\t{0}{1}", ((CopyCommand)op).Source, Environment.NewLine));
-            }
-            else if (op is MoveCommand)
-            {
-                _log.Add(string.Format("Moving:\t{0}{1}", ((MoveCommand)op).Source, Environment.NewLine));
-            }
-            else if (op is DeleteFile)
-            {
-                _log.Add(string.Format("Deleting:\t{0}{1}", ((DeleteFile)op).Path, Environment.NewLine));
-            }
-            NotifyPropertiesChanged("Log");
-        }
-
-        /// <summary>
-        /// Turns a number of bytes into a more human-friendly reading.
-        /// </summary>
-        /// <param name="bytes">The number of bytes to represent.</param>
-        /// <returns>The number of bytes represented as B, KB, MB, GB or TB, whatever is most appropriate.</returns>
-        private string VerbaliseBytes(ulong bytes)
-        {
-            if (bytes < 1000)
-            {
-                return string.Format("{0}B", bytes);
-            }
-            else if (bytes < Math.Pow(10, 6))
-            {
-                return string.Format("{0:0}KB", bytes / Math.Pow(10, 3));
-            }
-            else if (bytes < Math.Pow(10, 9))
-            {
-                return string.Format("{0:0}MB", bytes / Math.Pow(10, 6));
-            }
-            else if (bytes < Math.Pow(10, 12))
-            {
-                return string.Format("{0:0}GB", bytes / Math.Pow(10, 9));
-            }
-            else
-            {
-                return string.Format("{0:0}TB", bytes / Math.Pow(10, 12));
-            }
         }
 
         /// <summary>
@@ -435,31 +339,29 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 // This action can fail if the file is in use.
                 // TODO: Windows Shadow Volume integration?
-                try
-                {
-                    var hed = _fileManager.CreateFileHeader(localindex.LocalPath, f);
-                    if (allhashes.ContainsKey(f.ToLower()))
-                    {
-                        allhashes[f.ToLower()].LocalFileHeader = hed;
-                        allhashes[f.ToLower()].LocalFileHash = hed.ContentsHash + hed.IsFolder;
-                    }
-                    else
-                    {
-                        allhashes[f.ToLower()] = new LocalFileHashSet
-                        {
-                            LocalFileHeader = hed,
-                            LocalFileHash = hed.ContentsHash + hed.IsFolder
-                        };
-                    }
-                }
-                catch (Exception ex)
+                var hed = _fileManager.TryCreateFileHeader(localindex.LocalPath, f);
+                if (hed == null)
                 {
                     // Assume a file access exception. Skip this file by removing it and hope for better luck next run.
                     if (allhashes.ContainsKey(f.ToLower()))
                     {
                         allhashes.Remove(f.ToLower());
                     }
-                    logger.Log(0, "Skipping locked file: {0} ({1})", f, ex.Message);
+
+                    logger.Log(0, "Skipping locked file: {0}", f);
+                }
+                else if (allhashes.ContainsKey(f.ToLower()))
+                {
+                    allhashes[f.ToLower()].LocalFileHeader = hed;
+                    allhashes[f.ToLower()].LocalFileHash = hed.ContentsHash + hed.IsFolder;
+                }
+                else
+                {
+                    allhashes[f.ToLower()] = new LocalFileHashSet
+                    {
+                        LocalFileHeader = hed,
+                        LocalFileHash = hed.ContentsHash + hed.IsFolder
+                    };
                 }
             }
 
@@ -472,7 +374,6 @@ namespace AssimilationSoftware.MediaSync.Core
             var renameLocal = new List<FileHeader>(); // Target names to be generated on demand when processing.
             var noAction = new List<FileHeader>(); // Nothing to do to these, but keep a list in case of verbose preview.
             // Copy the collection for looping, so we can modify it in case of conflicts.
-            var allFileList = allhashes.Keys.ToList();
             foreach (var dex in allhashes.Keys)
             {
                 var f = allhashes[dex];

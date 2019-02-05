@@ -33,14 +33,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 // ensure the target folder exists.
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
-                if (File.Exists(target))
-                {
-                    return FileCommandResult.Success;
-                }
-                else
-                {
-                    return FileCommandResult.Failure;
-                }
+                return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
             }
             catch (Exception e)
             {
@@ -214,14 +207,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
         {
             if (absolutePath.StartsWith(basePath))
             {
-                if (basePath.EndsWith("\\"))
-                {
-                    return absolutePath.Remove(0, basePath.Length);
-                }
-                else
-                {
-                    return absolutePath.Remove(0, basePath.Length + 1);
-                }
+                return absolutePath.Remove(0, basePath.Length + (basePath.EndsWith("\\") ? 0 : 1));
             }
             else
             {
@@ -231,8 +217,8 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
 
         public string[] ListLocalFiles(string path, params string[] searchPatterns)
         {
-            List<string> result = new List<string>();
-            Queue<string> queue = new Queue<string>();
+            var result = new List<string>();
+            var queue = new Queue<string>();
             if (searchPatterns == null || searchPatterns.Length == 0)
             {
                 searchPatterns = new[] { "*.*" };
@@ -242,21 +228,37 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             while (queue.Count > 0)
             {
                 // Dequeue a folder to process.
-                string folder = queue.Dequeue();
+                var folder = queue.Dequeue();
                 // Enqueue subfolders.
-                foreach (string subfolder in Directory.GetDirectories(folder))
+                try
                 {
-                    queue.Enqueue(subfolder);
-                    result.Add(subfolder.Remove(0, path.Length + 1).Replace("/", "\\"));
+                    foreach (var subfolder in Directory.GetDirectories(folder))
+                    {
+                        queue.Enqueue(subfolder);
+                        result.Add(subfolder.Remove(0, path.Length + 1).Replace("/", "\\"));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Trace.WriteLine("Could not process subfolders of " + folder);
+                    Trace.WriteLine(e.Message);
                 }
                 // Add all image files to the index.
-                foreach (string search in searchPatterns)
+                foreach (var search in searchPatterns)
                 {
-                    foreach (string file in Directory.GetFiles(folder, search))
+                    try
                     {
-                        // Remove the base path.
-                        string truncFile = file.Remove(0, path.Length + 1).Replace("/", "\\");
-                        result.Add(truncFile);
+                        foreach (var file in Directory.GetFiles(folder, search))
+                        {
+                            // Remove the base path.
+                            var truncFile = GetRelativePath(file, path).Replace("/", "\\");
+                            result.Add(truncFile);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.WriteLine("Could not process files in " + folder);
+                        Trace.WriteLine(e.Message);
                     }
                 }
             }
@@ -265,18 +267,16 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
 
         public FileCommandResult MoveFile(string source, string target, bool overwrite)
         {
-            if (!FileExists(target) || overwrite)
+            if (FileExists(target) && !overwrite) return FileCommandResult.Success;
+            try
             {
-                try
-                {
-                    EnsureFolder(new FileInfo(target).DirectoryName);
-                    File.Move(source, target);
-                }
-                catch (Exception e)
-                {
-                    Errors.Add(e);
-                    return FileCommandResult.Failure;
-                }
+                EnsureFolder(new FileInfo(target).DirectoryName);
+                File.Move(source, target);
+            }
+            catch (Exception e)
+            {
+                Errors.Add(e);
+                return FileCommandResult.Failure;
             }
             return FileCommandResult.Success;
         }
@@ -295,7 +295,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             ulong total = 0;
             // Search for all files, not just matching ones.
             // If some other files get mixed in, it could overrun the reserve space.
-            foreach (string filename in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
+            foreach (var filename in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
             {
                 try
                 {

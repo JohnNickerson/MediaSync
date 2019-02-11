@@ -820,6 +820,12 @@ namespace AssimilationSoftware.MediaSync.Core
                 Thread.Sleep(1000);
             }
         }
+
+        public void Save()
+        {
+            // TODO: Save the profile data.
+            // Note: None is currently kept in memory. This might be part of why the program is so slow sometimes.
+        }
         #endregion
 
         #region Properties

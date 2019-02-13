@@ -12,7 +12,9 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         #endregion
 
         #region Constructors
-        public FileHeader(IFileHashProvider hasher = null)
+        public FileHeader() : this(null) { }
+
+        public FileHeader(IFileHashProvider hasher)
         {
             _hasher = hasher;
         }

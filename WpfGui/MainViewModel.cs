@@ -29,6 +29,8 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             {
                 ConfigExecute();
             }
+
+            ThisMachine = Settings.Default.ThisMachine;
             // Load the profiles for display.
             _api = new ViewModel(new XmlSyncSetMapper(Settings.Default.DataFile), ThisMachine, new SimpleFileManager(new Sha1Calculator()));
             Profiles = _api.Profiles;
@@ -40,7 +42,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         {
             // Run the profiles in another thread.
             var windowLogger = new WindowLogger(this);
-            Task.Run(() => _api.RunSync(false, windowLogger)).Start();
+            Task.Run(() => _api.RunSync(false, windowLogger));
         }
 
         public void CloseExecute()

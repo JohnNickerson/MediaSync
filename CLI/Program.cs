@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
+using System.IO;
 using AssimilationSoftware.MediaSync.CLI.Properties;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
@@ -18,14 +19,7 @@ namespace AssimilationSoftware.MediaSync.CLI
     {
         static void Main(string[] args)
         {
-            if (!Settings.Default.Configured && !args.Contains("init") && !args.Contains("help"))
-            {
-                Console.WriteLine("Please use the 'init' command to set up first.");
-                return;
-            }
-
-
-            string argverb = string.Empty;
+            var argverb = string.Empty;
             object argsubs = null;
             var options = new Options.Options();
             if (!CommandLine.Parser.Default.ParseArguments(args, options,
@@ -37,10 +31,29 @@ namespace AssimilationSoftware.MediaSync.CLI
             {
                 Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
             }
+            else if (argverb == "help")
+            {
+                Environment.Exit(CommandLine.Parser.DefaultExitCodeFail);
+            }
+            else if (argverb == "init")
+            {
+                var initOptions = (InitSubOptions) argsubs;
+                Settings.Default.MachineName = initOptions.MachineName;
+                Settings.Default.MetadataFolder = initOptions.MetadataFolder;
+                Settings.Default.Configured = true;
+
+                Settings.Default.Save();
+                return;
+            }
+            else if (!Settings.Default.Configured)
+            {
+                Console.WriteLine("Please use the 'init' command to set up first.");
+                return;
+            }
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
 
-            var mapper = new XmlSyncSetMapper("SyncData.xml");
+            var mapper = new XmlSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.xml"));
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
             vm.PropertyChanged += SyncServicePropertyChanged;
 
@@ -86,14 +99,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                     break;
                 case "list-machines":
                     new MachineListConsoleView(vm).Run();
-                    break;
-                case "init":
-                    var initOptions = (InitSubOptions)argsubs;
-                    Settings.Default.MachineName = initOptions.MachineName;
-                    Settings.Default.MetadataFolder = initOptions.MetadataFolder;
-                    Settings.Default.Configured = true;
-
-                    Settings.Default.Save();
                     break;
                 case "remove-machine":
                     #region Remove a machine from all profiles

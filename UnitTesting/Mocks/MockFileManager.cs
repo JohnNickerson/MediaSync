@@ -16,7 +16,7 @@ namespace UnitTesting.Mocks
             _fakeFiles = files != null ? files.ToList() : new List<FileHeader>();
         }
 
-        public int Count => throw new NotImplementedException();
+        public int Count => 0;
 
         public List<Exception> Errors => throw new NotImplementedException();
 

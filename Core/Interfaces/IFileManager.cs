@@ -68,10 +68,6 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Gets the number of file copies still pending.
-        /// </summary>
-        int Count { get; }
 
         List<Exception> Errors { get; }
         #endregion

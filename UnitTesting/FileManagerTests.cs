@@ -13,7 +13,7 @@ namespace UnitTesting
         [TestMethod]
         public void CopyFile()
         {
-            var fileManager = new QueuedDiskCopier(new MockHasher());
+            var fileManager = new SimpleFileManager(new MockHasher());
 
             // Arrange:
             // Ensure the source file exists first.
@@ -34,7 +34,7 @@ namespace UnitTesting
         [TestMethod]
         public void CreateIndex()
         {
-            var filemanager = new QueuedDiskCopier(new MockHasher());
+            var filemanager = new SimpleFileManager(new MockHasher());
 
             string folder = @"C:\temp";
             var index = filemanager.CreateIndex(folder, new[] { "*.txt" });
@@ -66,7 +66,7 @@ namespace UnitTesting
             };
 
             // Act
-            var match = new QueuedDiskCopier(new MockHasher()).FilesMatch(masterFile, indexFile);
+            var match = new SimpleFileManager(new MockHasher()).FilesMatch(masterFile, indexFile);
 
 
             // Assert

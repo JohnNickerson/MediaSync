@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using System.IO;
@@ -52,10 +51,10 @@ namespace AssimilationSoftware.MediaSync.CLI
             }
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
+            Trace.Listeners.Add(new ConsoleTraceListener());
 
             var mapper = new XmlSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.xml"));
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
-            vm.PropertyChanged += SyncServicePropertyChanged;
 
             switch (argverb)
             {
@@ -146,23 +145,6 @@ namespace AssimilationSoftware.MediaSync.CLI
             {
                 Console.Write(p.ContainsParticipant(Settings.Default.MachineName) ? "*\t" : "\t");
                 Console.WriteLine(p.Name);
-            }
-        }
-
-        /// <summary>
-        /// Responds to property change events.
-        /// </summary>
-        static void SyncServicePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            var s = (ViewModel)sender;
-            switch (e.PropertyName)
-            {
-                case "Log":
-                    Console.WriteLine(s.Log.Last());
-                    break;
-                case "StatusMessage":
-                    Console.WriteLine(s.StatusMessage);
-                    break;
             }
         }
     }

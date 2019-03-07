@@ -23,7 +23,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             return FileCommandResult.Success;
         }
 
-        int IFileManager.Count => 0;
+        public int Count => 0;
 
         string[] IFileManager.ListLocalFiles(string path, string[] searchPatterns)
         {

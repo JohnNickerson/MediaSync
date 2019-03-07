@@ -4,11 +4,11 @@ using AssimilationSoftware.MediaSync.Core.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -26,23 +26,9 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <param name="propertyname">The name of the changed property. Default: caller.</param>
         private void NotifyPropertyChanged([CallerMemberName] string propertyname = "")
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyname));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
         }
 
-        /// <summary>
-        /// Raises the PropertyChanged event for a list of properties.
-        /// </summary>
-        /// <param name="propertynames">The list of property names that have changed.</param>
-        private void NotifyPropertiesChanged(params string[] propertynames)
-        {
-            foreach (string prop in propertynames)
-            {
-                NotifyPropertyChanged(prop);
-            }
-        }
         #endregion
 
         #region Fields
@@ -55,7 +41,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private readonly ISyncSetMapper _indexer;
 
-        private List<string> _log;
         #endregion
 
         #region Constructors
@@ -84,7 +69,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
-                StatusMessage = "Profile name already exists: " + name;
+                Trace.WriteLine("Profile name already exists: " + name);
             }
         }
 
@@ -103,7 +88,7 @@ namespace AssimilationSoftware.MediaSync.Core
             var profile = GetProfile(profileName);
             if (profile == null)
             {
-                StatusMessage = String.Format("Profile does not exist: {0}", profileName);
+                Trace.WriteLine($"Profile does not exist: {profileName}");
             }
             else
             {
@@ -148,12 +133,6 @@ namespace AssimilationSoftware.MediaSync.Core
             LeaveProfile(profile, machine);
         }
 
-        public List<string> GetProfileNames()
-        {
-            var names = _indexer.ReadAll().Select(x => x.Name).Distinct();
-            return names.ToList();
-        }
-
         public List<SyncSet> Profiles => _indexer.ReadAll().ToList();
 
         public List<string> Machines
@@ -186,8 +165,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     logger.Line(1);
                     logger.Log(1, "Processing profile {0}", opts.Name);
 
-                    _log = new List<string>();
-                    //PropertyChanged += SyncServicePropertyChanged;
                     VerboseMode = logger.LogLevel >= 4;
                     try
                     {
@@ -286,7 +263,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     var path = fyle.RelativePath.ToLower();
                     if (!indexus.ContainsKey(path))
                     {
-                        indexus[path] = new ReplicaComparison { Path = path, Hash = fyle.ContentsHash, Count = 0 };
+                        indexus[path] = new ReplicaComparison { Hash = fyle.ContentsHash, Count = 0 };
                     }
                     indexus[path].AllSame = indexus[path].Hash == fyle.ContentsHash;
                     indexus[path].Count++;
@@ -558,7 +535,6 @@ namespace AssimilationSoftware.MediaSync.Core
                         PulledCount++;
                     }
                 }
-                WaitForCopies(); // Because if there are pending file moves, we could get a conflict overwrite here.
                 foreach (var d in copyToLocal.Where(i => i.IsFolder))
                 {
                     _fileManager.EnsureFolder(Path.Combine(localindex.LocalPath, d.RelativePath));
@@ -590,7 +566,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     PushedCount++;
                 }
                 #endregion
-                WaitForCopies();
                 logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
                 begin = DateTime.Now;
                 #region 3.2. Regenerate the local index.
@@ -628,7 +603,6 @@ namespace AssimilationSoftware.MediaSync.Core
                             indexus[path] = new ReplicaComparison
                             {
                                 Count = 0,
-                                Path = path,
                                 Hash = fyle.ContentsHash,
                                 AllSame = true,
                                 AllHashes = new List<string>()
@@ -766,7 +740,6 @@ namespace AssimilationSoftware.MediaSync.Core
                         logger.Log(0, "Error: Null file name scheduled for copying to shared storage.");
                     }
                 }
-                WaitForCopies();
                 #endregion
                 logger.Log(4, "\tOutbound actions: {0}", (DateTime.Now - begin).Verbalise());
             }
@@ -784,48 +757,6 @@ namespace AssimilationSoftware.MediaSync.Core
             //}
         }
 
-        /// <summary>
-        /// Compares indexes.
-        /// </summary>
-        public void ShowIndexComparison()
-        {
-            // QAD way: Preserve consumer/give flags, call Sync.
-            // TODO: Count files in full sync, only here, and only elsewhere.
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Spins until all async file copies are complete.
-        /// </summary>
-        private void WaitForCopies()
-        {
-            // Wait for file copies to finish.
-            int lastcount = 0;
-            DateTime startedWaiting = DateTime.Now;
-            var firstCount = _fileManager.Count;
-            while (_fileManager.Count > 0)
-            {
-                if (_fileManager.Count != lastcount)
-                {
-                    // Estimate time left via copies per second. Assumes even distribution of file sizes in queue.
-                    var secondswaiting = (DateTime.Now - startedWaiting).TotalSeconds;
-                    if (secondswaiting > 0)
-                    {
-                        var cps = (firstCount - _fileManager.Count) / secondswaiting;
-                        if (cps > 0)
-                        {
-                            var timeleft = new TimeSpan(0, 0, _fileManager.Count / (int)cps);
-                            StatusMessage = string.Format("\t\tWaiting on {0} {1}... (~{2} remaining)",
-                                _fileManager.Count, (_fileManager.Count == 1 ? "copy" : "copies"), timeleft);
-                        }
-                    }
-
-                    lastcount = _fileManager.Count;
-                }
-                Thread.Sleep(1000);
-            }
-        }
-
         public void Save()
         {
             // TODO: Save the profile data.
@@ -841,18 +772,6 @@ namespace AssimilationSoftware.MediaSync.Core
             set
             {
                 _machineId = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private string _statusMessage;
-        [Obsolete("Use IStatusLogger instead.")]
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set
-            {
-                _statusMessage = value;
                 NotifyPropertyChanged();
             }
         }
@@ -891,20 +810,9 @@ namespace AssimilationSoftware.MediaSync.Core
         }
         public List<Exception> Errors => _fileManager.Errors;
 
-        public List<string> Log
-        {
-            get => _log;
-            set
-            {
-                _log = value;
-                NotifyPropertiesChanged("Log");
-            }
-        }
-
         private class ReplicaComparison
         {
             internal bool AllSame;
-            internal string Path;
             internal string Hash;
             internal int Count;
             internal List<string> AllHashes;

@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using AssimilationSoftware.MediaSync.Core.Mappers;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
@@ -39,14 +40,15 @@ namespace AssimilationSoftware.MediaSync.Core
         /// </summary>
         private readonly IFileManager _fileManager;
 
-        private readonly ISyncSetMapper _indexer;
+        private readonly SyncSetRepository _repository;
 
         #endregion
 
         #region Constructors
         public ViewModel(ISyncSetMapper datacontext, string machineId, IFileManager filemanager)
         {
-            _indexer = datacontext;
+            _repository = new SyncSetRepository(datacontext);
+            _repository.FindAll();
             _machineId = machineId;
             _fileManager = filemanager;
         }
@@ -65,7 +67,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     Indexes = new List<FileIndex>(),
                     MasterIndex = new FileIndex { Files = new List<FileHeader>() }
                 };
-                _indexer.Update(profile);
+                _repository.Update(profile);
+                _repository.SaveChanges();
             }
             else
             {
@@ -75,12 +78,12 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private bool ProfileExists(string name)
         {
-            return _indexer.ReadAll().Any(x => x.Name.ToLower() == name.ToLower());
+            return _repository.Items.Any(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
         private SyncSet GetProfile(string name)
         {
-            return _indexer.ReadAll().FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
+            return _repository.Items.FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
         }
 
         public void JoinProfile(string profileName, string localpath, string sharedpath)
@@ -106,7 +109,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     LocalPath = localpath,
                     SharedPath = sharedpath
                 });
-                _indexer.Update(profile);
+                _repository.Update(profile);
             }
             else
             {
@@ -114,8 +117,9 @@ namespace AssimilationSoftware.MediaSync.Core
                 i.LocalPath = localpath;
                 i.SharedPath = sharedpath;
                 profile.UpdateIndex(i);
-                _indexer.Update(profile);
+                _repository.Update(profile);
             }
+            _repository.SaveChanges();
         }
 
         public void LeaveProfile(SyncSet profile, string machine)
@@ -123,7 +127,8 @@ namespace AssimilationSoftware.MediaSync.Core
             if (profile.ContainsParticipant(machine))
             {
                 profile.Indexes.RemoveAll(p => p.MachineName == machine);
-                _indexer.Update(profile);
+                _repository.Update(profile);
+                _repository.SaveChanges();
             }
         }
 
@@ -133,13 +138,13 @@ namespace AssimilationSoftware.MediaSync.Core
             LeaveProfile(profile, machine);
         }
 
-        public List<SyncSet> Profiles => _indexer.ReadAll().ToList();
+        public List<SyncSet> Profiles => _repository.Items.ToList();
 
         public List<string> Machines
         {
             get
             {
-                return _indexer.ReadAll().SelectMany(p => p.Indexes).Select(p => p.MachineName).Distinct().ToList();
+                return _repository.Items.SelectMany(p => p.Indexes).Select(p => p.MachineName).Distinct().ToList();
             }
         }
 
@@ -156,10 +161,8 @@ namespace AssimilationSoftware.MediaSync.Core
             PushedCount = 0;
             PulledCount = 0;
             PrunedCount = 0;
-            var profiles = _indexer.ReadAll();
-            for (int i = 0; i < profiles.Count; i++)
+            foreach (var opts in _repository.Items.ToList())
             {
-                SyncSet opts = profiles[i];
                 if (opts.ContainsParticipant(_machineId))
                 {
                     logger.Line(1);
@@ -169,8 +172,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     try
                     {
                         var begin = DateTime.Now;
-                        Sync(ref opts, logger, indexOnly, quickMode);
-                        profiles[i] = opts;
+                        var result = Sync(opts, logger, indexOnly, quickMode);
+                        _repository.Update(result);
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     catch (Exception e)
@@ -200,7 +203,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (!indexOnly)
             {
                 var begin = DateTime.Now;
-                _indexer.UpdateAll(profiles);
+                _repository.SaveChanges();
                 logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
             }
             logger.Line(1);
@@ -213,13 +216,14 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void RemoveProfile(string profileName)
         {
-            _indexer.UpdateAll(Profiles.Where(p => p.Name.ToLower() != profileName.ToLower()).ToList());
+            _repository.Delete(_repository.Find(profileName));
+            _repository.SaveChanges();
         }
 
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        public void Sync(ref SyncSet syncSet, IStatusLogger logger, bool preview = false, bool quickMode = false)
+        public SyncSet Sync(SyncSet syncSet, IStatusLogger logger, bool preview = false, bool quickMode = false)
         {
             // Check folders, just in case.
             var localindex = syncSet.GetIndex(MachineId) ?? new FileIndex();
@@ -231,12 +235,12 @@ namespace AssimilationSoftware.MediaSync.Core
             if (!_fileManager.DirectoryExists(sharedPath))
             {
                 logger.Log(0, "Shared storage not available ({0}). Aborting.", sharedPath);
-                return;
+                return syncSet;
             }
             if (!_fileManager.DirectoryExists(localindex.LocalPath))
             {
                 logger.Log(0, $"Local storage not available ({localindex.LocalPath}). Aborting.");
-                return;
+                return syncSet;
             }
 
             if (syncSet.MasterIndex == null)
@@ -755,6 +759,7 @@ namespace AssimilationSoftware.MediaSync.Core
             //    _indexer.Update(syncSet);
             //    logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
             //}
+            return syncSet;
         }
 
         public void Save()

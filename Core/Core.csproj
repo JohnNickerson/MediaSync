@@ -74,9 +74,11 @@
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="FileManagement\SimpleFileManager.cs" />
     <Compile Include="Interfaces\IFileHashProvider.cs" />
+    <Compile Include="Interfaces\IRepository.cs" />
     <Compile Include="Interfaces\IStatusLogger.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
     <Compile Include="Mappers\Binary\BinarySyncSetMapper.cs" />
+    <Compile Include="Mappers\SyncSetRepository.cs" />
     <Compile Include="Mappers\XML\XmlSyncSetMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
@@ -101,10 +103,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Mappers\Mock\" />
-    <Folder Include="Mappers\PlainText\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

@@ -61,6 +61,19 @@ namespace AssimilationSoftware.MediaSync.Core.Model
             Indexes.Remove(GetIndex(localIndex.MachineName));
             Indexes.Add(localIndex);
         }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as SyncSet;
+            if (other == null) return false;
+            return other.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase);
+        }
+
         #endregion
     }
 }

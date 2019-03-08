@@ -74,7 +74,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
 
         public void Update(SyncSet entity)
         {
-            _updated.RemoveAll(t => t.Name == entity.Name);
+            _updated.RemoveAll(t => string.Equals(t.Name, entity.Name, StringComparison.CurrentCultureIgnoreCase));
             _updated.Add(entity);
         }
     }

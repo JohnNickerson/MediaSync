@@ -358,6 +358,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(0, "Shared storage not available ({0}). Aborting.", sharedPath);
                 return;
             }
+            if (!_fileManager.DirectoryExists(localindex.LocalPath))
+            {
+                logger.Log(0, $"Local storage not available ({localindex.LocalPath}). Aborting.");
+                return;
+            }
 
             if (syncSet.MasterIndex == null)
             {
@@ -447,7 +452,7 @@ namespace AssimilationSoftware.MediaSync.Core
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
             {
                 // This action can fail if the file is in use.
-				// TODO: Windows Shadow Volume integration?
+                // TODO: Windows Shadow Volume integration?
                 try
                 {
                     var hed = _fileManager.CreateFileHeader(localindex.LocalPath, f);
@@ -633,7 +638,7 @@ namespace AssimilationSoftware.MediaSync.Core
             #endregion
 
             logger.Log(1, "");
-            logger.Log(1, "{0}{1} | Local   | Shared  |", syncSet.Name, new string(' ', Math.Max(0, 12-syncSet.Name.Length)));
+            logger.Log(1, "{0}{1} | Local   | Shared  |", syncSet.Name, new string(' ', Math.Max(0, 12 - syncSet.Name.Length)));
             logger.Log(1, "-------------+---------+---------+");
             logger.Log(1, "Copy To      | {0,7} | {1,7} |", CopyToLocal.Count, CopyToShared.Count);
             logger.Log(1, "Delete       | {0,7} | {1,7} |", DeleteLocal.Count, DeleteMaster.Count);
@@ -750,7 +755,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var mf in syncSet.MasterIndex.Files.ToArray())
                 {
                     var key = mf.RelativePath.ToLower();
-					var shrfilehed = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
+                    var shrfilehed = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
                     try
                     {
                         if (mf.IsDeleted)
@@ -762,7 +767,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 syncSet.MasterIndex.Remove(mf);
                             }
                         }
-						else if (shrfilehed != null && !syncSet.MasterIndex.MatchesFile(shrfilehed))
+                        else if (shrfilehed != null && !syncSet.MasterIndex.MatchesFile(shrfilehed))
                         // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                         {
                             // The shared file does not match the master index. It should be removed.
@@ -841,7 +846,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             logger.Log(4, "Copying {0} to {1}", s.RelativePath, sharedPath);
                             if (s.IsFolder)
                             {
-								s.IsDeleted = false; // To un-delete folders that were being removed, but have been re-created.
+                                s.IsDeleted = false; // To un-delete folders that were being removed, but have been re-created.
                                 syncSet.MasterIndex.UpdateFile(s);
                                 PushedCount++;
                             }

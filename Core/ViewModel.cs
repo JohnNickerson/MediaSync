@@ -35,9 +35,6 @@ namespace AssimilationSoftware.MediaSync.Core
         #region Fields
         public bool VerboseMode;
 
-        /// <summary>
-        /// An asynchronous file copier.
-        /// </summary>
         private readonly IFileManager _fileManager;
 
         private readonly SyncSetRepository _repository;
@@ -63,7 +60,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     Name = name,
                     ReserveSpace = reserve,
-                    IgnorePatterns = ignore.ToList(),
                     Indexes = new List<FileIndex>(),
                     MasterIndex = new FileIndex { Files = new List<FileHeader>() }
                 };
@@ -83,7 +79,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private SyncSet GetProfile(string name)
         {
-            return _repository.Items.FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
+            return _repository.Items.FirstOrDefault(x => String.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public void JoinProfile(string profileName, string localpath, string sharedpath)
@@ -126,7 +122,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (profile.ContainsParticipant(machine))
             {
-                profile.Indexes.RemoveAll(p => p.MachineName == machine);
+                profile.Indexes.RemoveAll(p => string.Equals(p.MachineName, machine, StringComparison.CurrentCultureIgnoreCase));
                 _repository.Update(profile);
                 _repository.SaveChanges();
             }
@@ -764,8 +760,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void Save()
         {
-            // TODO: Save the profile data.
-            // Note: None is currently kept in memory. This might be part of why the program is so slow sometimes.
+            _repository.SaveChanges();
         }
         #endregion
 

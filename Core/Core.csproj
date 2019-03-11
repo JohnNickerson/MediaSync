@@ -92,7 +92,7 @@
     </Compile>
     <Compile Include="Interfaces\IFileManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Model\SyncProfile.cs" />
+    <Compile Include="Model\SyncSet.cs" />
     <Compile Include="ViewModel.cs" />
   </ItemGroup>
   <ItemGroup>

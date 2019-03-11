@@ -27,10 +27,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// </summary>
         public FileIndex MasterIndex { get; set; }
 
-        /// <summary>
-        /// File name patterns to exclude from the profile.
-        /// </summary>
-        public List<string> IgnorePatterns { get; set; }
         #endregion
 
 		#region Constructors
@@ -40,20 +36,13 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         #region Methods
         public FileIndex GetIndex(string machine)
         {
-            var localsettings = Indexes.Where(p => p.MachineName.ToLower() == machine.ToLower());
-            if (localsettings.Any())
-            {
-                return localsettings.First();
-            }
-            else
-            {
-                throw new Exception(string.Format("Participant not found: {0}", machine));
-            }
+            var result = Indexes.FirstOrDefault(p => string.Equals(p.MachineName, machine, StringComparison.CurrentCultureIgnoreCase));
+            return result;
         }
 
         public bool ContainsParticipant(string machine)
         {
-            return Indexes.Any(p => p.MachineName.ToLower() == machine.ToLower());
+            return Indexes.Any(p => String.Equals(p.MachineName, machine, StringComparison.CurrentCultureIgnoreCase));
         }
 
         internal void UpdateIndex(FileIndex localIndex)
@@ -69,9 +58,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public override bool Equals(object obj)
         {
-            var other = obj as SyncSet;
-            if (other == null) return false;
-            return other.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase);
+            return obj is SyncSet other && other.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase);
         }
 
         #endregion

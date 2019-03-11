@@ -17,14 +17,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             Errors = new List<Exception>();
         }
 
-        public int Count => 0;
-
         public List<Exception> Errors { get; }
-
-        public string ComputeHash(string localFile)
-        {
-            return _fileHasher.ComputeHash(localFile);
-        }
 
         public FileCommandResult CopyFile(string source, string target)
         {
@@ -170,19 +163,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 || masterfile.ContentsHash == localIndexFile.ContentsHash);
         }
 
-        public bool FilesMatch(string literalFilePath, FileHeader indexFile)
-        {
-            if (FileExists(literalFilePath))
-            {
-                var finfo = new FileInfo(literalFilePath);
-                return indexFile != null && indexFile.Size == finfo.Length && (indexFile.ContentsHash == null || indexFile.ContentsHash == ComputeHash(literalFilePath));
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         public string GetConflictFileName(string localFile, string machineId, DateTime now)
         {
             var fileInfo = new FileInfo(localFile);
@@ -196,11 +176,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 newname = Path.Combine(fileInfo.DirectoryName, string.Format("{0} ({1}-s conflicted copy {2:yyyy-MM-dd}) ({3}){4}", justname, machineId, now, ver, fileInfo.Extension));
             }
             return newname;
-        }
-
-        public string[] GetDirectories(string parentFolder)
-        {
-            return Directory.GetDirectories(parentFolder, "*", SearchOption.AllDirectories);
         }
 
         public string GetRelativePath(string absolutePath, string basePath)
@@ -281,14 +256,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             return FileCommandResult.Success;
         }
 
-        public void SetNormalAttributes(string path)
-        {
-            foreach (string file in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
-            {
-                File.SetAttributes(file, FileAttributes.Normal);
-            }
-        }
-
         public ulong SharedPathSize(string path)
         {
             // Calculate the actual size of the shared path.
@@ -304,11 +271,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 catch (FileNotFoundException) { }
             }
             return total;
-        }
-
-        public bool ShouldCopy(string filename)
-        {
-            return true;
         }
     }
 }

@@ -167,6 +167,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     VerboseMode = logger.LogLevel >= 4;
                     try
                     {
+                        // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
                         var begin = DateTime.Now;
                         var result = Sync(opts, logger, indexOnly, quickMode);
                         _repository.Update(result);
@@ -174,8 +175,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     catch (Exception e)
                     {
-                        // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
-                        // TODO: Change to status message property setting.
                         logger.Log(0, "Could not sync.");
                         logger.Log(0, e.Message);
                         var x = e;
@@ -320,7 +319,6 @@ namespace AssimilationSoftware.MediaSync.Core
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
             {
                 // This action can fail if the file is in use.
-                // TODO: Windows Shadow Volume integration?
                 var hed = _fileManager.TryCreateFileHeader(localindex.LocalPath, f);
                 if (hed == null)
                 {
@@ -749,12 +747,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(0, e);
             }
 
-            //if (!preview)
-            //{
-            //    begin = DateTime.Now;
-            //    _indexer.Update(syncSet);
-            //    logger.Log(4, "\tSave data: {0}", (DateTime.Now - begin).Verbalise());
-            //}
             return syncSet;
         }
 
@@ -808,7 +800,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 NotifyPropertyChanged();
             }
         }
-        public List<Exception> Errors => _fileManager.Errors;
 
         private class ReplicaComparison
         {

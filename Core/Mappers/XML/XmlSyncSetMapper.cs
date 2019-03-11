@@ -18,17 +18,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             _filename = filename;
         }
 
-        public void Delete(string name)
-        {
-            var allsyncsets = ReadAll();
-            UpdateAll(allsyncsets.Where(ss => ss.Name != name).ToList());
-        }
-
-        public void Delete(SyncSet syncSet)
-        {
-            Delete(syncSet.Name);
-        }
-
         public SyncSet Read(string name)
         {
             var allsyncsets = ReadAll();

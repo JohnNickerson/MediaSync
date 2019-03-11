@@ -9,12 +9,6 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 	public interface IFileManager
 	{
         #region Methods
-        /// <summary>
-        /// Requests a file copy.
-        /// </summary>
-        /// <param name="source">The file to copy.</param>
-        /// <param name="target">The new location to copy to.</param>
-        FileCommandResult CopyFile(string source, string target);
 
         /// <summary>
         /// Copies a file from one location to another.
@@ -35,23 +29,15 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         ulong SharedPathSize(string path);
 
-        bool ShouldCopy(string filename);
-
         FileCommandResult Delete(string file);
 
         void EnsureFolder(string targetdir);
-
-        void SetNormalAttributes(string path);
 
         string[] ListLocalFiles(string path, params string[] searchPatterns);
 
         FileIndex CreateIndex(string path, params string[] searchpatterns);
 
-        bool FilesMatch(string literalFilePath, FileHeader indexFile);
-        bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile);
-        string ComputeHash(string localFile);
-        
-		FileHeader CreateFileHeader(string localPath, string relativePath);
+        FileHeader CreateFileHeader(string localPath, string relativePath);
 		
 		/// <summary>
 		/// Attempts to create a file header record for a given local file, if present.
@@ -61,8 +47,6 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 		
         string GetRelativePath(string fullPath, string basePath);
         bool DirectoryExists(string sharedPath);
-        string[] GetDirectories(string parentFolder);
-        bool FileExists(string file);
         bool FileExists(string localPath, string relativePath);
         string GetConflictFileName(string localFile, string machineId, DateTime now);
         #endregion

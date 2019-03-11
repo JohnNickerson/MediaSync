@@ -77,14 +77,10 @@
     <Compile Include="Interfaces\IRepository.cs" />
     <Compile Include="Interfaces\IStatusLogger.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
-    <Compile Include="Mappers\Binary\BinarySyncSetMapper.cs" />
     <Compile Include="Mappers\SyncSetRepository.cs" />
     <Compile Include="Mappers\XML\XmlSyncSetMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />
     <Compile Include="Model\FileIndex.cs" />
-    <Compile Include="FileManagement\MockFileManager.cs" />
-    <Compile Include="Model\ParticipantMode.cs" />
-    <Compile Include="Model\SplitPath.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

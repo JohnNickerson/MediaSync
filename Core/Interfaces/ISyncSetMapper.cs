@@ -7,12 +7,6 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
     {
         SyncSet Read(string name);
 
-        void Update(SyncSet syncSet);
-
-        void Delete(SyncSet syncSet);
-
-        void Delete(string name);
-
         List<SyncSet> ReadAll();
 
         void UpdateAll(List<SyncSet> syncSets);

@@ -256,6 +256,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(0, "Shared storage not available ({0}). Aborting.", sharedPath);
                 return;
             }
+            if (!_fileManager.DirectoryExists(localindex.LocalPath))
+            {
+                logger.Log(0, $"Local storage not available ({localindex.LocalPath}). Aborting.");
+                return;
+            }
 
             if (syncSet.MasterIndex == null)
             {

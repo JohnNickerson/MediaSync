@@ -10,6 +10,10 @@ MediaSync is a multi-master sync program designed to work from a flash drive. Us
 - Sync empty folders in addition to files.
 
 # Releases
+* 2019-03-14: v2.1.0.1
+  - Basic GUI (very much a work in progress)
+  - Better error trapping
+  - Check for local folder existence to prevent exception
 * 2018-10-04: v2.0.11
   - Shared folder cleanup now removes unindexed files.
 * 2018-09-13: v2.0.10

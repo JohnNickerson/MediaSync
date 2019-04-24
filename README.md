@@ -1,5 +1,5 @@
 # MediaSync
-MediaSync is a multi-master sync program designed to work from a flash drive. Using a virtual master file index, it determines the current state of the files on a machine and copies necessary changes to and from a space-limited shared folder. In this way, it is able, for instance, to (gradually) synchronise 100GB of files using an 8GB flash drive.
+MediaSync is a portable, multi-master, sync program designed to work from a flash drive. Using a virtual master file index, it determines the current state of the files on a machine and copies necessary changes to and from a space-limited shared folder. In this way, it is able, for instance, to (gradually) synchronise 100GB of files using an 8GB flash drive.
 
 # Features
 - No master copy: changes can be made on any copy of any file. All changes will be replicated everywhere.
@@ -10,6 +10,10 @@ MediaSync is a multi-master sync program designed to work from a flash drive. Us
 - Sync empty folders in addition to files.
 
 # Releases
+* 2019-03-28: v2.2.0
+  - Repository data storage.
+  - Fix for CLI ignoring data path setting.
+  - Scrolling for GUI output window.
 * 2019-03-14: v2.1.0.1
   - Basic GUI (very much a work in progress)
   - Better error trapping

@@ -127,7 +127,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var runOptions = (RunSubOptions)argsubs;
                         var logger = new ConsoleLogger(runOptions.LogLevel);
                         var begin = DateTime.Now;
-                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode);
+                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode, runOptions.Profile);
                         logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     #endregion

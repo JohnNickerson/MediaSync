@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Runtime.Remoting.Channels;
+using CommandLine;
 
 namespace AssimilationSoftware.MediaSync.CLI.Options
 {
@@ -12,5 +13,8 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 
         [Option('q', "quick", HelpText = "Quick mode. Skips calculating hashes where possible.")]
         public bool QuickMode { get; set; }
+
+        [Option("profile", HelpText = "The name of the profile to run (omit to run all).")]
+        public string Profile { get; set; }
     }
 }

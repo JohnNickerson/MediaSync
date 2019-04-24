@@ -152,13 +152,16 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void RunSync(bool indexOnly, IStatusLogger logger, bool quickMode = false)
+        public void RunSync(bool indexOnly, IStatusLogger logger, bool quickMode = false, string profile = null)
         {
             PushedCount = 0;
             PulledCount = 0;
             PrunedCount = 0;
             foreach (var opts in _repository.Items.ToList())
             {
+                // If we're looking for a specific profile and this one isn't it, skip it.
+                if (!string.IsNullOrEmpty(profile) && !string.Equals(opts.Name, profile, StringComparison.CurrentCultureIgnoreCase)) continue;
+
                 if (opts.ContainsParticipant(_machineId))
                 {
                     logger.Line(1);

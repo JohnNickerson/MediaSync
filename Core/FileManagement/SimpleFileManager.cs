@@ -26,6 +26,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 // ensure the target folder exists.
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
+                Trace.Write($"Copied  {source}  to  {target}");
                 return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
             }
             catch (Exception e)
@@ -117,12 +118,14 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 if (DirectoryExists(dir))
                 {
                     Directory.Delete(dir);
+                    Trace.WriteLine($"Deleted directory  {dir}");
                 }
                 else
                 {
                     // Make sure no file attributes stand in our way.
                     File.SetAttributes(dir, FileAttributes.Normal);
                     File.Delete(dir);
+                    Trace.WriteLine($"Deleted file  {dir}");
                 }
                 return FileCommandResult.Success;
             }
@@ -142,6 +145,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             if (!DirectoryExists(targetdir))
             {
                 Directory.CreateDirectory(targetdir);
+                Trace.WriteLine($"Created directory  {targetdir}");
             }
         }
 
@@ -247,6 +251,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             {
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Move(source, target);
+                Trace.WriteLine($"Moved file  {source}  to  {target}");
             }
             catch (Exception e)
             {

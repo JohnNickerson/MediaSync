@@ -515,6 +515,7 @@ namespace AssimilationSoftware.MediaSync.Core
             logger.Log(4, "\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
 
             // 3. Process the action queue according to the mode and limitations in place.
+            Trace.WriteLine($"Processing file actions for '{syncSet.Name} on {MachineId}:");
             var errorList = new List<string>();
             if (!preview)
             {
@@ -700,11 +701,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 begin = DateTime.Now;
                 #region 3.4. Copy to shared
                 var sharedsize = _fileManager.SharedPathSize(sharedPath);
+                // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
+                var flashDrive = new DriveInfo(Path.GetPathRoot(sharedPath));
+                var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, syncSet.ReserveSpace);
                 foreach (var s in copyToShared)
                 {
                     if (s != null)
                     {
-                        if (sharedsize + (ulong)s.Size < syncSet.ReserveSpace)
+                        if (sharedsize + (ulong)s.Size < carefulSpace)
                         {
                             logger.Log(4, "Copying {0} to {1}", s.RelativePath, sharedPath);
                             if (s.IsFolder)
@@ -743,6 +747,9 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 #endregion
                 logger.Log(4, "\tOutbound actions: {0}", (DateTime.Now - begin).Verbalise());
+
+                Trace.WriteLine(string.Empty);
+                Trace.WriteLine(string.Empty);
             }
 
             foreach (var e in errorList)

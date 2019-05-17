@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.572
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{CE8A4FEC-234C-4B03-A6A5-2EB1B0AEE406}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI", "CLI\CLI.csproj", "{6AFBDDB7-412A-48CE-9AF5-EBC71F2C0B27}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTesting", "UnitTesting\UnitTesting.csproj", "{40558EC7-DA58-4A3F-806E-B14EC10744D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Desktop", "Desktop\Desktop.csproj", "{05168EA4-21E9-4DA1-A960-280998F1AC39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,9 +65,24 @@ Global
 		{40558EC7-DA58-4A3F-806E-B14EC10744D7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{40558EC7-DA58-4A3F-806E-B14EC10744D7}.Release|x86.ActiveCfg = Release|Any CPU
 		{40558EC7-DA58-4A3F-806E-B14EC10744D7}.Release|x86.Build.0 = Release|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Debug|x86.Build.0 = Debug|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Release|x86.ActiveCfg = Release|Any CPU
+		{05168EA4-21E9-4DA1-A960-280998F1AC39}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B4B9D8AA-E3F0-44F6-BC58-E400CB64148E}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = MediaSync.vsmdi

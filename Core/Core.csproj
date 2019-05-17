@@ -44,14 +44,10 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ninject">
-      <HintPath>..\Library\Ninject.dll</HintPath>
-    </Reference>
     <Reference Include="Polenter.SharpSerializer">
       <HintPath>..\Library\Polenter.SharpSerializer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -64,9 +60,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UniversalSerializer3">
-      <HintPath>..\Library\UniversalSerializer3.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\TimeSpanExtensions.cs" />

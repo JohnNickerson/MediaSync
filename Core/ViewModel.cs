@@ -500,7 +500,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (syncSet.Indexes.Count == 1 || (indexus.ContainsKey(dex) && indexus[dex].AllSame))
                     {
                         // Side-channel or initial create. Just write the master index.
-                        logger.Log(3, $"SYNCED: {dex}");
+                        logger.Log(4, $"INITIAL CREATE: {dex}");
                         noAction.Add(f.LocalFileHeader);
                         syncSet.MasterIndex.UpdateFile(f.LocalFileHeader);
                     }

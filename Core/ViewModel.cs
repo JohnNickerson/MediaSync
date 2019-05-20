@@ -496,9 +496,20 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 else if (f.LocalFileHeader != null)
                 {
-                    // Local create. Copy to shared. Add to indexes.
-                    logger.Log(3, "NEW [-> SHARE]: {0}", dex);
-                    copyToShared.Add(f.LocalFileHeader);
+                    // Does every other remote index have the same version of the file?
+                    if (syncSet.Indexes.Count == 1 || (indexus.ContainsKey(dex) && indexus[dex].AllSame))
+                    {
+                        // Side-channel or initial create. Just write the master index.
+                        logger.Log(3, $"SYNCED: {dex}");
+                        noAction.Add(f.LocalFileHeader);
+                        syncSet.MasterIndex.UpdateFile(f.LocalFileHeader);
+                    }
+                    else
+                    {
+                        // Local create. Copy to shared. Add to indexes.
+                        logger.Log(3, "NEW [-> SHARE]: {0}", dex);
+                        copyToShared.Add(f.LocalFileHeader);
+                    }
                 }
             }
             #endregion

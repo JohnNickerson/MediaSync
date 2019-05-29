@@ -36,7 +36,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             }
             else if (argverb == "init")
             {
-                var initOptions = (InitSubOptions) argsubs;
+                var initOptions = (InitSubOptions)argsubs;
                 Settings.Default.MachineName = initOptions.MachineName;
                 Settings.Default.MetadataFolder = initOptions.MetadataFolder;
                 Settings.Default.Configured = true;
@@ -118,7 +118,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         new ProfileListConsoleView(vm).Run(false);
                     }
                     break;
-                    #endregion
+                #endregion
                 case "run":
                     #region Run profiles
                     {
@@ -131,6 +131,14 @@ namespace AssimilationSoftware.MediaSync.CLI
                         vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode, runOptions.Profile);
                         logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                         Trace.Flush();
+                    }
+                    #endregion
+                    break;
+                case "update-profile":
+                    #region Update a profile
+                    {
+                        var updateOptions = (UpdateProfileSubOptions)argsubs;
+                        vm.ResizeProfile(updateOptions.ProfileName, updateOptions.ReserveSpaceMb * 1000000);
                     }
                     #endregion
                     break;

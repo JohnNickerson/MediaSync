@@ -62,6 +62,7 @@
     <Compile Include="Options\RemoveMachineSubOptions.cs" />
     <Compile Include="Options\RemoveProfileOptions.cs" />
     <Compile Include="Options\RunSubOptions.cs" />
+    <Compile Include="Options\UpdateProfileSubOptions.cs" />
     <Compile Include="Options\VersionSubOptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

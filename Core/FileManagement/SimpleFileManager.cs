@@ -26,7 +26,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 // ensure the target folder exists.
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
-                Trace.Write($"Copied  {source}  to  {target}");
+                Trace.WriteLine($"Copied  {source}  to  {target}");
                 return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
             }
             catch (Exception e)

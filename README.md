@@ -10,6 +10,10 @@ MediaSync is a portable, multi-master, sync program designed to work from a flas
 - Sync empty folders in addition to files.
 
 # Releases
+* 2019-05-21: v2.2.1
+  - Better initial master index building.
+  - Limit overall flash drive space usage to 90%, regardless of other limits.
+  - Added logging.
 * 2019-05-10: v2.2.0.1
   - Patched to fix file access error in hash calculation.
 * 2019-03-28: v2.2.0
@@ -25,5 +29,3 @@ MediaSync is a portable, multi-master, sync program designed to work from a flas
 * 2018-09-13: v2.0.10
   - Added profile name displays to table output.
   - Bug and stability fixes.
-* 2018-06-08: v2.0.9
-  - Use the "join-profile" command to update folder locations for an existing profile.

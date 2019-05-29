@@ -24,6 +24,9 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         [VerbOption("leave-profile", HelpText = "Leave a sync profile")]
         public LeaveProfileSubOptions LeaveVerb { get; set; }
 
+        [VerbOption("update-profile", HelpText = "Modify the size reserved for a profile")]
+        public UpdateProfileSubOptions UpdateVerb { get; set; }
+
         [VerbOption("list", HelpText = "List all profiles")]
         public ListProfilesSubOptions ListProfilesVerb { get; set; }
 

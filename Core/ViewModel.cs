@@ -72,6 +72,17 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
+        public void ResizeProfile(string name, ulong reserve)
+        {
+            if (ProfileExists(name))
+            {
+                var profile = GetProfile(name);
+                profile.ReserveSpace = reserve;
+                _repository.Update(profile);
+                _repository.SaveChanges();
+            }
+        }
+
         private bool ProfileExists(string name)
         {
             return _repository.Items.Any(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
@@ -526,7 +537,7 @@ namespace AssimilationSoftware.MediaSync.Core
             logger.Log(4, "\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
 
             // 3. Process the action queue according to the mode and limitations in place.
-            Trace.WriteLine($"Processing file actions for '{syncSet.Name} on {MachineId}:");
+            Trace.WriteLine($"Processing file actions for '{syncSet.Name}' on {MachineId}:");
             var errorList = new List<string>();
             if (!preview)
             {

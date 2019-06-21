@@ -10,6 +10,9 @@ MediaSync is a portable, multi-master, sync program designed to work from a flas
 - Sync empty folders in addition to files.
 
 # Releases
+* 2019-06-13: v2.2.2
+  - Adjust reserve space.
+  - Tracing fixes.
 * 2019-05-21: v2.2.1
   - Better initial master index building.
   - Limit overall flash drive space usage to 90%, regardless of other limits.

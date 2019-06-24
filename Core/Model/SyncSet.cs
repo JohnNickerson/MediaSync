@@ -7,6 +7,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
     public class SyncSet
     {
         #region Properties
+        public int Id { get; set; }
+
         /// <summary>
         /// Bytes reserved for this profile on shared storage.
         /// </summary>

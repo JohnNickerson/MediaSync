@@ -18,7 +18,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.LiteDb
         {
             _database = new LiteDatabase(filename);
             _syncSets = _database.GetCollection<SyncSet>("syncSets");
-            _syncSets.EnsureIndex(s => s.Name);
+            _syncSets.EnsureIndex(s => s.Id);
         }
 
         public SyncSet Read(string name)

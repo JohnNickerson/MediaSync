@@ -11,6 +11,7 @@ using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
 using AssimilationSoftware.MediaSync.Core.Extensions;
+using AssimilationSoftware.MediaSync.Core.Mappers.LiteDb;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -53,7 +54,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
             Trace.Listeners.Add(new ConsoleTraceListener());
 
-            var mapper = new XmlSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.xml"));
+            var mapper = new LiteDbSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.db"));
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
 
             switch (argverb)

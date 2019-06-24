@@ -724,7 +724,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 #region 3.4. Copy to shared
                 var sharedsize = _fileManager.SharedPathSize(sharedPath);
                 // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
-                var flashDrive = new DriveInfo(Path.GetPathRoot(sharedPath));
+                var flashDrive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(sharedPath)));
                 var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, syncSet.ReserveSpace);
                 foreach (var s in copyToShared)
                 {

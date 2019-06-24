@@ -44,6 +44,9 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LiteDB, Version=4.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27, processorArchitecture=MSIL">
+      <HintPath>..\packages\LiteDB.4.1.4\lib\net40\LiteDB.dll</HintPath>
+    </Reference>
     <Reference Include="Polenter.SharpSerializer">
       <HintPath>..\Library\Polenter.SharpSerializer.dll</HintPath>
     </Reference>
@@ -70,6 +73,7 @@
     <Compile Include="Interfaces\IRepository.cs" />
     <Compile Include="Interfaces\IStatusLogger.cs" />
     <Compile Include="Interfaces\ISyncSetMapper.cs" />
+    <Compile Include="Mappers\LiteDb\LiteDbSyncSetMapper.cs" />
     <Compile Include="Mappers\SyncSetRepository.cs" />
     <Compile Include="Mappers\XML\XmlSyncSetMapper.cs" />
     <Compile Include="Model\FileHeader.cs" />

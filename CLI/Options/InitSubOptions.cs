@@ -9,5 +9,8 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 
         [Option('m', "machine", HelpText = "The name of the current machine.", Required = true)]
         public string MachineName { get; set; }
+
+        [Option("format", HelpText = "Specify the data file format: 'litedb' or 'xml'", DefaultValue = "xml")]
+        public string DataFileFormat { get; set; }
     }
 }

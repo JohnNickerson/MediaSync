@@ -11,6 +11,8 @@ using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
 using AssimilationSoftware.MediaSync.Core.Extensions;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.LiteDb;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
@@ -39,6 +41,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                 var initOptions = (InitSubOptions)argsubs;
                 Settings.Default.MachineName = initOptions.MachineName;
                 Settings.Default.MetadataFolder = initOptions.MetadataFolder;
+                Settings.Default.DataFileFormat = initOptions.DataFileFormat;
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();
@@ -53,7 +56,15 @@ namespace AssimilationSoftware.MediaSync.CLI
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
             Trace.Listeners.Add(new ConsoleTraceListener());
 
-            var mapper = new XmlSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.xml"));
+            ISyncSetMapper mapper;
+            if (string.Equals(Settings.Default.DataFileFormat, "litedb", StringComparison.CurrentCultureIgnoreCase))
+            {
+                mapper = new LiteDbSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.db"));
+            }
+            else
+            {
+                mapper = new XmlSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.xml"));
+            }
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
 
             switch (argverb)
@@ -127,7 +138,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var runOptions = (RunSubOptions)argsubs;
                         var logger = new ConsoleLogger(runOptions.LogLevel);
                         var begin = DateTime.Now;
-                        Trace.Listeners.Add(new System.Diagnostics.TextWriterTraceListener(Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log")));
+                        Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log")));
                         vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode, runOptions.Profile);
                         logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                         Trace.Flush();

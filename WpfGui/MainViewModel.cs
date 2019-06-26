@@ -7,6 +7,7 @@ using AssimilationSoftware.MediaSync.Core;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.MediaSync.Core.Mappers.LiteDb;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.WpfGui.Properties;
@@ -32,7 +33,8 @@ namespace AssimilationSoftware.MediaSync.WpfGui
 
             ThisMachine = Settings.Default.ThisMachine;
             // Load the profiles for display.
-            _api = new ViewModel(new XmlSyncSetMapper(Settings.Default.DataFile), ThisMachine, new SimpleFileManager(new Sha1Calculator()));
+            var mapper = new LiteDbSyncSetMapper(Settings.Default.DataFile);
+            _api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
             Profiles = _api.Profiles;
         }
 
@@ -55,6 +57,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         {
             // Open the configuration window.
             var configView = new ConfigWindow();
+            Settings.Default.ThisMachine = Settings.Default.ThisMachine.Replace("{System.Environment.MachineName}", Environment.MachineName);
             configView.DataContext = Settings.Default;
             //TODO: configView.Owner = this.Window;
             var result = configView.ShowDialog();

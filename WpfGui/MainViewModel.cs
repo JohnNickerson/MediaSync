@@ -45,6 +45,10 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             // Run the profiles in another thread.
             var windowLogger = new WindowLogger(this);
             Task.Run(() => _api.RunSync(false, windowLogger));
+            {
+                var flasher = new FlashWindowHelper(Application.Current);
+                flasher.FlashApplicationWindow();
+            }
         }
 
         public void CloseExecute()

@@ -525,15 +525,21 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             #endregion
 
-            logger.Log(1, "");
-            logger.Log(1, "{0}{1} | Local   | Shared  |", syncSet.Name, new string(' ', Math.Max(0, 12 - syncSet.Name.Length)));
-            logger.Log(1, "-------------+---------+---------+");
-            logger.Log(1, "Copy To      | {0,7} | {1,7} |", copyToLocal.Count, copyToShared.Count);
-            logger.Log(1, "Delete       | {0,7} | {1,7} |", deleteLocal.Count, deleteMaster.Count);
-            logger.Log(1, "Conflicted   | {0,7} |         |", renameLocal.Count);
-            logger.Log(1, "No Change    | {0,7} |         |", noAction.Count);
-            logger.Log(1, "");
-
+            if (copyToLocal.Count + copyToShared.Count + deleteLocal.Count + deleteMaster.Count + renameLocal.Count > 0)
+            {
+                logger.Log(1, "");
+                logger.Log(1, "{0}{1} | Local   | Shared  |", syncSet.Name, new string(' ', Math.Max(0, 12 - syncSet.Name.Length)));
+                logger.Log(1, "-------------+---------+---------+");
+                logger.Log(1, "Copy To      | {0,7} | {1,7} |", copyToLocal.Count, copyToShared.Count);
+                logger.Log(1, "Delete       | {0,7} | {1,7} |", deleteLocal.Count, deleteMaster.Count);
+                logger.Log(1, "Conflicted   | {0,7} |         |", renameLocal.Count);
+                logger.Log(1, "No Change    | {0,7} |         |", noAction.Count);
+                logger.Log(1, "");
+            }
+            else
+            {
+                logger.Log(1, $"{noAction.Count} files, no changes.");
+            }
             logger.Log(4, "\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
 
             // 3. Process the action queue according to the mode and limitations in place.

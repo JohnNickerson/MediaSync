@@ -54,7 +54,9 @@ namespace AssimilationSoftware.MediaSync.CLI
             }
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
+#if DEBUG
             Trace.Listeners.Add(new ConsoleTraceListener());
+#endif
 
             ISyncSetMapper mapper;
             if (string.Equals(Settings.Default.DataFileFormat, "litedb", StringComparison.CurrentCultureIgnoreCase))

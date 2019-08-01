@@ -61,16 +61,21 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         {
             // Open the configuration window.
             var configView = new ConfigWindow();
-            Settings.Default.ThisMachine = Settings.Default.ThisMachine.Replace("{System.Environment.MachineName}", Environment.MachineName);
-            configView.DataContext = Settings.Default;
+            var configVm = new ConfigViewModel();
+            configVm.ThisMachine = Settings.Default.ThisMachine.Replace("{System.Environment.MachineName}", Environment.MachineName);
+            configVm.DataFile = Settings.Default.DataFile;
+            configView.DataContext = configVm;
             //TODO: configView.Owner = this.Window;
             var result = configView.ShowDialog();
             if (result.HasValue && result.Value)
             {
+                Settings.Default.ThisMachine = configVm.ThisMachine;
+                Settings.Default.DataFile = configVm.DataFile;
                 Settings.Default.Save();
             }
             else
             {
+                // Just to be safe.
                 Settings.Default.Reload();
             }
         }

@@ -27,6 +27,9 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 };
                 table.Columns.Add(col);
             }
+
+            var reserveRow = new Row();
+            reserveRow.Data.Add("Reserve Space (MB)");
             foreach (var m in vm.Machines)
             {
                 var row = new Row();
@@ -53,12 +56,19 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                         row.Data.Add(null);
                         sharow.Data.Add(null);
                     }
+                    reserveRow.Data.Add(p.ReserveSpace/1000000);
                 }
                 table.Rows.Add(row);
                 if (showPaths)
                 {
                     table.Rows.Add(sharow);
                 }
+            }
+
+            if (showPaths)
+            {
+                table.Rows.Add(new Row());
+                table.Rows.Add(reserveRow);
             }
             Console.WriteLine(table.ToDisplayString());
             Console.WriteLine(string.Empty);

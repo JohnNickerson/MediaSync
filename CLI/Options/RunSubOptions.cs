@@ -15,6 +15,6 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         public bool QuickMode { get; set; }
 
         [Option("profile", HelpText = "The name of the profile to run (omit to run all).")]
-        public string Profile { get; set; }
+        public string ProfileSearch { get; set; }
     }
 }

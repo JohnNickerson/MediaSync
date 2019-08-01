@@ -141,7 +141,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var logger = new ConsoleLogger(runOptions.LogLevel);
                         var begin = DateTime.Now;
                         Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log")));
-                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode, runOptions.Profile);
+                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode, runOptions.ProfileSearch);
                         logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                         Trace.Flush();
                     }

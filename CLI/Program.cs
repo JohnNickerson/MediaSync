@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using System.IO;
 using AssimilationSoftware.MediaSync.CLI.Properties;
-using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.CLI.Options;
 using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.CLI.Views;
@@ -77,6 +75,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var addOptions = (AddProfileSubOptions)argsubs;
                         vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMb * 1000000, addOptions.IgnorePatterns);
                         vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath);
+                        new ProfileListConsoleView(vm).Run(false);
                     }
                     #endregion
                     break;
@@ -85,6 +84,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var joinOptions = (JoinProfileSubOptions)argsubs;
                         vm.JoinProfile(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath);
+                        new ProfileListConsoleView(vm).Run(false);
                     }
                     #endregion
                     break;
@@ -97,7 +97,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             leaveOptions.MachineName = Settings.Default.MachineName;
                         }
                         vm.LeaveProfile(leaveOptions.ProfileName, leaveOptions.MachineName);
-                        PrintProfilesWithParticipation(vm.Profiles);
+                        new ProfileListConsoleView(vm).Run(false);
                     }
                     #endregion
                     break;
@@ -152,6 +152,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     {
                         var updateOptions = (UpdateProfileSubOptions)argsubs;
                         vm.ResizeProfile(updateOptions.ProfileName, updateOptions.ReserveSpaceMb * 1000000);
+                        new ProfileListConsoleView(vm).Run(true);
                     }
                     #endregion
                     break;
@@ -160,15 +161,6 @@ namespace AssimilationSoftware.MediaSync.CLI
                     break;
             }
             Debug.Flush();
-        }
-
-        private static void PrintProfilesWithParticipation(List<SyncSet> profiles)
-        {
-            foreach (SyncSet p in profiles)
-            {
-                Console.Write(p.ContainsParticipant(Settings.Default.MachineName) ? "*\t" : "\t");
-                Console.WriteLine(p.Name);
-            }
         }
     }
 }

@@ -168,6 +168,8 @@ namespace AssimilationSoftware.MediaSync.Core
             PushedCount = 0;
             PulledCount = 0;
             PrunedCount = 0;
+            logger.Line(1);
+            logger.Log(1, $"{DateTime.Now:yyyy-MM-dd}: Starting run on {MachineId}");
             foreach (var opts in _repository.Items.ToList())
             {
                 // If we're looking for a specific profile and this one isn't it, skip it.
@@ -220,6 +222,12 @@ namespace AssimilationSoftware.MediaSync.Core
             if (PushedCount + PulledCount + PrunedCount == 0)
             {
                 logger.Log(1, "No actions taken");
+            }
+            else
+            {
+                logger.Log(1, $"{PushedCount} file(s) copied out.");
+                logger.Log(1, $"{PulledCount} file(s) copied in.");
+                logger.Log(1, $"{PrunedCount} file(s) removed.");
             }
         }
 

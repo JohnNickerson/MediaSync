@@ -10,6 +10,10 @@ MediaSync is a portable, multi-master, sync program designed to work from a flas
 - Sync empty folders in addition to files.
 
 # Releases
+* 2019-08-08: v2.3.0
+	- LiteDb storage.
+	- Flash GUI toolbar button when finished.
+	- Simplified display when no changes are needed.
 * 2019-06-13: v2.2.2
   - Adjust reserve space.
   - Tracing fixes.

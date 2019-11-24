@@ -39,6 +39,8 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private readonly SyncSetRepository _repository;
 
+        private bool _stopSync = false;
+
         #endregion
 
         #region Constructors
@@ -165,6 +167,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void RunSync(bool indexOnly, IStatusLogger logger, bool quickMode = false, string profile = null)
         {
+            _stopSync = false;
             PushedCount = 0;
             PulledCount = 0;
             PrunedCount = 0;
@@ -285,6 +288,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (!indexus.ContainsKey(path))
                     {
                         indexus[path] = new ReplicaComparison { Hash = fyle.ContentsHash, Count = 0 };
+                        if (_stopSync) return syncSet;
                     }
                     indexus[path].AllSame = indexus[path].Hash == fyle.ContentsHash;
                     indexus[path].Count++;
@@ -305,6 +309,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     mf.State = FileSyncState.Transit;
                 }
+                if (_stopSync) return syncSet;
             }
             #endregion
             logger.Log(4, "\tMaster index processing: {0}", (DateTime.Now - begin).Verbalise());
@@ -325,6 +330,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + f.IsFolder };
                 }
+                if (_stopSync) return syncSet;
             }
             foreach (var f in syncSet.MasterIndex.Files)
             {
@@ -337,6 +343,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash + f.IsFolder };
                 }
+                if (_stopSync) return syncSet;
             }
             foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
             {
@@ -365,6 +372,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         LocalFileHash = hed.ContentsHash + hed.IsFolder
                     };
                 }
+                if (_stopSync) return syncSet;
             }
 
             // Gather the necessary file actions into queues first, then act and update indexes at the end.
@@ -530,6 +538,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         copyToShared.Add(f.LocalFileHeader);
                     }
                 }
+                if (_stopSync) return syncSet;
             }
             #endregion
 
@@ -572,11 +581,13 @@ namespace AssimilationSoftware.MediaSync.Core
                         copyToShared.Add(r);
                         PulledCount++;
                     }
+                    if (_stopSync) return syncSet;
                 }
                 foreach (var d in copyToLocal.Where(i => i.IsFolder))
                 {
                     _fileManager.EnsureFolder(Path.Combine(localindex.LocalPath, d.RelativePath));
                     PulledCount++;
+                    if (_stopSync) return syncSet;
                 }
                 foreach (var c in copyToLocal.Where(i => !i.IsFolder))
                 {
@@ -589,11 +600,22 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         PulledCount++;
                     }
+                    if (_stopSync) return syncSet;
                 }
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
-                    _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
-                    PulledCount++; // I mean, kind of, right?
+                    var result = _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
+                    if (result == FileCommandResult.Failure && _fileManager.DirectoryExists(Path.Combine(localindex.LocalPath, d.RelativePath)))
+                    {
+                        // Directory that failed to delete. Mark as undeleted.
+                        d.IsDeleted = false;
+                        syncSet.MasterIndex.UpdateFile(d);
+                    }
+                    else
+                    {
+                        PulledCount++; // I mean, kind of, right?
+                    }
+                    if (_stopSync) return syncSet;
                 }
 
                 // Push.
@@ -602,6 +624,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     m.IsDeleted = true;
                     syncSet.MasterIndex.UpdateFile(m);
                     PushedCount++;
+                    if (_stopSync) return syncSet;
                 }
                 #endregion
                 logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
@@ -622,6 +645,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         // Keep the old file.
                         localindex.UpdateFile(oldex.GetFile(f));
                     }
+                    if (_stopSync) return syncSet;
                 }
                 localindex.TimeStamp = DateTime.Now;
                 syncSet.UpdateIndex(localindex);
@@ -649,6 +673,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         indexus[path].Count++;
                         indexus[path].AllSame = indexus[path].Hash == fyle.ContentsHash;
                         indexus[path].AllHashes.Add(fyle.ContentsHash);
+                        if (_stopSync) return syncSet;
                     }
                 }
 
@@ -693,6 +718,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // TODO: Avoid throwing exceptions from fileManager.Delete operations. If the file doesn't exist, that's success, not failure.
                     }
+                    if (_stopSync) return syncSet;
                 }
                 // Clean up shared storage. We already looked for master/shared mismatches.
                 var minx = syncSet.MasterIndex;
@@ -706,6 +732,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     // Shared file is missing from master index. Get rid of it.
                     _fileManager.Delete(Path.Combine(sharedPath, s));
                     logger.Log(4, "SHARE CLEANUP: {0}", s);
+                    if (_stopSync) return syncSet;
                 }
 
                 // Remove empty subfolders from the Shared folder.
@@ -730,6 +757,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             logger.Log(0, "Could not delete {0}: {1}", t, e.Message);
                         }
+                        if (_stopSync) return syncSet;
                     }
                 }
                 #endregion
@@ -780,6 +808,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         logger.Log(0, "Error: Null file name scheduled for copying to shared storage.");
                     }
+                    if (_stopSync) return syncSet;
                 }
                 #endregion
                 logger.Log(4, "\tOutbound actions: {0}", (DateTime.Now - begin).Verbalise());
@@ -799,6 +828,11 @@ namespace AssimilationSoftware.MediaSync.Core
         public void Save()
         {
             _repository.SaveChanges();
+        }
+
+        public void StopSync()
+        {
+            _stopSync = true;
         }
         #endregion
 

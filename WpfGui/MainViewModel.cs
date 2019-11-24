@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -17,11 +18,13 @@ namespace AssimilationSoftware.MediaSync.WpfGui
     public class MainViewModel : ViewModelBase
     {
         private RelayCommand _runAllCommand;
+        private RelayCommand _cancelRunCommand;
         private RelayCommand _closeCommand;
         private RelayCommand _configCommand;
         private string _outputText;
         private ViewModel _api;
         private List<SyncSet> _profiles;
+        private bool _isRunning;
 
         public MainViewModel()
         {
@@ -44,11 +47,18 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         {
             // Run the profiles in another thread.
             var windowLogger = new WindowLogger(this);
+            IsRunning = true;
             Task.Run(() => _api.RunSync(false, windowLogger));
             {
                 var flasher = new FlashWindowHelper(Application.Current);
                 flasher.FlashApplicationWindow();
             }
+        }
+
+        private void CancelRunExecute()
+        {
+            IsRunning = false;
+            _api.StopSync();
         }
 
         public void CloseExecute()
@@ -102,7 +112,20 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             }
         }
 
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set
+            {
+                if (_isRunning == value) return;
+                _isRunning = value;
+                OnPropertyChanged();
+            }
+        }
+
         public ICommand RunAllCommand => _runAllCommand ?? (_runAllCommand = new RelayCommand(RunAllExecute));
+
+        public ICommand CancelRunCommand => _cancelRunCommand ?? (_cancelRunCommand = new RelayCommand(CancelRunExecute, () => IsRunning));
 
         public ICommand CloseCommand => _closeCommand ?? (_closeCommand = new RelayCommand(CloseExecute));
 

@@ -299,7 +299,15 @@ namespace AssimilationSoftware.MediaSync.Core
                 var path = mf.RelativePath.ToLower();
                 if (mf.IsDeleted)
                 {
-                    mf.State = indexus.ContainsKey(path) ? FileSyncState.Expiring : FileSyncState.Destroyed;
+                    if (mf.IsFolder && syncSet.MasterIndex.Files.Any(f => f.IsDeleted == false && f.RelativePath.StartsWith(mf.RelativePath)))
+                    {
+                        // If the folder contains anything that's not deleted, its state is "transit", even if it is marked as deleted.
+                        mf.State = FileSyncState.Transit;
+                    }
+                    else
+                    {
+                        mf.State = indexus.ContainsKey(path) ? FileSyncState.Expiring : FileSyncState.Destroyed;
+                    }
                 }
                 else if (indexus.ContainsKey(path) && indexus[path].Count == syncSet.Indexes.Count && indexus[path].AllSame)
                 {
@@ -605,16 +613,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
                     var result = _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
-                    if (result == FileCommandResult.Failure && _fileManager.DirectoryExists(Path.Combine(localindex.LocalPath, d.RelativePath)))
-                    {
-                        // Directory that failed to delete. Mark as undeleted.
-                        d.IsDeleted = false;
-                        syncSet.MasterIndex.UpdateFile(d);
-                    }
-                    else
+                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(localindex.LocalPath, d.RelativePath)))
                     {
                         PulledCount++; // I mean, kind of, right?
                     }
+
                     if (_stopSync) return syncSet;
                 }
 

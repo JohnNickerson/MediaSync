@@ -10,6 +10,9 @@ MediaSync is a portable, multi-master, sync program designed to work from a flas
 - Sync empty folders in addition to files.
 
 # Releases
+* 2020-01-02: v2.3.2
+	- Interrupt sync.
+	- Undelete folders.
 * 2019-08-29: v2.3.1
 	- Fixed file browse button in GUI config window.
 	- Show profile reserve space in verbose output.

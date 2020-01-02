@@ -568,7 +568,7 @@ namespace AssimilationSoftware.MediaSync.Core
             logger.Log(4, "\tQueue generation: {0}", (DateTime.Now - begin).Verbalise());
 
             // 3. Process the action queue according to the mode and limitations in place.
-            Trace.WriteLine($"Processing file actions for '{syncSet.Name}' on {MachineId}:");
+            Trace.WriteLine($"{DateTime.Now:s} - Processing file actions for '{syncSet.Name}' on {MachineId}:");
             var errorList = new List<string>();
             if (!preview)
             {

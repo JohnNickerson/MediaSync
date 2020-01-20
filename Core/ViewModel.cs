@@ -39,22 +39,22 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private readonly SyncSetRepository _repository;
 
-        private bool _stopSync = false;
+        private bool _stopSync;
 
         #endregion
 
         #region Constructors
-        public ViewModel(ISyncSetMapper datacontext, string machineId, IFileManager filemanager)
+        public ViewModel(ISyncSetMapper dataContext, string machineId, IFileManager fileManager)
         {
-            _repository = new SyncSetRepository(datacontext);
+            _repository = new SyncSetRepository(dataContext);
             _repository.FindAll();
             _machineId = machineId;
-            _fileManager = filemanager;
+            _fileManager = fileManager;
         }
         #endregion
 
         #region Methods
-        public void CreateProfile(string name, ulong reserve, params string[] ignore)
+        public void CreateProfile(string name, ulong reserve)
         {
             if (!ProfileExists(name))
             {
@@ -95,7 +95,7 @@ namespace AssimilationSoftware.MediaSync.Core
             return _repository.Items.FirstOrDefault(x => String.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public void JoinProfile(string profileName, string localpath, string sharedpath)
+        public void JoinProfile(string profileName, string localPath, string sharedPath)
         {
             var profile = GetProfile(profileName);
             if (profile == null)
@@ -104,34 +104,34 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
-                JoinProfile(profile, localpath, sharedpath);
+                JoinProfile(profile, localPath, sharedPath);
             }
         }
 
-        public void JoinProfile(SyncSet profile, string localpath, string sharedpath)
+        private void JoinProfile(SyncSet profile, string localPath, string sharedPath)
         {
             if (!profile.ContainsParticipant(MachineId))
             {
                 profile.Indexes.Add(new FileIndex
                 {
                     MachineName = MachineId,
-                    LocalPath = localpath,
-                    SharedPath = sharedpath
+                    LocalPath = localPath,
+                    SharedPath = sharedPath
                 });
                 _repository.Update(profile);
             }
             else
             {
                 var i = profile.GetIndex(MachineId);
-                i.LocalPath = localpath;
-                i.SharedPath = sharedpath;
+                i.LocalPath = localPath;
+                i.SharedPath = sharedPath;
                 profile.UpdateIndex(i);
                 _repository.Update(profile);
             }
             _repository.SaveChanges();
         }
 
-        public void LeaveProfile(SyncSet profile, string machine)
+        private void LeaveProfile(SyncSet profile, string machine)
         {
             if (profile.ContainsParticipant(machine))
             {
@@ -188,7 +188,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
                         var begin = DateTime.Now;
-                        var result = Sync(opts, logger, indexOnly, quickMode);
+                        var result = Sync(opts, logger, indexOnly);
                         _repository.Update(result);
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
@@ -243,23 +243,23 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        public SyncSet Sync(SyncSet syncSet, IStatusLogger logger, bool preview = false, bool quickMode = false)
+        private SyncSet Sync(SyncSet syncSet, IStatusLogger logger, bool preview = false)
         {
             // Check folders, just in case.
-            var localindex = syncSet.GetIndex(MachineId) ?? new FileIndex();
-            if (localindex.Files == null)
+            var localIndex = syncSet.GetIndex(MachineId) ?? new FileIndex();
+            if (localIndex.Files == null)
             {
-                localindex.Files = new List<FileHeader>();
+                localIndex.Files = new List<FileHeader>();
             }
-            var sharedPath = localindex.SharedPath;
+            var sharedPath = localIndex.SharedPath;
             if (!_fileManager.DirectoryExists(sharedPath))
             {
                 logger.Log(0, "Shared storage not available ({0}). Aborting.", sharedPath);
                 return syncSet;
             }
-            if (!_fileManager.DirectoryExists(localindex.LocalPath))
+            if (!_fileManager.DirectoryExists(localIndex.LocalPath))
             {
-                logger.Log(0, $"Local storage not available ({localindex.LocalPath}). Aborting.");
+                logger.Log(0, $"Local storage not available ({localIndex.LocalPath}). Aborting.");
                 return syncSet;
             }
 
@@ -275,23 +275,23 @@ namespace AssimilationSoftware.MediaSync.Core
             var begin = DateTime.Now;
             #region Determine State
             // Pre-process the indexes to ensure the loop doesn't have to.
-            var indexus = new Dictionary<string, ReplicaComparison>();
+            var comparisons = new Dictionary<string, ReplicaComparison>();
             foreach (var dex in syncSet.Indexes)
             {
                 if (dex.Files == null)
                 {
                     dex.Files = new List<FileHeader>();
                 }
-                foreach (var fyle in dex.Files)
+                foreach (var file in dex.Files)
                 {
-                    var path = fyle.RelativePath.ToLower();
-                    if (!indexus.ContainsKey(path))
+                    var path = file.RelativePath.ToLower();
+                    if (!comparisons.ContainsKey(path))
                     {
-                        indexus[path] = new ReplicaComparison { Hash = fyle.ContentsHash, Count = 0 };
+                        comparisons[path] = new ReplicaComparison { Hash = file.ContentsHash, Count = 0 };
                         if (_stopSync) return syncSet;
                     }
-                    indexus[path].AllSame = indexus[path].Hash == fyle.ContentsHash;
-                    indexus[path].Count++;
+                    comparisons[path].AllSame = comparisons[path].Hash == file.ContentsHash;
+                    comparisons[path].Count++;
                 }
             }
             foreach (var mf in syncSet.MasterIndex.Files)
@@ -306,10 +306,10 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
-                        mf.State = indexus.ContainsKey(path) ? FileSyncState.Expiring : FileSyncState.Destroyed;
+                        mf.State = comparisons.ContainsKey(path) ? FileSyncState.Expiring : FileSyncState.Destroyed;
                     }
                 }
-                else if (indexus.ContainsKey(path) && indexus[path].Count == syncSet.Indexes.Count && indexus[path].AllSame)
+                else if (comparisons.ContainsKey(path) && comparisons[path].Count == syncSet.Indexes.Count && comparisons[path].AllSame)
                 {
                     mf.State = FileSyncState.Synchronised;
                 }
@@ -325,56 +325,56 @@ namespace AssimilationSoftware.MediaSync.Core
             // 2. Determine the necessary action for each file.
             begin = DateTime.Now;
             #region Plan actions
-            var allhashes = new Dictionary<string, LocalFileHashSet>();
+            var allHashes = new Dictionary<string, LocalFileHashSet>();
             // Merge the local index, the master index and the local file system.
-            foreach (var f in localindex.Files)
+            foreach (var f in localIndex.Files)
             {
-                if (allhashes.ContainsKey(f.RelativePath.ToLower()))
+                if (allHashes.ContainsKey(f.RelativePath.ToLower()))
                 {
-                    allhashes[f.RelativePath.ToLower()].LocalIndexHeader = f;
-                    allhashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash + f.IsFolder;
+                    allHashes[f.RelativePath.ToLower()].LocalIndexHeader = f;
+                    allHashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash + f.IsFolder;
                 }
                 else
                 {
-                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + f.IsFolder };
+                    allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + f.IsFolder };
                 }
                 if (_stopSync) return syncSet;
             }
             foreach (var f in syncSet.MasterIndex.Files)
             {
-                if (allhashes.ContainsKey(f.RelativePath.ToLower()))
+                if (allHashes.ContainsKey(f.RelativePath.ToLower()))
                 {
-                    allhashes[f.RelativePath.ToLower()].MasterHeader = f;
-                    allhashes[f.RelativePath.ToLower()].MasterHash = f.ContentsHash + f.IsFolder;
+                    allHashes[f.RelativePath.ToLower()].MasterHeader = f;
+                    allHashes[f.RelativePath.ToLower()].MasterHash = f.ContentsHash + f.IsFolder;
                 }
                 else
                 {
-                    allhashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash + f.IsFolder };
+                    allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash + f.IsFolder };
                 }
                 if (_stopSync) return syncSet;
             }
-            foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
+            foreach (var f in _fileManager.ListLocalFiles(localIndex.LocalPath))
             {
                 // This action can fail if the file is in use.
-                var hed = _fileManager.TryCreateFileHeader(localindex.LocalPath, f);
+                var hed = _fileManager.TryCreateFileHeader(localIndex.LocalPath, f);
                 if (hed == null)
                 {
                     // Assume a file access exception. Skip this file by removing it and hope for better luck next run.
-                    if (allhashes.ContainsKey(f.ToLower()))
+                    if (allHashes.ContainsKey(f.ToLower()))
                     {
-                        allhashes.Remove(f.ToLower());
+                        allHashes.Remove(f.ToLower());
                     }
 
                     logger.Log(0, "Skipping locked file: {0}", f);
                 }
-                else if (allhashes.ContainsKey(f.ToLower()))
+                else if (allHashes.ContainsKey(f.ToLower()))
                 {
-                    allhashes[f.ToLower()].LocalFileHeader = hed;
-                    allhashes[f.ToLower()].LocalFileHash = hed.ContentsHash + hed.IsFolder;
+                    allHashes[f.ToLower()].LocalFileHeader = hed;
+                    allHashes[f.ToLower()].LocalFileHash = hed.ContentsHash + hed.IsFolder;
                 }
                 else
                 {
-                    allhashes[f.ToLower()] = new LocalFileHashSet
+                    allHashes[f.ToLower()] = new LocalFileHashSet
                     {
                         LocalFileHeader = hed,
                         LocalFileHash = hed.ContentsHash + hed.IsFolder
@@ -392,9 +392,9 @@ namespace AssimilationSoftware.MediaSync.Core
             var renameLocal = new List<FileHeader>(); // Target names to be generated on demand when processing.
             var noAction = new List<FileHeader>(); // Nothing to do to these, but keep a list in case of verbose preview.
             // Copy the collection for looping, so we can modify it in case of conflicts.
-            foreach (var dex in allhashes.Keys)
+            foreach (var dex in allHashes.Keys)
             {
-                var f = allhashes[dex];
+                var f = allHashes[dex];
                 if (f.MasterHeader != null)
                 {
                     switch (f.MasterHeader.State)
@@ -532,7 +532,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 else if (f.LocalFileHeader != null)
                 {
                     // Does every other remote index have the same version of the file?
-                    if (syncSet.Indexes.Count == 1 || (indexus.ContainsKey(dex) && indexus[dex].AllSame))
+                    if (syncSet.Indexes.Count == 1 || (comparisons.ContainsKey(dex) && comparisons[dex].AllSame))
                     {
                         // Side-channel or initial create. Just write the master index.
                         logger.Log(4, $"INITIAL CREATE: {dex}");
@@ -576,16 +576,16 @@ namespace AssimilationSoftware.MediaSync.Core
                 #region 3.1. Rename, Copy to Local, Delete local, Delete master
                 foreach (var r in renameLocal)
                 {
-                    var newname = _fileManager.GetConflictFileName(Path.Combine(localindex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
-                    var nurelpath = _fileManager.GetRelativePath(newname, localindex.LocalPath);
-                    var fmr = _fileManager.MoveFile(Path.Combine(localindex.LocalPath, r.RelativePath), Path.Combine(localindex.LocalPath, nurelpath), false);
+                    var newName = _fileManager.GetConflictFileName(Path.Combine(localIndex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
+                    var newRelativePath = _fileManager.GetRelativePath(newName, localIndex.LocalPath);
+                    var fmr = _fileManager.MoveFile(Path.Combine(localIndex.LocalPath, r.RelativePath), Path.Combine(localIndex.LocalPath, newRelativePath), false);
                     if (fmr == FileCommandResult.Failure)
                     {
-                        errorList.Add(string.Format("File rename failed: {0}", r.RelativePath));
+                        errorList.Add($"File rename failed: {r.RelativePath}");
                     }
                     else
                     {
-                        r.RelativePath = nurelpath;
+                        r.RelativePath = newRelativePath;
                         copyToShared.Add(r);
                         PulledCount++;
                     }
@@ -593,16 +593,16 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 foreach (var d in copyToLocal.Where(i => i.IsFolder))
                 {
-                    _fileManager.EnsureFolder(Path.Combine(localindex.LocalPath, d.RelativePath));
+                    _fileManager.EnsureFolder(Path.Combine(localIndex.LocalPath, d.RelativePath));
                     PulledCount++;
                     if (_stopSync) return syncSet;
                 }
                 foreach (var c in copyToLocal.Where(i => !i.IsFolder))
                 {
-                    var fcr = _fileManager.CopyFile(sharedPath, c.RelativePath, localindex.LocalPath);
+                    var fcr = _fileManager.CopyFile(sharedPath, c.RelativePath, localIndex.LocalPath);
                     if (fcr == FileCommandResult.Failure)
                     {
-                        errorList.Add(string.Format("Inbound file copy failed: {0}", c.RelativePath));
+                        errorList.Add($"Inbound file copy failed: {c.RelativePath}");
                     }
                     else
                     {
@@ -612,8 +612,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
-                    var result = _fileManager.Delete(Path.Combine(localindex.LocalPath, d.RelativePath));
-                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(localindex.LocalPath, d.RelativePath)))
+                    var result = _fileManager.Delete(Path.Combine(localIndex.LocalPath, d.RelativePath));
+                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(localIndex.LocalPath, d.RelativePath)))
                     {
                         PulledCount++; // I mean, kind of, right?
                     }
@@ -634,48 +634,48 @@ namespace AssimilationSoftware.MediaSync.Core
                 begin = DateTime.Now;
                 #region 3.2. Regenerate the local index.
                 // Keep a copy of the old index in case of read failures.
-                var oldex = new FileIndex { Files = new List<FileHeader>() };
-                oldex.Files.AddRange(localindex.Files);
-                localindex.Files = new List<FileHeader>();
-                foreach (var f in _fileManager.ListLocalFiles(localindex.LocalPath))
+                var oldIndex = new FileIndex { Files = new List<FileHeader>() };
+                oldIndex.Files.AddRange(localIndex.Files);
+                localIndex.Files = new List<FileHeader>();
+                foreach (var f in _fileManager.ListLocalFiles(localIndex.LocalPath))
                 {
                     try
                     {
-                        localindex.UpdateFile(_fileManager.CreateFileHeader(localindex.LocalPath, f));
+                        localIndex.UpdateFile(_fileManager.CreateFileHeader(localIndex.LocalPath, f));
                     }
                     catch
                     {
                         // Keep the old file.
-                        localindex.UpdateFile(oldex.GetFile(f));
+                        localIndex.UpdateFile(oldIndex.GetFile(f));
                     }
                     if (_stopSync) return syncSet;
                 }
-                localindex.TimeStamp = DateTime.Now;
-                syncSet.UpdateIndex(localindex);
+                localIndex.TimeStamp = DateTime.Now;
+                syncSet.UpdateIndex(localIndex);
                 #endregion
                 logger.Log(4, "\tLocal index regeneration: {0}", (DateTime.Now - begin).Verbalise());
                 begin = DateTime.Now;
                 #region 3.3 Clean up the master index and shared folder.
                 // Pre-examine the indexes, for efficiency.
-                indexus = new Dictionary<string, ReplicaComparison>();
+                comparisons = new Dictionary<string, ReplicaComparison>();
                 foreach (var dex in syncSet.Indexes)
                 {
-                    foreach (var fyle in dex.Files)
+                    foreach (var file in dex.Files)
                     {
-                        var path = fyle.RelativePath.ToLower();
-                        if (!indexus.ContainsKey(path))
+                        var path = file.RelativePath.ToLower();
+                        if (!comparisons.ContainsKey(path))
                         {
-                            indexus[path] = new ReplicaComparison
+                            comparisons[path] = new ReplicaComparison
                             {
                                 Count = 0,
-                                Hash = fyle.ContentsHash,
+                                Hash = file.ContentsHash,
                                 AllSame = true,
                                 AllHashes = new List<string>()
                             };
                         }
-                        indexus[path].Count++;
-                        indexus[path].AllSame = indexus[path].Hash == fyle.ContentsHash;
-                        indexus[path].AllHashes.Add(fyle.ContentsHash);
+                        comparisons[path].Count++;
+                        comparisons[path].AllSame = comparisons[path].Hash == file.ContentsHash;
+                        comparisons[path].AllHashes.Add(file.ContentsHash);
                         if (_stopSync) return syncSet;
                     }
                 }
@@ -683,35 +683,35 @@ namespace AssimilationSoftware.MediaSync.Core
                 foreach (var mf in syncSet.MasterIndex.Files.ToArray())
                 {
                     var key = mf.RelativePath.ToLower();
-                    var shrfilehed = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
+                    var shareFileHead = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
                     try
                     {
                         if (mf.IsDeleted)
                         {
-                            if (!indexus.ContainsKey(key))
+                            if (!comparisons.ContainsKey(key))
                             {
                                 // Marked deleted and has been removed from every replica.
                                 logger.Log(4, "DESTROYED: {0}", mf.RelativePath);
                                 syncSet.MasterIndex.Remove(mf);
                             }
                         }
-                        else if (shrfilehed != null && !syncSet.MasterIndex.MatchesFile(shrfilehed))
+                        else if (shareFileHead != null && !syncSet.MasterIndex.MatchesFile(shareFileHead))
                         // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.MasterIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                         {
                             // The shared file does not match the master index. It should be removed.
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
-                        else if (_fileManager.FileExists(sharedPath, mf.RelativePath) && indexus.ContainsKey(key) && indexus[key].Count == syncSet.Indexes.Count && indexus[key].AllSame && indexus[key].Hash == mf.ContentsHash)
+                        else if (_fileManager.FileExists(sharedPath, mf.RelativePath) && comparisons.ContainsKey(key) && comparisons[key].Count == syncSet.Indexes.Count && comparisons[key].AllSame && comparisons[key].Hash == mf.ContentsHash)
                         {
                             // Successfully transmitted to every replica. Remove from shared storage.
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
-                        else if (!indexus.ContainsKey(key))
+                        else if (!comparisons.ContainsKey(key))
                         {
                             // Simultaneous side-channel delete from every replica. This file is toast.
                             syncSet.MasterIndex.Remove(mf);
                         }
-                        else if (indexus[key].AllHashes.All(h => h != mf.ContentsHash))
+                        else if (comparisons[key].AllHashes.All(h => h != mf.ContentsHash))
                         {
                             // Slightly more subtle. No physical matching version of this file exists any more.
                             syncSet.MasterIndex.Remove(mf);
@@ -743,11 +743,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 if (Directory.Exists(sharedPath))
                 {
                     // Sort by length descending to get leaf nodes first.
-                    var alldirs = from s in Directory.GetDirectories(sharedPath, "*", SearchOption.AllDirectories)
+                    var allDirs = from s in Directory.GetDirectories(sharedPath, "*", SearchOption.AllDirectories)
                                   where s != sharedPath // Don't kill the root folder.
                                   orderby s.Length descending
                                   select s;
-                    foreach (string t in alldirs)
+                    foreach (string t in allDirs)
                     {
                         try
                         {
@@ -767,7 +767,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(4, "\tMaster index cleanup: {0}", (DateTime.Now - begin).Verbalise());
                 begin = DateTime.Now;
                 #region 3.4. Copy to shared
-                var sharedsize = _fileManager.SharedPathSize(sharedPath);
+                var sharedSize = _fileManager.SharedPathSize(sharedPath);
                 // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
                 var flashDrive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(sharedPath)));
                 var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, syncSet.ReserveSpace);
@@ -775,7 +775,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     if (s != null)
                     {
-                        if (sharedsize + (ulong)s.Size < carefulSpace)
+                        if (sharedSize + (ulong)s.Size < carefulSpace)
                         {
                             logger.Log(4, "Copying {0} to {1}", s.RelativePath, sharedPath);
                             if (s.IsFolder)
@@ -786,12 +786,12 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else
                             {
-                                var result = _fileManager.CopyFile(localindex.LocalPath, s.RelativePath, sharedPath);
+                                var result = _fileManager.CopyFile(localIndex.LocalPath, s.RelativePath, sharedPath);
                                 // Check for success.
                                 if (result == FileCommandResult.Success || result == FileCommandResult.Async)
                                 {
                                     // Assume potential success on Async.
-                                    sharedsize += (ulong)s.Size;
+                                    sharedSize += (ulong)s.Size;
                                     syncSet.MasterIndex.UpdateFile(s);
                                     PushedCount++;
                                 }

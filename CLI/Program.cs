@@ -73,7 +73,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     #region Add profile
                     {
                         var addOptions = (AddProfileSubOptions)argsubs;
-                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMb * 1000000, addOptions.IgnorePatterns);
+                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMb * 1000000);
                         vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath);
                         new ProfileListConsoleView(vm).Run(false);
                     }

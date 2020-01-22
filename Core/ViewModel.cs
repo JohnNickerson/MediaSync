@@ -172,7 +172,7 @@ namespace AssimilationSoftware.MediaSync.Core
             PulledCount = 0;
             PrunedCount = 0;
             logger.Line(1);
-            logger.Log(1, $"{DateTime.Now:yyyy-MM-dd}: Starting run on {MachineId}");
+            logger.LogTimed(1, $"Starting run on {MachineId}");
             foreach (var opts in _repository.Items.ToList())
             {
                 // If we're looking for a specific profile and this one isn't it, skip it.
@@ -188,8 +188,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
                         var begin = DateTime.Now;
-                        var result = Sync(opts, logger, indexOnly);
-                        _repository.Update(result);
+                        _repository.Update(Sync(opts, logger, indexOnly));
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     catch (Exception e)
@@ -247,10 +246,6 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             // Check folders, just in case.
             var localIndex = syncSet.GetIndex(MachineId) ?? new FileIndex();
-            if (localIndex.Files == null)
-            {
-                localIndex.Files = new List<FileHeader>();
-            }
             var sharedPath = localIndex.SharedPath;
             if (!_fileManager.DirectoryExists(sharedPath))
             {
@@ -263,14 +258,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 return syncSet;
             }
 
-            if (syncSet.MasterIndex == null)
-            {
-                syncSet.MasterIndex = new FileIndex();
-            }
-            if (syncSet.MasterIndex.Files == null)
-            {
-                syncSet.MasterIndex.Files = new List<FileHeader>();
-            }
             // 1. Compare the master index to each remote index to determine each file's state.
             var begin = DateTime.Now;
             #region Determine State
@@ -278,10 +265,6 @@ namespace AssimilationSoftware.MediaSync.Core
             var comparisons = new Dictionary<string, ReplicaComparison>();
             foreach (var dex in syncSet.Indexes)
             {
-                if (dex.Files == null)
-                {
-                    dex.Files = new List<FileHeader>();
-                }
                 foreach (var file in dex.Files)
                 {
                     var path = file.RelativePath.ToLower();

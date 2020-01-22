@@ -24,5 +24,10 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 Console.WriteLine(status, args);
             }
         }
+
+        public void LogTimed(int level, string status, params object[] args)
+        {
+            Log(level, $"{DateTime.Now:yyyy-MM-dd}: {status}", args);
+        }
     }
 }

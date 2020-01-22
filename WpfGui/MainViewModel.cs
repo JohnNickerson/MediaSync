@@ -146,6 +146,11 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             _mainViewModel.OutputText += Environment.NewLine;
         }
 
+        public void LogTimed(int level, string status, params object[] args)
+        {
+            Log(level, $"{DateTime.Now:yyyy-MM-dd}: {status}", args);
+        }
+
         public void Line(int level)
         {
             _mainViewModel.OutputText += Environment.NewLine;

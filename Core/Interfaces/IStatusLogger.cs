@@ -1,9 +1,14 @@
-﻿namespace AssimilationSoftware.MediaSync.Core.Interfaces
+﻿using System.Runtime.Remoting.Channels;
+
+namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
     public interface IStatusLogger
     {
         int LogLevel { get; set; }
+
         void Log(int level, string status, params object[] args);
+
+        void LogTimed(int level, string status, params object[] args);
 
         /// <summary>
         /// Shortcut for logging a newline, in whatever form that takes.

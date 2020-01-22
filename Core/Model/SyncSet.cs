@@ -6,6 +6,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class SyncSet
     {
+        private FileIndex _masterIndex;
+
         #region Properties
         public int Id { get; set; }
 
@@ -27,7 +29,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The master index, containing info on the latest versions of files from all participants.
         /// </summary>
-        public FileIndex MasterIndex { get; set; }
+        public FileIndex MasterIndex
+        {
+            get => _masterIndex ?? (_masterIndex = new FileIndex());
+            set => _masterIndex = value;
+        }
 
         #endregion
 
@@ -51,16 +57,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         {
             Indexes.Remove(GetIndex(localIndex.MachineName));
             Indexes.Add(localIndex);
-        }
-
-        public override int GetHashCode()
-        {
-            return Name.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is SyncSet other && other.Name.Equals(this.Name, StringComparison.CurrentCultureIgnoreCase);
         }
 
         #endregion

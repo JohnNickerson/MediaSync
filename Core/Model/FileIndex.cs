@@ -6,6 +6,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class FileIndex
     {
+        private List<FileHeader> _files;
+
         /// <summary>
         /// The name of the machine to which this index belongs, if any.
         /// </summary>
@@ -19,7 +21,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The actual files that make up the index.
         /// </summary>
-        public List<FileHeader> Files { get; set; } = new List<FileHeader>();
+        public List<FileHeader> Files
+        {
+            get => _files ?? (_files = new List<FileHeader>());
+            set => _files = value;
+        }
 
         /// <summary>
         /// The path on the local machine where the repository is stored.

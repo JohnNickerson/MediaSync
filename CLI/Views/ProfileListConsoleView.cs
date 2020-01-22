@@ -7,18 +7,18 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
 {
     internal class ProfileListConsoleView
     {
-        private readonly ViewModel vm;
+        private readonly ViewModel _vm;
 
         internal ProfileListConsoleView(ViewModel vm)
         {
-            this.vm = vm;
+            this._vm = vm;
         }
 
         internal void Run(bool showPaths)
         {
             Table table = new Table();
             table.AddColumns("Machine");
-            foreach (SyncSet p in vm.Profiles)
+            foreach (SyncSet p in _vm.Profiles)
             {
                 var col = new Column
                 {
@@ -30,13 +30,13 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
 
             var reserveRow = new Row();
             reserveRow.Data.Add("Reserve Space (MB)");
-            foreach (var m in vm.Machines)
+            foreach (var m in _vm.Machines)
             {
                 var row = new Row();
                 row.Data.Add(m);
                 var sharow = new Row();
                 sharow.Data.Add(null);
-                foreach (SyncSet p in vm.Profiles)
+                foreach (SyncSet p in _vm.Profiles)
                 {
                     if (p.ContainsParticipant(m))
                     {

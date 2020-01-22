@@ -165,7 +165,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void RunSync(bool indexOnly, IStatusLogger logger, bool quickMode = false, string profile = null)
+        public void RunSync(bool indexOnly, IStatusLogger logger, string profile = null)
         {
             _stopSync = false;
             PushedCount = 0;

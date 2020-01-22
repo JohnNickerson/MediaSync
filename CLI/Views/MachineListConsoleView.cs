@@ -5,16 +5,16 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
 {
     public class MachineListConsoleView
     {
-        private readonly ViewModel vm;
+        private readonly ViewModel _vm;
 
         public MachineListConsoleView(ViewModel vm)
         {
-            this.vm = vm;
+            this._vm = vm;
         }
 
         internal void Run()
         {
-            var participants = vm.Machines;
+            var participants = _vm.Machines;
             if (participants.Count > 0)
             {
                 Console.WriteLine(string.Empty);
@@ -22,7 +22,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 Console.WriteLine(string.Empty);
                 foreach (var p in participants)
                 {
-                    Console.WriteLine("\t\t{0}{1}", p, (p.ToLower() == vm.MachineId.ToLower() ? " <-- This machine" : ""));
+                    Console.WriteLine("\t\t{0}{1}", p, (p.ToLower() == _vm.MachineId.ToLower() ? " <-- This machine" : ""));
                 }
             }
             else

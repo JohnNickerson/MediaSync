@@ -1,5 +1,4 @@
-﻿using System.Runtime.Remoting.Channels;
-using CommandLine;
+﻿using CommandLine;
 
 namespace AssimilationSoftware.MediaSync.CLI.Options
 {

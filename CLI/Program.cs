@@ -14,7 +14,7 @@ using AssimilationSoftware.MediaSync.Core.Mappers.LiteDb;
 
 namespace AssimilationSoftware.MediaSync.CLI
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
@@ -141,7 +141,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var logger = new ConsoleLogger(runOptions.LogLevel);
                         var begin = DateTime.Now;
                         Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log")));
-                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.QuickMode, runOptions.ProfileSearch);
+                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.ProfileSearch);
                         logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                         Trace.Flush();
                     }

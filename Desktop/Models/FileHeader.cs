@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using AssimilationSoftware.Maroon.Model;
+﻿using System.IO;
 
 namespace AssimilationSoftware.MediaSync.Desktop.Models
 {

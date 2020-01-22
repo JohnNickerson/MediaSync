@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -9,7 +8,6 @@ using AssimilationSoftware.MediaSync.Core.FileManagement;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Mappers.LiteDb;
-using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.Core.Model;
 using AssimilationSoftware.MediaSync.WpfGui.Properties;
 

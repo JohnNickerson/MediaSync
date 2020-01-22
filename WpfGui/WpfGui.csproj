@@ -66,7 +66,9 @@
       <DependentUpon>ConfigWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="FlashWindowHelper.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="RelayCommand.cs" />
+    <Compile Include="SyncResultViewModel.cs" />
     <Compile Include="ViewModelBase.cs" />
     <Page Include="ConfigWindow.xaml">
       <SubType>Designer</SubType>

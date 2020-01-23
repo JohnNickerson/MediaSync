@@ -52,15 +52,17 @@ namespace UnitTesting.Mocks
                 LocalPath = path,
                 MachineName = "testmachine",
                 TimeStamp = DateTime.Now,
-                Files = new List<FileHeader>()
+                Files = new Dictionary<string, FileHeader>()
                 {
-                    new FileHeader
-                    {
-                        BasePath = @"C:\Temp",
-                        IsDeleted = false,
-                        RelativePath = "oldversion.txt",
-                        ContentsHash = "aaaa",
-                        Size = 1000,
+                    { @"C:\Temp",
+                        new FileHeader
+                        {
+                            BasePath = @"C:\Temp",
+                            IsDeleted = false,
+                            RelativePath = "oldversion.txt",
+                            ContentsHash = "aaaa",
+                            Size = 1000,
+                        }
                     }
                 }
             };

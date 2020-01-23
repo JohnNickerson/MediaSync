@@ -6,7 +6,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class FileIndex
     {
-        private List<FileHeader> _files;
+        private Dictionary<string, FileHeader> _files;
 
         /// <summary>
         /// The name of the machine to which this index belongs, if any.
@@ -21,9 +21,9 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The actual files that make up the index.
         /// </summary>
-        public List<FileHeader> Files
+        public Dictionary<string, FileHeader> Files
         {
-            get => _files ?? (_files = new List<FileHeader>());
+            get => _files ?? (_files = new Dictionary<string, FileHeader>(StringComparer.CurrentCultureIgnoreCase));
             set => _files = value;
         }
 
@@ -39,28 +39,26 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 
         public FileHeader GetFile(string relativePath)
         {
-            var srch = Files.FirstOrDefault(f => f.RelativePath == relativePath);
-            return srch;
+            return Files.ContainsKey(relativePath) ? Files[relativePath] : null;
         }
 
         public void UpdateFile(FileHeader fileHeader)
         {
             if (fileHeader == null) return;
-            Files.RemoveAll(f => f.RelativePath == fileHeader.RelativePath);
-            Files.Add(fileHeader.Clone());
+            Files[fileHeader.RelativePath] = fileHeader.Clone();
         }
 
         public void Remove(FileHeader localIndexFile)
         {
             if (Exists(localIndexFile.RelativePath))
             {
-                Files.RemoveAll(f => f.RelativePath == localIndexFile.RelativePath);
+                Files.Remove(localIndexFile.RelativePath);
             }
         }
 
         public bool Exists(string relativepath)
         {
-            return Files != null && Files.Any(f => String.Equals(f.RelativePath, relativepath, StringComparison.CurrentCultureIgnoreCase));
+            return Files.ContainsKey(relativepath);
         }
 
         public bool MatchesFile(FileHeader file)

@@ -35,7 +35,10 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
         {
             if (File.Exists(_filename))
             {
-                return (List<SyncSet>)_serialiser.Deserialize(_filename);
+                using (var fileStream = new FileStream(_filename, FileMode.Open))
+                {
+                    return (List<SyncSet>)_serialiser.Deserialize(fileStream);
+                }
             }
             else
             {
@@ -56,7 +59,10 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
 
         public void UpdateAll(List<SyncSet> syncSets)
         {
-            _serialiser.Serialize(syncSets, _filename);
+            using (var fileStream = new FileStream(_filename, FileMode.OpenOrCreate))
+            {
+                _serialiser.Serialize(syncSets, fileStream);
+            }
         }
     }
 }

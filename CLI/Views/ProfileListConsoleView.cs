@@ -18,7 +18,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
         {
             Table table = new Table();
             table.AddColumns("Machine");
-            foreach (SyncSet p in _vm.Profiles)
+            foreach (SyncSet p in _vm.Profiles.Values)
             {
                 var col = new Column
                 {
@@ -36,7 +36,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 row.Data.Add(m);
                 var sharow = new Row();
                 sharow.Data.Add(null);
-                foreach (SyncSet p in _vm.Profiles)
+                foreach (SyncSet p in _vm.Profiles.Values)
                 {
                     if (p.ContainsParticipant(m))
                     {

@@ -24,7 +24,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// All the participants in this profile.
         /// </summary>
-        public List<FileIndex> Indexes { get; set; }
+        public Dictionary<string, FileIndex> Indexes { get; set; }
 
         /// <summary>
         /// The master index, containing info on the latest versions of files from all participants.
@@ -44,19 +44,17 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         #region Methods
         public FileIndex GetIndex(string machine)
         {
-            var result = Indexes.FirstOrDefault(p => string.Equals(p.MachineName, machine, StringComparison.CurrentCultureIgnoreCase));
-            return result;
+            return Indexes.TryGetValue(machine, out var result) ? result : null;
         }
 
         public bool ContainsParticipant(string machine)
         {
-            return Indexes.Any(p => String.Equals(p.MachineName, machine, StringComparison.CurrentCultureIgnoreCase));
+            return Indexes.ContainsKey(machine);
         }
 
         internal void UpdateIndex(FileIndex localIndex)
         {
-            Indexes.Remove(GetIndex(localIndex.MachineName));
-            Indexes.Add(localIndex);
+            Indexes[localIndex.MachineName] = localIndex;
         }
 
         #endregion

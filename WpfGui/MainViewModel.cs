@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -36,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             // Load the profiles for display.
             var mapper = new LiteDbSyncSetMapper(Settings.Default.DataFile);
             _api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
-            Profiles = _api.Profiles;
+            Profiles = _api.Profiles.Values.ToList();
         }
 
         public string ThisMachine { get; set; }

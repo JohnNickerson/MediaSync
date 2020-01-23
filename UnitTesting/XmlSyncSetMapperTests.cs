@@ -29,7 +29,6 @@ namespace UnitTesting
             {
                 MasterIndex = new FileIndex(),
                 Name = "TestSyncSet",
-                Indexes = new System.Collections.Generic.List<FileIndex>(),
                 ReserveSpace = 10000,
             };
             mapper.Update(nss);

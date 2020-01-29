@@ -712,7 +712,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Clean up shared storage. We already looked for master/shared mismatches.
                 var minx = syncSet.MasterIndex;
                 var shareCleanMeta = from s in _fileManager.ListLocalFiles(sharedPath)
-                                     where File.Exists(Path.Combine(sharedPath, s)) && !minx.Files.ContainsKey(s)
+                                     where File.Exists(Path.Combine(sharedPath, s)) && (!minx.Files.ContainsKey(s) || minx.GetFile(s).IsDeleted)
                                      select s;
                 // For every file now in shared storage,
                 foreach (var s in shareCleanMeta)

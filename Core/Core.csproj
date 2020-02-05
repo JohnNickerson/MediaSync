@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\TimeSpanExtensions.cs" />
+    <Compile Include="FileActionsCount.cs" />
     <Compile Include="FileManagement\Hashing\MockHasher.cs" />
     <Compile Include="FileManagement\Hashing\Sha1Calculator.cs" />
     <Compile Include="FileManagement\SimpleFileManager.cs" />

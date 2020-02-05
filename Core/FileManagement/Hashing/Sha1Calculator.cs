@@ -14,7 +14,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement.Hashing
             {
                 using (var cryptoProvider = new SHA1CryptoServiceProvider())
                 {
-                    var stream = new FileInfo(filename).OpenRead();
+                    var stream = new BufferedStream(File.OpenRead(filename), 1200000);
                     var hash = BitConverter.ToString(cryptoProvider.ComputeHash(stream));
                     stream.Close();
                     return hash;

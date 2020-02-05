@@ -168,9 +168,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public void RunSync(bool indexOnly, IStatusLogger logger, string profile = null)
         {
             _stopSync = false;
-            PushedCount = 0;
-            PulledCount = 0;
-            PrunedCount = 0;
+            var fullResults = new FileActionsCount();
             logger.Line(1);
             logger.LogTimed(1, $"Starting run on {MachineId}");
             foreach (var opts in _repository.Items.ToList())
@@ -188,7 +186,8 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
                         var begin = DateTime.Now;
-                        _repository.Update(Sync(opts, logger, indexOnly));
+                        var syncResult = Sync(opts, logger, indexOnly);
+                        fullResults.Add(syncResult);
                         logger.Log(1, "Profile sync time taken: {0}", (DateTime.Now - begin).Verbalise());
                     }
                     catch (Exception e)
@@ -221,16 +220,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             logger.Line(1);
             logger.Log(1, "Finished.");
-            if (PushedCount + PulledCount + PrunedCount == 0)
-            {
-                logger.Log(1, "No actions taken");
-            }
-            else
-            {
-                logger.Log(1, $"{PushedCount} file(s) copied out.");
-                logger.Log(1, $"{PulledCount} file(s) copied in.");
-                logger.Log(1, $"{PrunedCount} file(s) removed.");
-            }
+            logger.Log(1, fullResults.AnyChanges ? fullResults.GetDisplayString("Totals") : "No actions taken");
         }
 
         public void RemoveProfile(string profileName)
@@ -242,20 +232,21 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        private SyncSet Sync(SyncSet syncSet, IStatusLogger logger, bool preview = false)
+        private FileActionsCount Sync(SyncSet syncSet, IStatusLogger logger, bool preview = false)
         {
+            var actionsCount = new FileActionsCount();
             // Check folders, just in case.
             var localIndex = syncSet.GetIndex(MachineId) ?? new FileIndex();
             var sharedPath = localIndex.SharedPath;
             if (!_fileManager.DirectoryExists(sharedPath))
             {
                 logger.Log(0, "Shared storage not available ({0}). Aborting.", sharedPath);
-                return syncSet;
+                return actionsCount;
             }
             if (!_fileManager.DirectoryExists(localIndex.LocalPath))
             {
                 logger.Log(0, $"Local storage not available ({localIndex.LocalPath}). Aborting.");
-                return syncSet;
+                return actionsCount;
             }
 
             // 1. Compare the master index to each remote index to determine each file's state.
@@ -271,7 +262,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     if (!comparisons.ContainsKey(path))
                     {
                         comparisons[path] = new ReplicaComparison { Hash = file.ContentsHash, Count = 0 };
-                        if (_stopSync) return syncSet;
+                        if (_stopSync) return actionsCount;
                     }
                     comparisons[path].AllSame = comparisons[path].Hash == file.ContentsHash;
                     comparisons[path].Count++;
@@ -300,7 +291,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     mf.State = FileSyncState.Transit;
                 }
-                if (_stopSync) return syncSet;
+                if (_stopSync) return actionsCount;
             }
             #endregion
             logger.Log(4, "\tMaster index processing: {0}", (DateTime.Now - begin).Verbalise());
@@ -321,7 +312,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + f.IsFolder };
                 }
-                if (_stopSync) return syncSet;
+                if (_stopSync) return actionsCount;
             }
             foreach (var f in syncSet.MasterIndex.Files.Values)
             {
@@ -334,7 +325,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { MasterHeader = f, MasterHash = f.ContentsHash + f.IsFolder };
                 }
-                if (_stopSync) return syncSet;
+                if (_stopSync) return actionsCount;
             }
             foreach (var f in _fileManager.ListLocalFiles(localIndex.LocalPath))
             {
@@ -363,7 +354,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         LocalFileHash = hed.ContentsHash + hed.IsFolder
                     };
                 }
-                if (_stopSync) return syncSet;
+                if (_stopSync) return actionsCount;
             }
 
             // Gather the necessary file actions into queues first, then act and update indexes at the end.
@@ -529,19 +520,25 @@ namespace AssimilationSoftware.MediaSync.Core
                         copyToShared.Add(f.LocalFileHeader);
                     }
                 }
-                if (_stopSync) return syncSet;
+
+                if (_stopSync)
+                {
+                    _repository.Update(syncSet);
+                    return actionsCount;
+                }
             }
             #endregion
 
-            if (copyToLocal.Count + copyToShared.Count + deleteLocal.Count + deleteMaster.Count + renameLocal.Count > 0)
+            actionsCount.RenameLocalCount = renameLocal.Count;
+            actionsCount.DeleteLocalCount = deleteLocal.Count;
+            actionsCount.CopyToLocalCount = copyToLocal.Count;
+            actionsCount.DeleteMasterCount = deleteMaster.Count;
+            actionsCount.NoActionCount = noAction.Count;
+            actionsCount.CopyToSharedCount = copyToShared.Count;
+            if (actionsCount.AnyChanges)
             {
                 logger.Log(1, "");
-                logger.Log(1, "{0}{1} | Local   | Shared  |", syncSet.Name, new string(' ', Math.Max(0, 12 - syncSet.Name.Length)));
-                logger.Log(1, "-------------+---------+---------+");
-                logger.Log(1, "Copy To      | {0,7} | {1,7} |", copyToLocal.Count, copyToShared.Count);
-                logger.Log(1, "Delete       | {0,7} | {1,7} |", deleteLocal.Count, deleteMaster.Count);
-                logger.Log(1, "Conflicted   | {0,7} |         |", renameLocal.Count);
-                logger.Log(1, "No Change    | {0,7} |         |", noAction.Count);
+                logger.Log(1, actionsCount.GetDisplayString(syncSet.Name));
                 logger.Log(1, "");
             }
             else
@@ -570,15 +567,23 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         r.RelativePath = newRelativePath;
                         copyToShared.Add(r);
-                        PulledCount++;
                     }
-                    if (_stopSync) return syncSet;
+
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
                 }
                 foreach (var d in copyToLocal.Where(i => i.IsFolder))
                 {
                     _fileManager.EnsureFolder(Path.Combine(localIndex.LocalPath, d.RelativePath));
-                    PulledCount++;
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
                 foreach (var c in copyToLocal.Where(i => !i.IsFolder))
                 {
@@ -589,19 +594,27 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
-                        PulledCount++;
                     }
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
                     var result = _fileManager.Delete(Path.Combine(localIndex.LocalPath, d.RelativePath));
                     if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(localIndex.LocalPath, d.RelativePath)))
                     {
-                        PulledCount++; // I mean, kind of, right?
                     }
 
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
 
                 // Push.
@@ -609,8 +622,12 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     m.IsDeleted = true;
                     syncSet.MasterIndex.UpdateFile(m);
-                    PushedCount++;
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
                 #endregion
                 logger.Log(4, "\tInbound actions: {0}", (DateTime.Now - begin).Verbalise());
@@ -634,7 +651,12 @@ namespace AssimilationSoftware.MediaSync.Core
                         // Keep the old file.
                         localIndex.UpdateFile(oldIndex.GetFile(f));
                     }
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
                 localIndex.TimeStamp = DateTime.Now;
                 syncSet.UpdateIndex(localIndex);
@@ -662,7 +684,12 @@ namespace AssimilationSoftware.MediaSync.Core
                         comparisons[path].Count++;
                         comparisons[path].AllSame = comparisons[path].Hash == file.ContentsHash;
                         comparisons[path].AllHashes.Add(file.ContentsHash);
-                        if (_stopSync) return syncSet;
+                        if (_stopSync)
+                        {
+                            _repository.Update(syncSet);
+                            return actionsCount;
+                        }
+
                     }
                 }
 
@@ -707,7 +734,12 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // TODO: Avoid throwing exceptions from fileManager.Delete operations. If the file doesn't exist, that's success, not failure.
                     }
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
                 // Clean up shared storage. We already looked for master/shared mismatches.
                 var minx = syncSet.MasterIndex;
@@ -720,7 +752,12 @@ namespace AssimilationSoftware.MediaSync.Core
                     // Shared file is missing from master index. Get rid of it.
                     _fileManager.Delete(Path.Combine(sharedPath, s));
                     logger.Log(4, "SHARE CLEANUP: {0}", s);
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
 
                 // Remove empty subfolders from the Shared folder.
@@ -745,7 +782,12 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             logger.Log(0, "Could not delete {0}: {1}", t, e.Message);
                         }
-                        if (_stopSync) return syncSet;
+                        if (_stopSync)
+                        {
+                            _repository.Update(syncSet);
+                            return actionsCount;
+                        }
+
                     }
                 }
                 #endregion
@@ -767,7 +809,6 @@ namespace AssimilationSoftware.MediaSync.Core
                             {
                                 s.IsDeleted = false; // To un-delete folders that were being removed, but have been re-created.
                                 syncSet.MasterIndex.UpdateFile(s);
-                                PushedCount++;
                             }
                             else
                             {
@@ -778,7 +819,6 @@ namespace AssimilationSoftware.MediaSync.Core
                                     // Assume potential success on Async.
                                     sharedSize += (ulong)s.Size;
                                     syncSet.MasterIndex.UpdateFile(s);
-                                    PushedCount++;
                                 }
                                 else
                                 {
@@ -796,7 +836,12 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         logger.Log(0, "Error: Null file name scheduled for copying to shared storage.");
                     }
-                    if (_stopSync) return syncSet;
+                    if (_stopSync)
+                    {
+                        _repository.Update(syncSet);
+                        return actionsCount;
+                    }
+
                 }
                 #endregion
                 logger.Log(4, "\tOutbound actions: {0}", (DateTime.Now - begin).Verbalise());
@@ -810,7 +855,8 @@ namespace AssimilationSoftware.MediaSync.Core
                 logger.Log(0, e);
             }
 
-            return syncSet;
+            _repository.Update(syncSet);
+            return actionsCount;
         }
 
         public void Save()
@@ -832,39 +878,6 @@ namespace AssimilationSoftware.MediaSync.Core
             set
             {
                 _machineId = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private int _pulledCount;
-        public int PulledCount
-        {
-            get => _pulledCount;
-            set
-            {
-                _pulledCount = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private int _pushedCount;
-        public int PushedCount
-        {
-            get => _pushedCount;
-            set
-            {
-                _pushedCount = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private int _prunedCount;
-        public int PrunedCount
-        {
-            get => _prunedCount;
-            set
-            {
-                _prunedCount = value;
                 NotifyPropertyChanged();
             }
         }

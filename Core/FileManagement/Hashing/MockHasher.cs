@@ -8,5 +8,10 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement.Hashing
         {
             return string.Empty;
         }
+
+        public void ClearCache(string filename)
+        {
+            // ignored.
+        }
     }
 }

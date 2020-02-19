@@ -27,6 +27,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
                 Trace.WriteLine($"Copied  {source}  to  {target}");
+                _fileHasher.ClearCache(target);
                 return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
             }
             catch (Exception e)
@@ -123,6 +124,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 else
                 {
                     // Make sure no file attributes stand in our way.
+                    _fileHasher.ClearCache(dir);
                     File.SetAttributes(dir, FileAttributes.Normal);
                     File.Delete(dir);
                     Trace.WriteLine($"Deleted file  {dir}");
@@ -250,6 +252,8 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             try
             {
                 EnsureFolder(new FileInfo(target).DirectoryName);
+                _fileHasher.ClearCache(source);
+                _fileHasher.ClearCache(target);
                 File.Move(source, target);
                 Trace.WriteLine($"Moved file  {source}  to  {target}");
             }

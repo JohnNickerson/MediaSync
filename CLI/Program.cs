@@ -52,9 +52,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             }
 
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
-#if DEBUG
             Trace.Listeners.Add(new ConsoleTraceListener());
-#endif
 
             ISyncSetMapper mapper;
             if (string.Equals(Settings.Default.DataFileFormat, "litedb", StringComparison.CurrentCultureIgnoreCase))
@@ -138,11 +136,15 @@ namespace AssimilationSoftware.MediaSync.CLI
                         // TODO: SearchSpecification for which profiles to run.
                         // TODO: Confirm profile selections before running.
                         var runOptions = (RunSubOptions)argsubs;
-                        var logger = new ConsoleLogger(runOptions.LogLevel);
                         var begin = DateTime.Now;
-                        Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log")));
-                        vm.RunSync(runOptions.IndexOnly, logger, runOptions.ProfileSearch);
-                        logger.Log(1, "Total time taken: {0}", (DateTime.Now - begin).Verbalise());
+                        var logName = Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log");
+                        if (File.Exists(logName) && new FileInfo(logName).Length > 1000000)
+                        {
+                            File.Move(logName, Path.Combine(Settings.Default.MetadataFolder, $"{Path.GetFileNameWithoutExtension(logName)}.{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log"));
+                        }
+                        Trace.Listeners.Add(new TextWriterTraceListener(logName));
+                        vm.RunSync(runOptions.IndexOnly, runOptions.LogLevel >= 4, runOptions.ProfileSearch);
+                        Trace.WriteLine("Total time taken: {0}", (DateTime.Now - begin).Verbalise());
                         Trace.Flush();
                     }
                     #endregion

@@ -1,7 +1,9 @@
-﻿using System.Runtime.Remoting.Channels;
+﻿using System;
+using System.Runtime.Remoting.Channels;
 
 namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {
+    [Obsolete("Use plain trace and debug instead.")]
     public interface IStatusLogger
     {
         int LogLevel { get; set; }

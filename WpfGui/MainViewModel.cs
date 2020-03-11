@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,8 +47,9 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         {
             // Run the profiles in another thread.
             var windowLogger = new WindowLogger(this);
+            Trace.Listeners.Add(windowLogger);
             IsRunning = true;
-            Task.Run(() => _api.RunSync(false, windowLogger));
+            Task.Run(() => _api.RunSync(false, false));
             {
                 var flasher = new FlashWindowHelper(Application.Current);
                 flasher.FlashApplicationWindow();
@@ -131,7 +133,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         public ICommand ConfigCommand => _configCommand ?? (_configCommand = new RelayCommand(ConfigExecute));
     }
 
-    public class WindowLogger : IStatusLogger
+    public class WindowLogger : TraceListener
     {
         private readonly MainViewModel _mainViewModel;
 
@@ -155,6 +157,16 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         public void Line(int level)
         {
             _mainViewModel.OutputText += Environment.NewLine;
+        }
+
+        public override void Write(string message)
+        {
+            _mainViewModel.OutputText += message;
+        }
+
+        public override void WriteLine(string message)
+        {
+            _mainViewModel.OutputText += message + Environment.NewLine;
         }
     }
 }

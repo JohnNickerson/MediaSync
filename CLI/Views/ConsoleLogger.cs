@@ -3,6 +3,7 @@ using System;
 
 namespace AssimilationSoftware.MediaSync.CLI.Views
 {
+    [Obsolete("Use ConsoleTraceListener")]
     public class ConsoleLogger : IStatusLogger
     {
         public ConsoleLogger(int level)

@@ -10,6 +10,9 @@ MediaSync is a portable, multi-master, sync program designed to work from a flas
 - Sync empty folders in addition to files.
 
 # Releases
+* 2020-05-21: v2.4.1
+	- Restored timestamps in logs.
+	- Overhauled logging system.
 * 2020-03-05: v2.4.0
 	- Fixed file share cleanup for files deleted in transit..
 	- Updated final result reporting mechanism to match individual profile results..

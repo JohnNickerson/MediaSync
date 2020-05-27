@@ -144,7 +144,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         }
                         Trace.Listeners.Add(new TextWriterTraceListener(logName));
                         vm.RunSync(runOptions.IndexOnly, runOptions.LogLevel >= 4, runOptions.ProfileSearch);
-                        Trace.WriteLine("Total time taken: {0}", (DateTime.Now - begin).Verbalise());
+                        Trace.WriteLine($"Total time taken: {(DateTime.Now - begin).Verbalise()}");
                         Trace.Flush();
                     }
                     #endregion

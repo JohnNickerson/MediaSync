@@ -11,11 +11,11 @@ namespace AssimilationSoftware.MediaSync.Core
         public int CopyToLocalCount { get; set; }
         public int CopyToSharedCount { get; set; }
         public int DeleteLocalCount { get; set; }
-        public int DeleteMasterCount { get; set; }
+        public int DeletePrimaryCount { get; set; }
         public int RenameLocalCount { get; set; }
         public int NoActionCount { get; set; }
 
-        public bool AnyChanges => CopyToLocalCount + CopyToSharedCount + DeleteLocalCount + DeleteMasterCount + RenameLocalCount > 0;
+        public bool AnyChanges => CopyToLocalCount + CopyToSharedCount + DeleteLocalCount + DeletePrimaryCount + RenameLocalCount > 0;
 
         public string GetDisplayString(string header = null)
         {
@@ -25,7 +25,7 @@ namespace AssimilationSoftware.MediaSync.Core
             table.AppendLine(" | Local   | Shared  |");
             table.AppendLine("-------------+---------+---------+");
             table.AppendLine($"Copy To      | {CopyToLocalCount,7} | {CopyToSharedCount,7} |");
-            table.AppendLine($"Delete       | {DeleteLocalCount,7} | {DeleteMasterCount,7} |");
+            table.AppendLine($"Delete       | {DeleteLocalCount,7} | {DeletePrimaryCount,7} |");
             table.AppendLine($"Conflicted   | {RenameLocalCount,7} |         |");
             table.AppendLine($"No Change    | {NoActionCount,7} |         |");
 
@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Core
             CopyToLocalCount += syncResult.CopyToLocalCount;
             CopyToSharedCount += syncResult.CopyToSharedCount;
             DeleteLocalCount += syncResult.DeleteLocalCount;
-            DeleteMasterCount += syncResult.DeleteMasterCount;
+            DeletePrimaryCount += syncResult.DeletePrimaryCount;
             RenameLocalCount += syncResult.RenameLocalCount;
             NoActionCount += syncResult.NoActionCount;
         }

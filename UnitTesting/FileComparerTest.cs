@@ -8,12 +8,12 @@ namespace UnitTesting
     public class FileComparerTest
     {
         /// <summary>
-        /// Local file does not match the local or current master index, but does match an old master index revision.
+        /// Local file does not match the local or current primary index, but does match an old primary index revision.
         /// </summary>
         [TestMethod]
         public void OldLocalVersionShouldBeOverwritten()
         {
-            // Set up a master index (revisions 0 to 2)
+            // Set up a primary index (revisions 0 to 2)
             // Set up a local index (revision 0)
             // Set up a mock file manager (revision 1)
             IFileManager mockfilesystem = new MockFileManager();

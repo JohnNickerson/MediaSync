@@ -24,7 +24,7 @@ namespace AssimilationSoftware.MediaSync.Desktop.Models
         /// A flag to indicate that the file was deleted.
         /// </summary>
         /// <remarks>
-        /// Used only in the master index. Records with this flag that do not exist in any satellite index should be removed.
+        /// Used only in the primary index. Records with this flag that do not exist in any satellite index should be removed.
         /// </remarks>
         public bool IsDeleted { get; set; }
 
@@ -44,7 +44,7 @@ namespace AssimilationSoftware.MediaSync.Desktop.Models
         public string ContentsHash { get; set; }
 
         /// <summary>
-        /// A synchronisation state, used for the master index.
+        /// A synchronisation state, used for the primary index.
         /// </summary>
         public FileSyncState State { get; set; }
 

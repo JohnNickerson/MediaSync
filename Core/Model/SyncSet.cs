@@ -6,7 +6,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class SyncSet
     {
-        private FileIndex _masterIndex;
+        private FileIndex _primaryIndex;
 
         #region Properties
         public int Id { get; set; }
@@ -27,12 +27,12 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public Dictionary<string, FileIndex> Indexes { get; set; }
 
         /// <summary>
-        /// The master index, containing info on the latest versions of files from all participants.
+        /// The primary index, containing info on the latest versions of files from all participants.
         /// </summary>
-        public FileIndex MasterIndex
+        public FileIndex PrimaryIndex
         {
-            get => _masterIndex ?? (_masterIndex = new FileIndex());
-            set => _masterIndex = value;
+            get => _primaryIndex ?? (_primaryIndex = new FileIndex());
+            set => _primaryIndex = value;
         }
 
         #endregion

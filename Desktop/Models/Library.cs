@@ -13,11 +13,11 @@ namespace AssimilationSoftware.MediaSync.Desktop.Models
                 Revision = Revision,
                 RevisionGuid = RevisionGuid,
                 Name = Name,
-                MasterIndexId = MasterIndexId
+                PrimaryIndexId = PrimaryIndexId
             };
         }
 
         public string Name { get; set; }
-        public Guid MasterIndexId { get; set; }
+        public Guid PrimaryIndexId { get; set; }
     }
 }

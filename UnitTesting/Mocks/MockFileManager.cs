@@ -93,9 +93,9 @@ namespace UnitTesting.Mocks
             return FileExists(Path.Combine(basepath, relativePath));
         }
 
-        public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)
+        public bool FilesMatch(FileHeader primaryfile, FileHeader localIndexFile)
         {
-            return masterfile.ContentsHash == localIndexFile.ContentsHash;
+            return primaryfile.ContentsHash == localIndexFile.ContentsHash;
         }
 
         public bool FilesMatch(string literalFilePath, FileHeader indexFile)

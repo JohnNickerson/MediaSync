@@ -27,7 +27,7 @@ namespace UnitTesting
 
             var nss = new SyncSet
             {
-                MasterIndex = new FileIndex(),
+                PrimaryIndex = new FileIndex(),
                 Name = "TestSyncSet",
                 ReserveSpace = 10000,
             };

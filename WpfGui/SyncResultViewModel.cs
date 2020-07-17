@@ -6,12 +6,12 @@ namespace AssimilationSoftware.MediaSync.WpfGui
 {
     public class SyncResultViewModel : INotifyPropertyChanged
     {
-        private int _copiedToMaster;
+        private int _copiedToPrimary;
         private int _copiedFromShared;
         private int _unchanged;
         private int _conflicted;
         private int _deletedLocal;
-        private int _deletedToMaster;
+        private int _deletedToPrimary;
         private string _syncSetName;
 
         public SyncResultViewModel(string syncSetName)
@@ -38,13 +38,13 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             }
         }
 
-        public int CopiedToMaster
+        public int CopiedToPrimary
         {
-            get => _copiedToMaster;
+            get => _copiedToPrimary;
             set
             {
-                if (value == _copiedToMaster) return;
-                _copiedToMaster = value;
+                if (value == _copiedToPrimary) return;
+                _copiedToPrimary = value;
                 OnPropertyChanged();
             }
         }
@@ -60,13 +60,13 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             }
         }
 
-        public int DeletedToMaster
+        public int DeletedToPrimary
         {
-            get => _deletedToMaster;
+            get => _deletedToPrimary;
             set
             {
-                if (value == _deletedToMaster) return;
-                _deletedToMaster = value;
+                if (value == _deletedToPrimary) return;
+                _deletedToPrimary = value;
                 OnPropertyChanged();
             }
         }

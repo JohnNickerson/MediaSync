@@ -161,12 +161,12 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             return FileExists(Path.Combine(localPath, relativePath));
         }
 
-        public bool FilesMatch(FileHeader masterfile, FileHeader localIndexFile)
+        public bool FilesMatch(FileHeader primaryfile, FileHeader localIndexFile)
         {
-            return masterfile.Size == localIndexFile.Size
-                && (masterfile.ContentsHash == null 
+            return primaryfile.Size == localIndexFile.Size
+                && (primaryfile.ContentsHash == null 
                 || localIndexFile.ContentsHash == null 
-                || masterfile.ContentsHash == localIndexFile.ContentsHash);
+                || primaryfile.ContentsHash == localIndexFile.ContentsHash);
         }
 
         public string GetConflictFileName(string localFile, string machineId, DateTime now)

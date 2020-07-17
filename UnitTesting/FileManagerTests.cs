@@ -46,7 +46,7 @@ namespace UnitTesting
         public void FilesMatch_HashMismatchShouldBeFalse()
         {
             // Arrange
-            var masterFile = new FileHeader
+            var primaryFile = new FileHeader
             {
                 ContentsHash = "123",
                 BasePath = @"C:\Users\John\Documents",
@@ -66,7 +66,7 @@ namespace UnitTesting
             };
 
             // Act
-            var match = new SimpleFileManager(new MockHasher()).FilesMatch(masterFile, indexFile);
+            var match = new SimpleFileManager(new MockHasher()).FilesMatch(primaryFile, indexFile);
 
 
             // Assert

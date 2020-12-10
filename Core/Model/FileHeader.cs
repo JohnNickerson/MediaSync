@@ -4,7 +4,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class FileHeader
+    public class FileHeader : EntityBase, IFileSystemEntry
     {
         #region Fields
         private readonly IFileHashProvider _hasher;

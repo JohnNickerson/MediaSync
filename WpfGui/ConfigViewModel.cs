@@ -6,18 +6,18 @@ namespace AssimilationSoftware.MediaSync.WpfGui
     {
         private RelayCommand _browseCommand;
 
-        private string _dataFile;
+        private string _sharedFolder;
         private string _thisMachine;
 
         public ICommand BrowseCommand => _browseCommand ?? (_browseCommand = new RelayCommand(BrowseExecute));
 
-        public string DataFile
+        public string SharedFolder
         {
-            get => _dataFile;
+            get => _sharedFolder;
             set
             {
-                if (_dataFile == value) return;
-                _dataFile = value;
+                if (_sharedFolder == value) return;
+                _sharedFolder = value;
                 OnPropertyChanged();
             }
         }
@@ -36,23 +36,15 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         public void BrowseExecute()
         {
             // Configure open file dialog box
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog
+            var fdlg = new System.Windows.Forms.FolderBrowserDialog();
+            fdlg.SelectedPath = SharedFolder;
+            fdlg.ShowNewFolderButton = true;
+            fdlg.Description = "Shared data folder";
+            var answer = fdlg.ShowDialog();
+            if (answer == System.Windows.Forms.DialogResult.OK)
             {
-                FileName = "SyncData",
-                DefaultExt = ".db",
-                Filter = "MediaSync data file (.db)|*.db|All documents (*.*)|*.*",
-                Title = "Data File Location",
-                CheckFileExists = false
-            };
-
-            // Show open file dialog box
-            var result = dlg.ShowDialog();
-            if (result == true)
-            {
-                DataFile = dlg.FileName;
+                SharedFolder = fdlg.SelectedPath;
             }
         }
-
-
     }
 }

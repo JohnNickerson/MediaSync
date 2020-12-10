@@ -54,15 +54,14 @@ namespace AssimilationSoftware.MediaSync.Core
         #endregion
 
         #region Methods
-        public void CreateProfile(string name, ulong reserve)
+        public void CreateLibrary(string name, ulong reserve)
         {
             if (!ProfileExists(name))
             {
-                var profile = new SyncSet
+                var profile = new Library()
                 {
                     Name = name,
-                    ReserveSpace = reserve,
-                    Indexes = new Dictionary<string, FileIndex>(StringComparer.CurrentCultureIgnoreCase),
+                    MaxSharedSize = reserve,
                     PrimaryIndex = new FileIndex( )
                 };
                 _repository.Update(profile);
@@ -74,7 +73,7 @@ namespace AssimilationSoftware.MediaSync.Core
             }
         }
 
-        public void ResizeProfile(string name, ulong reserve)
+        public void ResizeReserve(string name, ulong reserve)
         {
             if (ProfileExists(name))
             {
@@ -90,12 +89,12 @@ namespace AssimilationSoftware.MediaSync.Core
             return _repository.Items.Any(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        private SyncSet GetProfile(string name)
+        private Replica GetProfile(string name)
         {
             return _repository.Items.FirstOrDefault(x => String.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public void JoinProfile(string profileName, string localPath, string sharedPath)
+        public void AddReplica(string profileName, string localPath, string sharedPath)
         {
             var profile = GetProfile(profileName);
             if (profile == null)
@@ -104,19 +103,17 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
-                JoinProfile(profile, localPath, sharedPath);
+                AddReplica(profile, localPath, sharedPath);
             }
         }
 
-        private void JoinProfile(SyncSet profile, string localPath, string sharedPath)
+        private void AddReplica(Replica profile, string localPath, string sharedPath)
         {
             if (!profile.ContainsParticipant(MachineId))
             {
-                profile.Indexes[MachineId] = new FileIndex
+                profile.Indexes[MachineId] = new Replica()
                 {
-                    MachineName = MachineId,
-                    LocalPath = localPath,
-                    SharedPath = sharedPath
+                    LocalPath = localPath
                 };
                 _repository.Update(profile);
             }
@@ -124,14 +121,13 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 var i = profile.GetIndex(MachineId);
                 i.LocalPath = localPath;
-                i.SharedPath = sharedPath;
                 profile.UpdateIndex(i);
                 _repository.Update(profile);
             }
             _repository.SaveChanges();
         }
 
-        private void LeaveProfile(SyncSet profile, string machine)
+        private void LeaveProfile(Replica profile, string machine)
         {
             if (profile.ContainsParticipant(machine))
             {
@@ -147,7 +143,7 @@ namespace AssimilationSoftware.MediaSync.Core
             LeaveProfile(profile, machine);
         }
 
-        public Dictionary<string, SyncSet> Profiles => _repository.Items.ToDictionary(k => k.Name, v => v);
+        public Dictionary<string, Replica> Profiles => _repository.Items.ToDictionary(k => k.Name, v => v);
 
         public List<string> Machines
         {
@@ -223,7 +219,7 @@ namespace AssimilationSoftware.MediaSync.Core
             Trace.WriteLine(fullResults.AnyChanges ? fullResults.GetDisplayString("Totals") : "No actions taken");
         }
 
-        public void RemoveProfile(string profileName)
+        public void RemoveLibrary(string profileName)
         {
             _repository.Delete(_repository.Find(profileName));
             _repository.SaveChanges();
@@ -232,7 +228,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        private FileActionsCount Sync(SyncSet syncSet, bool preview = false)
+        private FileActionsCount Sync(Replica syncSet, bool preview = false)
         {
             var actionsCount = new FileActionsCount();
             // Check folders, just in case.
@@ -575,32 +571,25 @@ namespace AssimilationSoftware.MediaSync.Core
                         return actionsCount;
                     }
                 }
-                foreach (var d in copyToLocal.Where(i => i.IsFolder))
+                foreach (var d in copyToLocal.OrderBy(i => i.RelativePath.Length))
                 {
-                    _fileManager.EnsureFolder(Path.Combine(localIndex.LocalPath, d.RelativePath));
-                    if (_stopSync)
+                    if (d.IsFolder)
                     {
-                        _repository.Update(syncSet);
-                        return actionsCount;
-                    }
-
-                }
-                foreach (var c in copyToLocal.Where(i => !i.IsFolder))
-                {
-                    var fcr = _fileManager.CopyFile(sharedPath, c.RelativePath, localIndex.LocalPath);
-                    if (fcr == FileCommandResult.Failure)
-                    {
-                        errorList.Add($"Inbound file copy failed: {c.RelativePath}");
+                        _fileManager.EnsureFolder(Path.Combine(localIndex.LocalPath, d.RelativePath));
                     }
                     else
                     {
+                        var fcr = _fileManager.CopyFile(sharedPath, d.RelativePath, localIndex.LocalPath);
+                        if (fcr == FileCommandResult.Failure)
+                        {
+                            errorList.Add($"Inbound file copy failed: {d.RelativePath}");
+                        }
                     }
                     if (_stopSync)
                     {
                         _repository.Update(syncSet);
                         return actionsCount;
                     }
-
                 }
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
@@ -618,7 +607,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
 
                 // Push.
-                foreach (var m in deletePrimary)
+                foreach (var m in deletePrimary.OrderByDescending(f => f.RelativePath.Length))
                 {
                     m.IsDeleted = true;
                     syncSet.PrimaryIndex.UpdateFile(m);
@@ -798,7 +787,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
                 var flashDrive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(sharedPath)));
                 var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, syncSet.ReserveSpace);
-                foreach (var s in copyToShared)
+                foreach (var s in copyToShared.OrderBy(f => f.RelativePath.Length))
                 {
                     if (s != null)
                     {

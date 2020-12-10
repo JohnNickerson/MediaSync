@@ -37,32 +37,25 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CommandLine">
-      <HintPath>..\Library\CommandLine.dll</HintPath>
+    <Reference Include="CommandLine, Version=2.2.1.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.2.2.1\lib\net45\CommandLine.dll</HintPath>
     </Reference>
     <Reference Include="Cuneiform">
       <HintPath>..\Library\Cuneiform.dll</HintPath>
     </Reference>
-    <Reference Include="LiteDB, Version=4.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27, processorArchitecture=MSIL">
-      <HintPath>..\packages\LiteDB.4.1.4\lib\net40\LiteDB.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Options\AddProfileSubOptions.cs" />
+    <Compile Include="Options\AddLibrarySubOptions.cs" />
     <Compile Include="Options\InitSubOptions.cs" />
-    <Compile Include="Options\JoinProfileSubOptions.cs" />
-    <Compile Include="Options\LeaveProfileSubOptions.cs" />
+    <Compile Include="Options\AddReplicaSubOptions.cs" />
+    <Compile Include="Options\RemoveReplicaSubOptions.cs" />
     <Compile Include="Options\ListMachinesSubOptions.cs" />
     <Compile Include="Options\ListProfilesSubOptions.cs" />
     <Compile Include="Options\Options.cs" />
     <Compile Include="Options\RemoveMachineSubOptions.cs" />
-    <Compile Include="Options\RemoveProfileOptions.cs" />
+    <Compile Include="Options\RemoveLibraryOptions.cs" />
     <Compile Include="Options\RunSubOptions.cs" />
     <Compile Include="Options\UpdateProfileSubOptions.cs" />
     <Compile Include="Options\VersionSubOptions.cs" />

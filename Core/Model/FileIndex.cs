@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class FileIndex
+    public class FileIndex : EntityBase
     {
         private Dictionary<string, FileHeader> _files;
 
-        /// <summary>
-        /// The name of the machine to which this index belongs, if any.
-        /// </summary>
-        public string MachineName { get; set; }
+        public int LibraryId { get; set; }
+        public Library Library { get; set; }
 
         /// <summary>
         /// The date and time at which the index was last updated.
@@ -31,11 +30,6 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// The path on the local machine where the repository is stored.
         /// </summary>
         public string LocalPath { get; set; }
-
-        /// <summary>
-        /// The path, on the local machine, where shared storage for file transfers is accessed.
-        /// </summary>
-        public string SharedPath { get; set; }
 
         public FileHeader GetFile(string relativePath)
         {
@@ -70,7 +64,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
                 return false;
 
             var indexfile = GetFile(file.RelativePath);
-            return file.IsFolder == indexfile.IsFolder && file.Size == indexfile.Size && file.ContentsHash == indexfile.ContentsHash;
+            return file.IsFolder == indexfile.IsFolder && file.Size == indexfile.Size &&
+                   file.ContentsHash == indexfile.ContentsHash;
         }
     }
 }

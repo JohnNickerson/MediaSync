@@ -44,7 +44,6 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                         {
                             var party = p.GetIndex(m);
                             row.Data.Add(party.LocalPath);
-                            sharow.Data.Add(party.SharedPath);
                         }
                         else
                         {

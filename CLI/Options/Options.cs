@@ -13,16 +13,16 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
 
         #region Commands
         [VerbOption("add-profile", HelpText = "Adds a new sync profile")]
-        public AddProfileSubOptions AddVerb { get; set; }
+        public AddLibrarySubOptions AddVerb { get; set; }
 
         [VerbOption("init", HelpText = "Initialises general settings")]
         public InitSubOptions InitVerb { get; set; }
 
         [VerbOption("join-profile", HelpText = "Join (or retarget) a sync profile")]
-        public JoinProfileSubOptions JoinVerb { get; set; }
+        public AddReplicaSubOptions JoinVerb { get; set; }
 
         [VerbOption("leave-profile", HelpText = "Leave a sync profile")]
-        public LeaveProfileSubOptions LeaveVerb { get; set; }
+        public RemoveReplicaSubOptions LeaveVerb { get; set; }
 
         [VerbOption("update-profile", HelpText = "Modify the size reserved for a profile")]
         public UpdateProfileSubOptions UpdateVerb { get; set; }
@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         public RemoveMachineSubOptions RemoveMachineVerb { get; set; }
 
         [VerbOption("remove-profile", HelpText = "Removes an entire profile from the configuration")]
-        public RemoveProfileOptions RemoveProfileVerb { get; set; }
+        public RemoveLibraryOptions RemoveLibraryVerb { get; set; }
 
         [VerbOption("run", HelpText = "Runs all profiles")]
         public RunSubOptions RunVerb { get; set; }

@@ -67,29 +67,29 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             switch (argverb)
             {
-                case "add-profile":
-                    #region Add profile
+                case "add-library":
+                    #region Add library
                     {
-                        var addOptions = (AddProfileSubOptions)argsubs;
-                        vm.CreateProfile(addOptions.ProfileName, addOptions.ReserveSpaceMb * 1000000);
-                        vm.JoinProfile(addOptions.ProfileName, addOptions.LocalPath, addOptions.SharedPath);
+                        var addOptions = (AddLibrarySubOptions)argsubs;
+                        vm.CreateLibrary(addOptions.LibraryName, addOptions.ReserveSpaceMb * 1000000);
+                        vm.AddReplica(addOptions.LibraryName, addOptions.LocalPath, addOptions.SharedPath);
                         new ProfileListConsoleView(vm).Run(false);
                     }
                     #endregion
                     break;
-                case "join-profile":
-                    #region Join profile
+                case "add-replica":
+                    #region Add replica
                     {
-                        var joinOptions = (JoinProfileSubOptions)argsubs;
-                        vm.JoinProfile(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath);
+                        var joinOptions = (AddReplicaSubOptions)argsubs;
+                        vm.AddReplica(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath);
                         new ProfileListConsoleView(vm).Run(false);
                     }
                     #endregion
                     break;
-                case "leave-profile":
-                    #region Leave profile
+                case "remove-replica":
+                    #region Remove replica
                     {
-                        var leaveOptions = (LeaveProfileSubOptions)argsubs;
+                        var leaveOptions = (RemoveReplicaSubOptions)argsubs;
                         if (leaveOptions.MachineName == "this")
                         {
                             leaveOptions.MachineName = Settings.Default.MachineName;
@@ -121,17 +121,17 @@ namespace AssimilationSoftware.MediaSync.CLI
                     }
                     #endregion
                     break;
-                case "remove-profile":
-                    #region Remove an entire profile
+                case "remove-library":
+                    #region Remove an entire library
                     {
-                        var removeOptions = (RemoveProfileOptions)argsubs;
-                        vm.RemoveProfile(removeOptions.ProfileName);
+                        var removeOptions = (RemoveLibraryOptions)argsubs;
+                        vm.RemoveLibrary(removeOptions.ProfileName);
                         new ProfileListConsoleView(vm).Run(false);
                     }
                     break;
                 #endregion
                 case "run":
-                    #region Run profiles
+                    #region Run sync
                     {
                         // TODO: SearchSpecification for which profiles to run.
                         // TODO: Confirm profile selections before running.
@@ -149,11 +149,11 @@ namespace AssimilationSoftware.MediaSync.CLI
                     }
                     #endregion
                     break;
-                case "update-profile":
-                    #region Update a profile
+                case "update-replica":
+                    #region Update a replica
                     {
                         var updateOptions = (UpdateProfileSubOptions)argsubs;
-                        vm.ResizeProfile(updateOptions.ProfileName, updateOptions.ReserveSpaceMb * 1000000);
+                        vm.ResizeReserve(updateOptions.ProfileName, updateOptions.ReserveSpaceMb * 1000000);
                         new ProfileListConsoleView(vm).Run(true);
                     }
                     #endregion

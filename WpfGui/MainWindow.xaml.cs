@@ -10,5 +10,11 @@
             InitializeComponent();
             this.DataContext = new MainViewModel();
         }
+
+        public MainViewModel ViewModel
+        {
+            get => (MainViewModel) DataContext;
+            set => DataContext = value;
+        }
     }
 }

@@ -8,8 +8,8 @@
     <Setting Name="ThisMachine" Type="System.String" Scope="User">
       <Value Profile="(Default)">{System.Environment.MachineName}</Value>
     </Setting>
-    <Setting Name="DataFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">SyncData.xml</Value>
+    <Setting Name="SharedPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">.</Value>
     </Setting>
   </Settings>
 </SettingsFile>

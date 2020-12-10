@@ -10,6 +10,8 @@ MediaSync is a portable, multi-primary, sync program designed to work from a fla
 - Sync empty folders in addition to files.
 
 # Releases
+* 2020-12-10: v2.4.1.2
+	- Fixed a relative path determination bug in SimpleFileManager.
 * 2020-05-27: v2.4.1.1
 	- Fixed calls to Debug and Trace.WriteLine to use string interpolation.
 * 2020-05-21: v2.4.1

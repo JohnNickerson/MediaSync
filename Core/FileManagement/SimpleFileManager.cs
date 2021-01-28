@@ -216,7 +216,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     foreach (var subfolder in Directory.GetDirectories(folder))
                     {
                         queue.Enqueue(subfolder);
-                        result.Add(subfolder.Remove(0, path.Length + 1).Replace("/", "\\"));
+                        result.Add(GetRelativePath(subfolder, path).Replace("/", "\\"));
                     }
                 }
                 catch (Exception e)

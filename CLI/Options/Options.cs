@@ -12,11 +12,14 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         }
 
         #region Commands
-        [VerbOption("add-profile", HelpText = "Adds a new sync profile")]
-        public AddProfileSubOptions AddVerb { get; set; }
-
         [VerbOption("init", HelpText = "Initialises general settings")]
         public InitSubOptions InitVerb { get; set; }
+
+        [VerbOption("change-drive", HelpText = "Change the shared drive letter on this machine")]
+        public ChangeSharedDriveOptions ChangeDriveLetterVerb { get; set; }
+
+        [VerbOption("add-profile", HelpText = "Adds a new sync profile")]
+        public AddProfileSubOptions AddVerb { get; set; }
 
         [VerbOption("join-profile", HelpText = "Join (or retarget) a sync profile")]
         public JoinProfileSubOptions JoinVerb { get; set; }

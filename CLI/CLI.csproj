@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Options\AddProfileSubOptions.cs" />
+    <Compile Include="Options\ChangeSharedDriveOptions.cs" />
     <Compile Include="Options\InitSubOptions.cs" />
     <Compile Include="Options\JoinProfileSubOptions.cs" />
     <Compile Include="Options\LeaveProfileSubOptions.cs" />

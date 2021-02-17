@@ -868,6 +868,23 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             _stopSync = true;
         }
+
+        public void ChangeDriveLetter(DriveInfo newDrive, string machineName)
+        {
+            foreach (var profile in Profiles.Values)
+            {
+                if (profile.ContainsParticipant(machineName))
+                {
+                    var newSharedPath = (newDrive.RootDirectory.FullName);
+                    var party = profile.GetIndex(machineName);
+                    var originalPath = party.SharedPath;
+                    if (originalPath.StartsWith(newDrive.RootDirectory.FullName)) continue; // Already there.
+                    originalPath = originalPath.Remove(0, originalPath.IndexOf(@"\", StringComparison.Ordinal) + 1);
+                    newSharedPath = Path.Combine(newSharedPath, originalPath);
+                    JoinProfile(profile.Name, party.LocalPath, newSharedPath);
+                }
+            }
+        }
         #endregion
 
         #region Properties

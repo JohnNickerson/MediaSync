@@ -66,6 +66,9 @@ namespace AssimilationSoftware.MediaSync.CLI
             }
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
 
+            // TODO: vm.CheckDriveLetter(Settings.Default.MachineName, Directory.GetDirectoryRoot(Environment.CurrentDirectory));
+            // ie if profiles reference a different directory to the current working folder, offer to change the drive letter.
+
             switch (argverb)
             {
                 case "add-profile":
@@ -84,19 +87,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                         var changeDriveOptions = (ChangeSharedDriveOptions)argsubs;
                         // For each profile for this machine, load the shared path and change the drive letter.
                         var newDrive = new System.IO.DriveInfo(changeDriveOptions.NewDriveLetter);
-                        foreach (var profile in vm.Profiles.Values)
-                        {
-                            if (profile.ContainsParticipant(Settings.Default.MachineName))
-                            {
-                                var newSharedPath = (newDrive.RootDirectory.FullName);
-                                var party = profile.GetIndex(Settings.Default.MachineName);
-                                var originalPath = party.SharedPath;
-                                if (originalPath.StartsWith(changeDriveOptions.NewDriveLetter)) continue; // Already there.
-                                originalPath = originalPath.Remove(0, originalPath.IndexOf(@"\", StringComparison.Ordinal) + 1);
-                                newSharedPath = Path.Combine(newSharedPath, originalPath);
-                                vm.JoinProfile(profile.Name, party.LocalPath, newSharedPath);
-                            }
-                        }
+                        vm.ChangeDriveLetter(newDrive, Settings.Default.MachineName);
                         new ProfileListConsoleView(vm).Run(false);
                     }
                     #endregion

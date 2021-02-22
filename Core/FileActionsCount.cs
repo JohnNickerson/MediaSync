@@ -14,6 +14,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public int DeletePrimaryCount { get; set; }
         public int RenameLocalCount { get; set; }
         public int NoActionCount { get; set; }
+        public int SkippedCount { get; set; }
 
         public bool AnyChanges => CopyToLocalCount + CopyToSharedCount + DeleteLocalCount + DeletePrimaryCount + RenameLocalCount > 0;
 
@@ -28,6 +29,7 @@ namespace AssimilationSoftware.MediaSync.Core
             table.AppendLine($"Delete       | {DeleteLocalCount,7} | {DeletePrimaryCount,7} |");
             table.AppendLine($"Conflicted   | {RenameLocalCount,7} |         |");
             table.AppendLine($"No Change    | {NoActionCount,7} |         |");
+            // TODO: table.AppendLine($"Skipped      | {SkippedCount,7} |         |");
 
             return table.ToString();
         }

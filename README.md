@@ -10,6 +10,11 @@ MediaSync is a portable, multi-primary, sync program designed to work from a fla
 - Sync empty folders in addition to files.
 
 # Releases
+* 2021-02-23: v2.4.3
+	- Added automatic detection of drive letter changes.
+	- Sorted action queues by file name length for nicer display.
+* 2021-02-18: v2.4.2
+	- Added a "change-drive" command to update the drive letter of the flash drive.
 * 2020-12-10: v2.4.1.2
 	- Fixed a relative path determination bug in SimpleFileManager.
 * 2020-05-27: v2.4.1.1

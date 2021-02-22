@@ -554,7 +554,7 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 begin = DateTime.Now;
                 #region 3.1. Rename, Copy to Local, Delete local, Delete primary
-                foreach (var r in renameLocal)
+                foreach (var r in renameLocal.OrderBy(f => f.FileName.Length))
                 {
                     var newName = _fileManager.GetConflictFileName(Path.Combine(localIndex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
                     var newRelativePath = _fileManager.GetRelativePath(newName, localIndex.LocalPath);
@@ -575,7 +575,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         return actionsCount;
                     }
                 }
-                foreach (var d in copyToLocal.Where(i => i.IsFolder))
+                foreach (var d in copyToLocal.Where(i => i.IsFolder).OrderBy(f => f.FileName.Length))
                 {
                     _fileManager.EnsureFolder(Path.Combine(localIndex.LocalPath, d.RelativePath));
                     if (_stopSync)
@@ -585,7 +585,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
 
                 }
-                foreach (var c in copyToLocal.Where(i => !i.IsFolder))
+                foreach (var c in copyToLocal.Where(i => !i.IsFolder).OrderBy(f => f.FileName.Length))
                 {
                     var fcr = _fileManager.CopyFile(sharedPath, c.RelativePath, localIndex.LocalPath);
                     if (fcr == FileCommandResult.Failure)
@@ -618,7 +618,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
 
                 // Push.
-                foreach (var m in deletePrimary)
+                foreach (var m in deletePrimary.OrderByDescending(f => f.FileName.Length))
                 {
                     m.IsDeleted = true;
                     syncSet.PrimaryIndex.UpdateFile(m);
@@ -693,7 +693,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                 }
 
-                foreach (var mf in syncSet.PrimaryIndex.Files.Values.ToArray())
+                foreach (var mf in syncSet.PrimaryIndex.Files.Values.ToArray().OrderByDescending(f => f.FileName.Length))
                 {
                     var key = mf.RelativePath.ToLower();
                     var shareFileHead = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
@@ -747,7 +747,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                      where File.Exists(Path.Combine(sharedPath, s)) && (!minx.Files.ContainsKey(s) || minx.GetFile(s).IsDeleted)
                                      select s;
                 // For every file now in shared storage,
-                foreach (var s in shareCleanMeta)
+                foreach (var s in shareCleanMeta.OrderByDescending(f => f.Length))
                 {
                     // Shared file is missing from primary index. Get rid of it.
                     _fileManager.Delete(Path.Combine(sharedPath, s));
@@ -798,7 +798,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
                 var flashDrive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(sharedPath)));
                 var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, syncSet.ReserveSpace);
-                foreach (var s in copyToShared)
+                foreach (var s in copyToShared.OrderBy(f => f.FileName.Length))
                 {
                     if (s != null)
                     {

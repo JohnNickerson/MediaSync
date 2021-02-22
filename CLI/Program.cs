@@ -22,6 +22,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             var argverb = string.Empty;
             object argsubs = null;
             var options = new Options.Options();
+            var currentDriveLetter = Directory.GetDirectoryRoot(Environment.CurrentDirectory);
             if (!CommandLine.Parser.Default.ParseArguments(args, options,
                 (verb, subOptions) =>
                 {
@@ -41,6 +42,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                 Settings.Default.MachineName = initOptions.MachineName;
                 Settings.Default.MetadataFolder = initOptions.MetadataFolder;
                 Settings.Default.DataFileFormat = initOptions.DataFileFormat;
+                Settings.Default.LastKnownDriveLetter = currentDriveLetter;
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();
@@ -66,8 +68,22 @@ namespace AssimilationSoftware.MediaSync.CLI
             }
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
 
-            // TODO: vm.CheckDriveLetter(Settings.Default.MachineName, Directory.GetDirectoryRoot(Environment.CurrentDirectory));
-            // ie if profiles reference a different directory to the current working folder, offer to change the drive letter.
+            #region Detect shared drive letter changes
+            if (!string.IsNullOrEmpty(Settings.Default.LastKnownDriveLetter))
+            {
+                if (Settings.Default.LastKnownDriveLetter != currentDriveLetter)
+                {
+                    // Prompt to change drive letter.
+                    Console.WriteLine($"Shared drive letter appears to have changed: {Settings.Default.LastKnownDriveLetter} -> {currentDriveLetter}");
+                    Console.WriteLine("Should I update profiles to match the new drive letter? [y/n]");
+                    var k = Console.ReadKey().ToString().ToLower();
+                    if (k == "y")
+                    {
+                        vm.ChangeDriveLetter(new DriveInfo(currentDriveLetter), Settings.Default.MachineName);
+                    }
+                }
+            }
+            #endregion
 
             switch (argverb)
             {

@@ -73,13 +73,13 @@ namespace AssimilationSoftware.MediaSync.CLI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastKnownDriveLetter {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UpgradeRequired {
             get {
-                return ((string)(this["LastKnownDriveLetter"]));
+                return ((bool)(this["UpgradeRequired"]));
             }
             set {
-                this["LastKnownDriveLetter"] = value;
+                this["UpgradeRequired"] = value;
             }
         }
     }

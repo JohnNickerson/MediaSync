@@ -2,6 +2,7 @@
 using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Configuration;
 using System.Text;
 using AssimilationSoftware.MediaSync.CLI.Properties;
 using AssimilationSoftware.MediaSync.CLI.Options;
@@ -42,11 +43,18 @@ namespace AssimilationSoftware.MediaSync.CLI
                 Settings.Default.MachineName = initOptions.MachineName;
                 Settings.Default.MetadataFolder = initOptions.MetadataFolder;
                 Settings.Default.DataFileFormat = initOptions.DataFileFormat;
-                Settings.Default.LastKnownDriveLetter = currentDriveLetter;
+                LastKnownDriveLetter = currentDriveLetter;
                 Settings.Default.Configured = true;
 
                 Settings.Default.Save();
                 return;
+            }
+            else if (Settings.Default.UpgradeRequired)
+            {
+                Console.WriteLine("Upgrading settings from previous version...");
+                Settings.Default.Upgrade();
+                Settings.Default.UpgradeRequired = false;
+                Settings.Default.Save();
             }
             else if (!Settings.Default.Configured)
             {
@@ -69,12 +77,12 @@ namespace AssimilationSoftware.MediaSync.CLI
             var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
 
             #region Detect shared drive letter changes
-            if (!string.IsNullOrEmpty(Settings.Default.LastKnownDriveLetter))
+            if (!string.IsNullOrEmpty(LastKnownDriveLetter))
             {
-                if (Settings.Default.LastKnownDriveLetter != currentDriveLetter)
+                if (LastKnownDriveLetter != currentDriveLetter)
                 {
                     // Prompt to change drive letter.
-                    Console.WriteLine($"Shared drive letter appears to have changed: {Settings.Default.LastKnownDriveLetter} -> {currentDriveLetter}");
+                    Console.WriteLine($"Shared drive letter appears to have changed: {LastKnownDriveLetter} -> {currentDriveLetter}");
                     Console.WriteLine("Should I update profiles to match the new drive letter? [y/n]");
                     var k = Console.ReadKey().ToString().ToLower();
                     if (k == "y")
@@ -83,6 +91,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     }
                 }
             }
+            LastKnownDriveLetter = currentDriveLetter;
             #endregion
 
             switch (argverb)
@@ -194,6 +203,32 @@ namespace AssimilationSoftware.MediaSync.CLI
                     break;
             }
             Debug.Flush();
+        }
+
+        static string LastKnownDriveLetter
+        {
+            get
+            {
+                try
+                {
+                    return File.ReadAllText(".mediasync");
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            }
+            set
+            {
+                try
+                {
+                    File.WriteAllText(".mediasync", value);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
     }
 }

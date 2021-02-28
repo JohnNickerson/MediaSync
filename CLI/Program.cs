@@ -211,7 +211,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             {
                 try
                 {
-                    return File.ReadAllText(".mediasync");
+                    return File.ReadAllText($"{Environment.MachineName}.mediasync");
                 }
                 catch
                 {
@@ -222,7 +222,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             {
                 try
                 {
-                    File.WriteAllText(".mediasync", value);
+                    File.WriteAllText($"{Environment.MachineName}.mediasync", value);
                 }
                 catch
                 {

@@ -1,199 +1,312 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AssimilationSoftware.MediaSync.Core.Interfaces;
+using AssimilationSoftware.Maroon.Repositories;
+using AssimilationSoftware.MediaSync.Core.Mappers.CSV;
 using AssimilationSoftware.MediaSync.Core.Model;
-using Polenter.Serialization;
 
 namespace AssimilationSoftware.MediaSync.Core.Mappers
 {
     public class DataStore
     {
         private readonly string _path;
-        private Dictionary<int, IFileSystemEntry> Files;
-        private Dictionary<int, FileIndex> Indexes;
-        private Dictionary<int, Library> Libraries;
-        private Dictionary<int, Machine> Machines;
-        private Dictionary<int, Replica> Replicas;
-        private SharpSerializer _mapper;
+        private SingleOriginRepository<FileSystemEntry> Files;
+        private SingleOriginRepository<FileIndex> Indexes;
+        private SingleOriginRepository<Library> Libraries;
+        private SingleOriginRepository<Machine> Machines;
+        private SingleOriginRepository<Replica> Replicas;
 
         public DataStore(string path)
         {
             _path = path;
-            _mapper = new SharpSerializer();
+            Files = new SingleOriginRepository<FileSystemEntry>(new CsvFileSystemEntryMapper(), Path.Combine(_path, "Files.csv"));
+            Indexes = new SingleOriginRepository<FileIndex>(new CsvFileIndexMapper(), Path.Combine(_path, "Indexes.csv"));
+            Libraries = new SingleOriginRepository<Library>(new CsvLibraryMapper(), Path.Combine(_path, "Libraries.csv"));
+            Machines = new SingleOriginRepository<Machine>(new CsvMachineMapper(), Path.Combine(_path, "Machines.csv"));
+            Replicas = new SingleOriginRepository<Replica>(new CsvReplicaMapper(), Path.Combine(_path, "Replicas.csv"));
             LoadAll();
         }
 
         private void LoadAll()
         {
-            Files = (Dictionary<int, IFileSystemEntry>) _mapper.Deserialize(Path.Combine(_path, "Files.xml"));
-            Indexes = (Dictionary<int, FileIndex>)_mapper.Deserialize(Path.Combine(_path, "Indexes.xml"));
-            Libraries = (Dictionary<int, Library>)_mapper.Deserialize(Path.Combine(_path, "Libraries.xml"));
-            Machines = (Dictionary<int, Machine>)_mapper.Deserialize(Path.Combine(_path, "Machines.xml"));
-            Replicas = (Dictionary<int, Replica>)_mapper.Deserialize(Path.Combine(_path, "Replicas.xml"));
+            Files.FindAll();
+            Indexes.FindAll();
+            Libraries.FindAll();
+            Machines.FindAll();
+            Replicas.FindAll();
         }
 
-        public IFileSystemEntry GetFileSystemEntryById(int id)
+        public FileSystemEntry GetFileSystemEntryById(Guid id)
         {
-            return Files.TryGetValue(id, out var result) ? result : null;
+            return Files.Find(id);
         }
 
-        public FileIndex GetFileIndexById(int id)
+        public FileIndex GetFileIndexById(Guid id)
         {
-            return Indexes.TryGetValue(id, out var result) ? result : null;
+            return Indexes.Find(id);
         }
 
-        public Library GetLibraryById(int id)
+        public Library GetLibraryById(Guid id)
         {
-            return Libraries.TryGetValue(id, out var result) ? result : null;
+            return Libraries.Find(id);
         }
 
-        public Machine GetMachineById(int id)
+        public Machine GetMachineById(Guid id)
         {
-            return Machines.TryGetValue(id, out var result) ? result : null;
+            return Machines.Find(id);
         }
 
-        public Replica GetReplicaById(int id)
+        public Replica GetReplicaById(Guid? id)
         {
-            return Replicas.TryGetValue(id, out var result) ? result : null;
+            return id.HasValue ? Replicas.Find(id.Value) : null;
         }
 
-        public virtual IEnumerable<IFileSystemEntry> ListFileSystemEntries()
+        public virtual IEnumerable<FileSystemEntry> ListFileSystemEntries()
         {
-            return Files.Values.AsEnumerable();
+            return Files.Items;
         }
 
         public virtual IEnumerable<FileIndex> ListIndexes()
         {
-            return Indexes.Values.AsEnumerable();
+            return Indexes.Items;
         }
 
         public virtual IEnumerable<Library> ListLibraries()
         {
-            return Libraries.Values.AsEnumerable();
+            return Libraries.Items;
         }
 
         public virtual IEnumerable<Machine> ListMachines()
         {
-            return Machines.Values.AsEnumerable();
+            return Machines.Items;
         }
 
         public virtual IEnumerable<Replica> ListReplicas()
         {
-            return Replicas.Values.AsEnumerable();
+            return Replicas.Items;
         }
 
-        public virtual IEnumerable<IFileSystemEntry> ListFileSystemEntries(System.Linq.Expressions.Expression<Func<IFileSystemEntry, bool>> predicate)
+        public virtual IEnumerable<FileSystemEntry> ListFileSystemEntries(System.Linq.Expressions.Expression<Func<FileSystemEntry, bool>> predicate)
         {
-            return Files.Values.AsQueryable().Where(predicate).AsEnumerable();
+            return Files.Items.AsQueryable().Where(predicate).AsEnumerable();
+        }
+
+        public virtual FileSystemEntry GetFileByPath(Guid indexId, string relativePath)
+        {
+            return Files.Items
+                .FirstOrDefault(f => f.IndexId == indexId &&
+                                     f.RelativePath.Equals(relativePath, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public virtual IEnumerable<FileIndex> ListIndexes(System.Linq.Expressions.Expression<Func<FileIndex, bool>> predicate)
         {
-            return Indexes.Values.AsQueryable().Where(predicate).AsEnumerable();
+            return Indexes.Items.AsQueryable().Where(predicate).AsEnumerable();
         }
 
         public virtual IEnumerable<Library> ListLibraries(System.Linq.Expressions.Expression<Func<Library, bool>> predicate)
         {
-            return Libraries.Values.AsQueryable().Where(predicate).AsEnumerable();
+            return Libraries.Items.AsQueryable().Where(predicate).AsEnumerable();
         }
 
         public virtual IEnumerable<Machine> ListMachines(System.Linq.Expressions.Expression<Func<Machine, bool>> predicate)
         {
-            return Machines.Values.AsQueryable().Where(predicate).AsEnumerable();
+            return Machines.Items.AsQueryable().Where(predicate).AsEnumerable();
         }
 
         public virtual IEnumerable<Replica> ListReplicas(System.Linq.Expressions.Expression<Func<Replica, bool>> predicate)
         {
-            return Replicas.Values.AsQueryable().Where(predicate).AsEnumerable();
+            return Replicas.Items.AsQueryable().Where(predicate).AsEnumerable();
         }
 
         public void SaveChanges()
         {
-            _mapper.Serialize(Files, Path.Combine(_path, "Files.xml"));
-            _mapper.Serialize(Indexes, Path.Combine(_path, "Indexes.xml"));
-            _mapper.Serialize(Libraries, Path.Combine(_path, "Libraries.xml"));
-            _mapper.Serialize(Machines, Path.Combine(_path, "Machines.xml"));
-            _mapper.Serialize(Replicas, Path.Combine(_path, "Replicas.xml"));
+            PurgeOrphanedData();
+            Files.SaveChanges();
+            Indexes.SaveChanges();
+            Libraries.SaveChanges();
+            Machines.SaveChanges();
+            Replicas.SaveChanges();
         }
 
-        public void Insert(IFileSystemEntry entity)
+        public void Insert(FileSystemEntry entity)
         {
-            Files[entity.Id] = (entity);
+            Files.Create(entity);
         }
 
         public void Insert(FileIndex entity)
         {
-            Indexes[entity.Id] = (entity);
+            Indexes.Create(entity);
         }
 
         public void Insert(Library entity)
         {
-            Libraries[entity.Id] = (entity);
+            Libraries.Create(entity);
         }
 
         public void Insert(Machine entity)
         {
-            Machines[entity.Id] = (entity);
+            Machines.Create(entity);
         }
 
         public void Insert(Replica entity)
         {
-            Replicas[entity.Id] = (entity);
+            Replicas.Create(entity);
         }
 
-        public void Update(IFileSystemEntry entity)
+        public void Update(FileSystemEntry entity)
         {
-            Files[entity.Id] = entity;
+            // "Update" for file system entries may be used for creation as well.
+            if (Files.Find(entity.ID) != null)
+            {
+                Files.Update(entity);
+            }
+            else
+            {
+                Files.Create(entity);
+            }
         }
 
         public void Update(FileIndex entity)
         {
-            Indexes[entity.Id] = entity;
+            Indexes.Update(entity);
         }
 
         public void Update(Library entity)
         {
-            Libraries[entity.Id] = entity;
+            Libraries.Update(entity);
         }
 
         public void Update(Machine entity)
         {
-            Machines[entity.Id] = entity;
+            Machines.Update(entity);
         }
 
         public void Update(Replica entity)
         {
-            Replicas[entity.Id] = entity;
+            Replicas.Update(entity);
         }
 
-        public void Delete(IFileSystemEntry entity)
+        public void Delete(FileSystemEntry entity)
         {
-            Files.Remove(entity.Id);
+            Files.Delete(entity);
         }
 
         public void Delete(FileIndex entity)
         {
-            Indexes.Remove(entity.Id);
+            Indexes.Delete(entity);
         }
 
         public void Delete(Library entity)
         {
-            Libraries.Remove(entity.Id);
+            Libraries.Delete(entity);
         }
 
         public void Delete(Machine entity)
         {
-            Machines.Remove(entity.Id);
+            Machines.Delete(entity);
         }
 
         public void Delete(Replica entity)
         {
-            Replicas.Remove(entity.Id);
+            Replicas.Delete(entity);
+        }
+
+        public Machine GetMachineByName(string name)
+        {
+            return Machines.Items.FirstOrDefault(m => m.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public void PurgeOrphanedData()
+        {
+            // Replicas without a Machine
+            foreach (var r in Replicas.Items)
+            {
+                if (GetMachineById(r.MachineId) == null || GetLibraryById(r.LibraryId) == null)
+                {
+                    Delete(r);
+                }
+            }
+
+            // Indexes without a replica or library
+            foreach (var i in Indexes.Items)
+            {
+                var replica = GetReplicaById(i.ReplicaId);
+                if (GetLibraryById(i.LibraryId) == null || i.ReplicaId.HasValue && replica == null)
+                {
+                    Delete(i);
+                }
+            }
+
+            foreach (var f in Files.Items)
+            {
+                // Files without an index.
+                var index = GetFileIndexById(f.IndexId);
+                if (index == null || index.IsDeleted)
+                {
+                    Delete(f);
+                }
+                // TODO: Expired library files with no replicas.
+            }
+        }
+
+        public void CopyFileSystemEntry(FileSystemEntry fLocalFileHeader, Guid primaryIndexId)
+        {
+            // Add a new copy of the given file system entry to the given primary index.
+            FileSystemEntry theNewOne = null;
+            if (fLocalFileHeader is FileHeader file)
+            {
+                theNewOne = new FileHeader
+                {
+                    ID = Guid.NewGuid(),
+                    IndexId = primaryIndexId,
+                    BasePath = file.BasePath,
+                    ContentsHash = fLocalFileHeader.ContentsHash,
+                    ImportHash = file.ImportHash,
+                    IsDeleted = file.IsDeleted,
+                    IsFolder = file.IsFolder,
+                    LastModified = DateTime.Now,
+                    LastWriteTime = file.LastWriteTime,
+                    PrevRevision = null,
+                    RelativePath = file.RelativePath,
+                    RevisionGuid = Guid.NewGuid(),
+                    Size = file.Size,
+                    State = file.State
+                };
+            }
+            else if (fLocalFileHeader is FolderHeader folder)
+            {
+                theNewOne = new FolderHeader
+                {
+                    ContentsHash = folder.ContentsHash,
+                    ID = Guid.NewGuid(),
+                    IndexId = primaryIndexId,
+                    IsDeleted = folder.IsDeleted,
+                    ImportHash = folder.ImportHash,
+                    RelativePath = folder.RelativePath,
+                    State = folder.State,
+                    LastModified = DateTime.Now,
+                    PrevRevision = null,
+                    RevisionGuid = Guid.NewGuid()
+                };
+            }
+            if (theNewOne != null)
+                Insert(theNewOne);
+        }
+
+        public IEnumerable<FileIndex> GetIndexesByReplica(Replica replica)
+        {
+            return ListIndexes(i => i.ReplicaId == replica.ID);
+        }
+
+        public IEnumerable<FileSystemEntry> GetFilesByIndex(FileIndex index)
+        {
+            return ListFileSystemEntries(f => f.IndexId == index.ID);
+        }
+
+        public IEnumerable<FileIndex> GetIndexesByLibraryId(Guid libraryId, bool includePrimary = false)
+        {
+            return includePrimary ? ListIndexes(i => !i.IsDeleted && i.LibraryId == libraryId) : ListIndexes(i => !i.IsDeleted && i.LibraryId == libraryId && i.ReplicaId != null);
         }
     }
 }

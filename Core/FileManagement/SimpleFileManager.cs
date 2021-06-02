@@ -68,7 +68,8 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     LastModified = finfo.LastWriteTime,
                     RelativePath = relativePath,
                     Size = finfo.Length,
-                    IsFolder = DirectoryExists(fullpath)
+                    IsFolder = DirectoryExists(fullpath),
+                    ContentsHash = _fileHasher.ComputeHash(fullpath)
                 };
             }
         }
@@ -88,29 +89,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
 				return null;
 			}
 		}
-
-        public FileIndex CreateIndex(string path, params string[] searchpatterns)
-        {
-            FileIndex index = new FileIndex
-            {
-                LocalPath = path,
-                TimeStamp = DateTime.Now
-            };
-
-            foreach (string file in ListLocalFiles(path, searchpatterns))
-            {
-                try
-                {
-                    var f = CreateFileHeader(index.LocalPath, file);
-                    index.UpdateFile(f);
-                }
-                catch (Exception e)
-                {
-                    Errors.Add(e);
-                }
-            }
-            return index;
-        }
 
         public FileCommandResult Delete(string dir)
         {

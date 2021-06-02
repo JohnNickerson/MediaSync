@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AssimilationSoftware.MediaSync.CLI</RootNamespace>
     <AssemblyName>MediaSync</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -43,21 +43,28 @@
     <Reference Include="Cuneiform">
       <HintPath>..\Library\Cuneiform.dll</HintPath>
     </Reference>
+    <Reference Include="Maroon">
+      <HintPath>..\Library\Maroon.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Options\AddLibrarySubOptions.cs" />
-    <Compile Include="Options\InitSubOptions.cs" />
-    <Compile Include="Options\AddReplicaSubOptions.cs" />
-    <Compile Include="Options\RemoveReplicaSubOptions.cs" />
-    <Compile Include="Options\ListMachinesSubOptions.cs" />
+    <Compile Include="Options\AddLibraryOptions.cs" />
+    <Compile Include="Options\DeleteFileOptions.cs" />
+    <Compile Include="Options\InitOptions.cs" />
+    <Compile Include="Options\AddReplicaOptions.cs" />
+    <Compile Include="Options\MoveReplicaOptions.cs" />
+    <Compile Include="Options\RemoveReplicaOptions.cs" />
+    <Compile Include="Options\UndeleteFileOptions.cs" />
+    <Compile Include="Options\ViewIndexOptions.cs" />
     <Compile Include="Options\ListProfilesSubOptions.cs" />
-    <Compile Include="Options\Options.cs" />
-    <Compile Include="Options\RemoveMachineSubOptions.cs" />
+    <Compile Include="Options\DeleteMachineOptions.cs" />
     <Compile Include="Options\RemoveLibraryOptions.cs" />
-    <Compile Include="Options\RunSubOptions.cs" />
-    <Compile Include="Options\UpdateProfileSubOptions.cs" />
+    <Compile Include="Options\RunOptions.cs" />
+    <Compile Include="Options\UpdateLibraryOptions.cs" />
     <Compile Include="Options\VersionSubOptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

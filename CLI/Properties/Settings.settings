@@ -11,8 +11,11 @@
     <Setting Name="MetadataFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)">.</Value>
     </Setting>
-    <Setting Name="DataFileFormat" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+    <Setting Name="UpgradeRequired" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="SharedPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">.\Transfer</Value>
     </Setting>
   </Settings>
 </SettingsFile>

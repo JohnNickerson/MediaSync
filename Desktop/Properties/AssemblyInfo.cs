@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Assimilation Software")]
 [assembly: AssemblyProduct("MediaSync")]
-[assembly: AssemblyCopyright("Copyright © Assimilation Software 2020")]
+[assembly: AssemblyCopyright("Copyright © Assimilation Software 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

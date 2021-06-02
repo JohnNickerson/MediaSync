@@ -35,8 +35,6 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
 
         string[] ListLocalFiles(string path, params string[] searchPatterns);
 
-        FileIndex CreateIndex(string path, params string[] searchpatterns);
-
         FileHeader CreateFileHeader(string localPath, string relativePath);
 		
 		/// <summary>

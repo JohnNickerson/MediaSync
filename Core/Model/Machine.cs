@@ -7,7 +7,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class Machine : EntityBase
+    public class Machine : Maroon.Model.ModelObject
     {
         public string Name { get; set; }
 

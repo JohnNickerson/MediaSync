@@ -32,9 +32,9 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             // Configuration will be set by this point.
             ThisMachine = Settings.Default.ThisMachine;
             // Load the profiles for display.
-            var mapper = new LiteDbSyncSetMapper(Settings.Default.SharedPath);
-            _api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
-            Replicas = _api.Profiles.Values.ToList();
+            //var mapper = new LiteDbSyncSetMapper(Settings.Default.SharedPath);
+            //_api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
+            //Replicas = _api.Profiles.Values.ToList();
         }
 
         public string ThisMachine { get; set; }

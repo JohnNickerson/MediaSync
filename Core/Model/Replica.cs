@@ -8,19 +8,16 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class Replica : EntityBase
+    public class Replica : Maroon.Model.ModelObject
     {
-        public int HostId { get; set; }
-        public Machine Host { get; set; }
-        public int IndexId { get; set; }
-        public FileIndex Index { get; set; }
+        public Guid MachineId { get; set; }
+        public Guid IndexId { get; set; }
 
         /// <summary>
         /// The path on the local machine where the replica is stored.
         /// </summary>
         public string LocalPath { get; set; }
 
-        public int LibraryId { get; set; }
-        public Library Library { get; set; }
+        public Guid LibraryId { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,25 +24,22 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         private RelayCommand _configCommand;
         private string _outputText;
         private ViewModel _api;
-        private List<SyncSet> _profiles;
+        private ObservableCollection<Replica> _replicas;
         private bool _isRunning;
 
         public MainViewModel()
         {
-            // Check whether we are configured yet.
-            if (!Settings.Default.Configured)
-            {
-                ConfigExecute();
-            }
-
+            // Configuration will be set by this point.
             ThisMachine = Settings.Default.ThisMachine;
             // Load the profiles for display.
-            var mapper = new LiteDbSyncSetMapper(Settings.Default.DataFile);
-            _api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
-            Profiles = _api.Profiles.Values.ToList();
+            //var mapper = new LiteDbSyncSetMapper(Settings.Default.SharedPath);
+            //_api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
+            //Replicas = _api.Profiles.Values.ToList();
         }
 
         public string ThisMachine { get; set; }
+
+        public MainWindow View { get; set; }
 
         public void RunAllExecute()
         {
@@ -74,14 +72,14 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             var configView = new ConfigWindow();
             var configVm = new ConfigViewModel();
             configVm.ThisMachine = Settings.Default.ThisMachine.Replace("{System.Environment.MachineName}", Environment.MachineName);
-            configVm.DataFile = Settings.Default.DataFile;
+            configVm.SharedFolder = Settings.Default.SharedPath;
             configView.DataContext = configVm;
             //TODO: configView.Owner = this.Window;
             var result = configView.ShowDialog();
             if (result.HasValue && result.Value)
             {
                 Settings.Default.ThisMachine = configVm.ThisMachine;
-                Settings.Default.DataFile = configVm.DataFile;
+                Settings.Default.SharedPath = configVm.SharedFolder;
                 Settings.Default.Save();
             }
             else
@@ -91,13 +89,13 @@ namespace AssimilationSoftware.MediaSync.WpfGui
             }
         }
 
-        public List<SyncSet> Profiles
+        public ObservableCollection<Replica> Replicas
         {
-            get => _profiles;
+            get => _replicas;
             set
             {
-                if (Equals(_profiles, value)) return;
-                _profiles = value;
+                if (Equals(_replicas, value)) return;
+                _replicas = value;
                 OnPropertyChanged();
             }
         }

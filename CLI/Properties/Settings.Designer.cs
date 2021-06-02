@@ -61,18 +61,6 @@ namespace AssimilationSoftware.MediaSync.CLI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DataFileFormat {
-            get {
-                return ((string)(this["DataFileFormat"]));
-            }
-            set {
-                this["DataFileFormat"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool UpgradeRequired {
             get {

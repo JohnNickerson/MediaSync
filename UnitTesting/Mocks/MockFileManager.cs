@@ -45,29 +45,6 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public FileIndex CreateIndex(string path, string[] searchpatterns)
-        {
-            return new FileIndex
-            {
-                LocalPath = path,
-                MachineName = "testmachine",
-                TimeStamp = DateTime.Now,
-                Files = new Dictionary<string, FileHeader>()
-                {
-                    { @"C:\Temp",
-                        new FileHeader
-                        {
-                            BasePath = @"C:\Temp",
-                            IsDeleted = false,
-                            RelativePath = "oldversion.txt",
-                            ContentsHash = "aaaa",
-                            Size = 1000,
-                        }
-                    }
-                }
-            };
-        }
-
         public FileCommandResult Delete(string dir)
         {
             throw new NotImplementedException();

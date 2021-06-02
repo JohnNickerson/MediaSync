@@ -1,7 +1,7 @@
 ﻿<Window x:Class="AssimilationSoftware.MediaSync.WpfGui.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MediaSync Portable v2.3.3.0" Height="350" Width="525">
+        Title="{Binding Path=WindowTitle, FallbackValue=MediaSync Portable}" Height="350" Width="525">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="MinHeight" Value="25"/>
@@ -20,12 +20,12 @@
                 <MenuItem Header="_Run All" Command="{Binding RunAllCommand}"/>
                 <MenuItem Header="E_xit" Command="{Binding CloseCommand}" />
             </MenuItem>
-            <MenuItem Header="_Profiles">
-                <MenuItem Header="_Add new profile"/>
-                <MenuItem Header="_Join existing profile"/>
+            <MenuItem Header="_Replicas">
+                <MenuItem Header="_Add new Replica"/>
+                <MenuItem Header="_Join existing Replica"/>
                 <MenuItem Header="_Change reserve space"/>
-                <MenuItem Header="_Leave a profile"/>
-                <MenuItem Header="Remove a profile"/>
+                <MenuItem Header="_Leave a Replica"/>
+                <MenuItem Header="Remove a Replica"/>
                 <MenuItem Header="Remove a computer"/>
 
             </MenuItem>
@@ -35,14 +35,28 @@
         </Menu>
 
         <TabControl Grid.Row="1" Margin="5">
-            <TabItem Header="Profiles">
-                <ListView Margin="2" ItemsSource="{Binding Path=Profiles}">
+            <TabItem Header="Replicas">
+                <ListView Margin="2" ItemsSource="{Binding Path=Replicas}">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Profile">
+                            <GridViewColumn Header="Replica">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Path=Name}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Machine">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Machine}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Library">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Library}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -50,6 +64,13 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Path=ReserveSpace}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Index Date">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Date}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>

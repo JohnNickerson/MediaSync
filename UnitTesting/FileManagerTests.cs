@@ -32,17 +32,6 @@ namespace UnitTesting
         }
 
         [TestMethod]
-        public void CreateIndex()
-        {
-            var filemanager = new SimpleFileManager(new MockHasher());
-
-            string folder = @"C:\temp";
-            var index = filemanager.CreateIndex(folder, new[] { "*.txt" });
-
-            Assert.IsNotNull(index);
-        }
-
-        [TestMethod]
         public void FilesMatch_HashMismatchShouldBeFalse()
         {
             // Arrange

@@ -4,7 +4,7 @@ using AssimilationSoftware.MediaSync.Core.Interfaces;
 
 namespace AssimilationSoftware.MediaSync.Core.Model
 {
-    public class FileHeader
+    public class FileHeader : FileSystemEntry
     {
         #region Fields
         private readonly IFileHashProvider _hasher;
@@ -27,22 +27,9 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public string BasePath { get; set; }
 
         /// <summary>
-        /// The path of the file, relative to the local base path.
-        /// </summary>
-        public string RelativePath { get; set; }
-
-        /// <summary>
         /// The name of the file.
         /// </summary>
         public string FileName => new FileInfo(Path.Combine(BasePath, RelativePath)).Name;
-
-        /// <summary>
-        /// A flag to indicate that the file was deleted.
-        /// </summary>
-        /// <remarks>
-        /// Used only in the primary index. Records with this flag that do not exist in any satellite index should be removed.
-        /// </remarks>
-        public bool IsDeleted { get; set; }
 
         /// <summary>
         /// Indicates whether this is a folder.
@@ -50,47 +37,19 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public bool IsFolder { get; set; }
 
         /// <summary>
-        /// The size of the file, in bytes.
-        /// </summary>
-        public long Size { get; set; }
-
-        /// <summary>
-        /// A hash of the file contents, used to determine if changes have been made.
-        /// </summary>
-        public string ContentsHash
-        {
-            get => _contentsHash ?? (_contentsHash = _hasher?.ComputeHash(Path.Combine(BasePath, RelativePath)));
-            set => _contentsHash = value;
-        }
-
-        /// <summary>
-        /// A synchronisation state, used for the primary index.
-        /// </summary>
-        public FileSyncState State { get; set; }
-
-        /// <summary>
         /// The date and time when the file was last modified.
         /// </summary>
-        public DateTime LastModified { get; set; }
+        public DateTime LastWriteTime { get; set; }
+        #endregion
 
-        /// <summary>
-        /// Gets a copy of the file's metadata in a new object.
-        /// </summary>
-        /// <returns>A FileHeader just like this one.</returns>
-        internal FileHeader Clone()
+        #region Methods
+
+        public override bool Matches(FileSystemEntry shareFileHead)
         {
-            return new FileHeader
-            {
-                ContentsHash = ContentsHash,
-                IsDeleted = IsDeleted,
-                LastModified = LastModified,
-                RelativePath = RelativePath,
-                Size = Size,
-                BasePath = BasePath,
-                State = State,
-                IsFolder = IsFolder
-            };
+            if (!(shareFileHead is FileHeader otherFile)) return false;
+            return base.Matches(otherFile) && IsFolder == otherFile.IsFolder;
         }
+
         #endregion
     }
 

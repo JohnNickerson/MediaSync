@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UnitTesting</RootNamespace>
     <AssemblyName>UnitTesting</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -16,6 +16,7 @@
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,11 +36,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LiteDB, Version=4.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27, processorArchitecture=MSIL">
-      <HintPath>..\packages\LiteDB.4.1.4\lib\net40\LiteDB.dll</HintPath>
-    </Reference>
-    <Reference Include="Polenter.SharpSerializer, Version=3.0.1.0, Culture=neutral, PublicKeyToken=8f4f20011571ee5f, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpSerializer.3.0.1\lib\net452\Polenter.SharpSerializer.dll</HintPath>
+    <Reference Include="Maroon">
+      <HintPath>..\Library\Maroon.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
@@ -59,9 +57,7 @@
     <Compile Include="FileComparerTest.cs" />
     <Compile Include="FileManagerTests.cs" />
     <Compile Include="Mocks\MockFileManager.cs" />
-    <Compile Include="Mocks\MockSyncSetMapper.cs" />
-    <Compile Include="SyncSetTests.cs" />
-    <Compile Include="XmlSyncSetMapperTests.cs" />
+    <Compile Include="MachineMapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -69,9 +65,6 @@
       <Project>{ce8a4fec-234c-4b03-a6a5-2eb1b0aee406}</Project>
       <Name>Core</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

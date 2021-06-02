@@ -37,132 +37,120 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private readonly IFileManager _fileManager;
 
-        private readonly SyncSetRepository _repository;
+        private readonly DataStore _repository;
 
         private bool _stopSync;
+        private string _sharedBasePath;
 
         #endregion
 
         #region Constructors
-        public ViewModel(ISyncSetMapper dataContext, string machineId, IFileManager fileManager)
+        public ViewModel(DataStore dataContext, string machineId, IFileManager fileManager)
         {
-            _repository = new SyncSetRepository(dataContext);
-            _repository.FindAll();
+            _repository = dataContext;
             _machineId = machineId;
             _fileManager = fileManager;
+            _sharedBasePath = dataContext.GetMachineByName(machineId).SharedPath;
         }
         #endregion
 
         #region Methods
-        public void CreateProfile(string name, ulong reserve)
+        public void CreateLibrary(string name, ulong reserve)
         {
-            if (!ProfileExists(name))
+            if (!LibraryExists(name))
             {
-                var profile = new SyncSet
+                var index = new FileIndex();
+                var library = new Library()
                 {
                     Name = name,
-                    ReserveSpace = reserve,
-                    Indexes = new Dictionary<string, FileIndex>(StringComparer.CurrentCultureIgnoreCase),
-                    PrimaryIndex = new FileIndex( )
+                    MaxSharedSize = reserve,
+                    PrimaryIndexId = index.ID
                 };
-                _repository.Update(profile);
+                index.LibraryId = library.ID;
+                _repository.Insert(library);
+                _repository.Insert(index);
                 _repository.SaveChanges();
             }
             else
             {
-                Trace.WriteLine("Profile name already exists: " + name);
+                Trace.WriteLine("A library with the same name already exists: " + name);
             }
         }
 
-        public void ResizeProfile(string name, ulong reserve)
+        public void ResizeReserve(string name, ulong reserve)
         {
-            if (ProfileExists(name))
+            if (LibraryExists(name))
             {
-                var profile = GetProfile(name);
-                profile.ReserveSpace = reserve;
-                _repository.Update(profile);
-                _repository.SaveChanges();
-            }
-        }
-
-        private bool ProfileExists(string name)
-        {
-            return _repository.Items.Any(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
-        }
-
-        private SyncSet GetProfile(string name)
-        {
-            return _repository.Items.FirstOrDefault(x => String.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
-        }
-
-        public void JoinProfile(string profileName, string localPath, string sharedPath)
-        {
-            var profile = GetProfile(profileName);
-            if (profile == null)
-            {
-                Trace.WriteLine($"Profile does not exist: {profileName}");
-            }
-            else
-            {
-                JoinProfile(profile, localPath, sharedPath);
-            }
-        }
-
-        private void JoinProfile(SyncSet profile, string localPath, string sharedPath)
-        {
-            if (!profile.ContainsParticipant(MachineId))
-            {
-                profile.Indexes[MachineId] = new FileIndex
-                {
-                    MachineName = MachineId,
-                    LocalPath = localPath,
-                    SharedPath = sharedPath
-                };
-                _repository.Update(profile);
-            }
-            else
-            {
-                var i = profile.GetIndex(MachineId);
-                i.LocalPath = localPath;
-                i.SharedPath = sharedPath;
-                profile.UpdateIndex(i);
-                _repository.Update(profile);
-            }
-            _repository.SaveChanges();
-        }
-
-        private void LeaveProfile(SyncSet profile, string machine)
-        {
-            if (profile.ContainsParticipant(machine))
-            {
-                profile.Indexes.Remove(machine);
+                var profile = GetLibrary(name);
+                profile.MaxSharedSize = reserve;
                 _repository.Update(profile);
                 _repository.SaveChanges();
             }
         }
 
-        public void LeaveProfile(string profileName, string machine)
+        private bool LibraryExists(string name)
         {
-            var profile = GetProfile(profileName);
-            LeaveProfile(profile, machine);
+            return _repository.ListLibraries().Any(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public Dictionary<string, SyncSet> Profiles => _repository.Items.ToDictionary(k => k.Name, v => v);
+        private Library GetLibrary(string name)
+        {
+            return _repository.ListLibraries().FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        public void AddReplica(string libraryName, string localPath, string machineName)
+        {
+            var library = GetLibrary(libraryName);
+            var machine = _repository.GetMachineByName(machineName);
+            if (library == null)
+            {
+                Trace.WriteLine($"Library does not exist: {libraryName}");
+            }
+            else if (machine == null)
+            {
+                Trace.WriteLine($"Machine does not exist: {machineName}");
+            }
+            else if (ReplicaExists(library, localPath, machine))
+            {
+                Trace.WriteLine($"Replica of library {libraryName} on {machineName} already exists.");
+            }
+            else
+            {
+                AddReplica(library, localPath, machine);
+            }
+        }
+
+        private bool ReplicaExists(Library library, string localPath, Machine machine)
+        {
+            return _repository.ListReplicas().Any(r =>
+                r.LibraryId == library.ID && r.MachineId == machine.ID &&
+                r.LocalPath.Equals(localPath, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        private void AddReplica(Library library, string localPath, Machine machine)
+        {
+            var replica = new Replica { LocalPath = localPath, LibraryId = library.ID, MachineId = machine.ID };
+            _repository.Insert(replica);
+        }
+
+        public void DeleteReplica(Guid replicaId)
+        {
+            _repository.Delete(_repository.GetReplicaById(replicaId));
+        }
 
         public List<string> Machines
         {
             get
             {
-                return _repository.Items.SelectMany(p => p.Indexes).Select(p => p.Value.MachineName).Distinct().ToList();
+                return _repository.ListMachines().Select(m => m.Name).ToList();
             }
         }
 
         public void RemoveMachine(string machine)
         {
-            foreach (var p in Profiles)
-            {
-                LeaveProfile(p.Key, machine);
-            }
+            var m = _repository.GetMachineByName(machine);
+            _repository.Delete(m);
+            _repository.PurgeOrphanedData();
         }
 
         public void RunSync(bool indexOnly, bool verbose, string profile = null)
@@ -171,13 +159,17 @@ namespace AssimilationSoftware.MediaSync.Core
             var fullResults = new FileActionsCount();
             Trace.WriteLine(string.Empty);
             Trace.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Starting run on {MachineId}");
-            foreach (var opts in _repository.Items.ToList())
+            var machine = _repository.ListMachines(m => m.Name == _machineId).FirstOrDefault();
+            foreach (var opts in _repository.ListLibraries().ToList())
             {
                 // If we're looking for a specific profile and this one isn't it, skip it.
                 if (!string.IsNullOrEmpty(profile) && !string.Equals(opts.Name, profile, StringComparison.CurrentCultureIgnoreCase)) continue;
 
-                if (opts.ContainsParticipant(_machineId))
+                // If any replica of this library is on this machine...
+                var repliCount = 0;
+                foreach (var replica in _repository.ListReplicas(r => r.MachineId == machine.ID && r.LibraryId == opts.ID).ToArray())
                 {
+                    repliCount++;
                     Trace.WriteLine(string.Empty);
                     Trace.WriteLine($"Processing profile {opts.Name}");
 
@@ -186,7 +178,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         // This is a huge error trap. If this gets triggered, it's pretty catastrophic.
                         var begin = DateTime.Now;
-                        var syncResult = Sync(opts, indexOnly);
+                        var syncResult = Sync(replica, indexOnly);
                         fullResults.Add(syncResult);
                         Trace.WriteLine($"Profile sync time taken: {(DateTime.Now - begin).Verbalise()}");
                     }
@@ -206,7 +198,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                     }
                 }
-                else
+                if (repliCount == 0)
                 {
                     Trace.WriteLine($"Not participating in profile {opts.Name}");
                 }
@@ -223,29 +215,30 @@ namespace AssimilationSoftware.MediaSync.Core
             Trace.WriteLine(fullResults.AnyChanges ? fullResults.GetDisplayString("Totals") : "No actions taken");
         }
 
-        public void RemoveProfile(string profileName)
+        public void RemoveLibrary(string libraryName)
         {
-            _repository.Delete(_repository.Find(profileName));
-            _repository.SaveChanges();
+            var library = _repository.ListLibraries(l => l.Name.Equals(libraryName, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
+            _repository.Delete(library);
+            _repository.PurgeOrphanedData();
         }
 
         /// <summary>
         /// Performs a 4-step, shared storage, limited space, partial sync operation as configured.
         /// </summary>
-        private FileActionsCount Sync(SyncSet syncSet, bool preview = false)
+        private FileActionsCount Sync(Replica replica, bool preview = false)
         {
             var actionsCount = new FileActionsCount();
             // Check folders, just in case.
-            var localIndex = syncSet.GetIndex(MachineId) ?? new FileIndex();
-            var sharedPath = localIndex.SharedPath;
+            var localIndex = _repository.GetFileIndexById(replica.IndexId) ?? new FileIndex();
+            var sharedPath = _repository.GetMachineByName(MachineId).SharedPath;
             if (!_fileManager.DirectoryExists(sharedPath))
             {
                 Trace.WriteLine($"Shared storage not available ({sharedPath}). Cannot proceed.");
                 return actionsCount;
             }
-            if (!_fileManager.DirectoryExists(localIndex.LocalPath))
+            if (!_fileManager.DirectoryExists(replica.LocalPath))
             {
-                Trace.WriteLine($"Local storage not available ({localIndex.LocalPath}). Cannot proceed.");
+                Trace.WriteLine($"Local storage not available ({replica.LocalPath}). Cannot proceed.");
                 return actionsCount;
             }
 
@@ -254,26 +247,48 @@ namespace AssimilationSoftware.MediaSync.Core
             #region Determine State
             // Pre-process the indexes to ensure the loop doesn't have to.
             var comparisons = new Dictionary<string, ReplicaComparison>();
-            foreach (var dex in syncSet.Indexes.Values)
+            foreach (var dex in _repository.GetIndexesByLibraryId(replica.LibraryId))
             {
-                foreach (var file in dex.Files.Values)
+                foreach (var file in _repository.GetFilesByIndex(dex))
                 {
                     var path = file.RelativePath.ToLower();
                     if (!comparisons.ContainsKey(path))
                     {
-                        comparisons[path] = new ReplicaComparison { Hash = file.ContentsHash, Count = 0 };
+                        comparisons[path] = new ReplicaComparison {Hash = file.ContentsHash, Count = 0};
                         if (_stopSync) return actionsCount;
                     }
                     comparisons[path].AllSame = comparisons[path].Hash == file.ContentsHash;
                     comparisons[path].Count++;
                 }
             }
-            foreach (var mf in syncSet.PrimaryIndex.Files.Values)
+
+            var library = _repository.GetLibraryById(replica.LibraryId);
+            var primaryIndex = _repository.GetFileIndexById(library.PrimaryIndexId);
+            Dictionary<string, FileSystemEntry> primaryIndexFiles = null;
+            if (primaryIndex == null)
+            {
+                // Need to create a new library index.
+                primaryIndex = new FileIndex
+                {
+                    ID = library.PrimaryIndexId,
+                    IsDeleted = false,
+                    LastModified = DateTime.Now,
+                    LibraryId = library.ID,
+                    RevisionGuid = Guid.NewGuid(),
+                    PrevRevision = null,
+                    TimeStamp = DateTime.Now
+                };
+                _repository.Insert(primaryIndex);
+            }
+
+            primaryIndexFiles = _repository.GetFilesByIndex(primaryIndex)
+                .ToDictionary(p => p.RelativePath);
+            foreach (var mf in primaryIndexFiles.Values)
             {
                 var path = mf.RelativePath.ToLower();
-                if (mf.IsDeleted)
+                if (mf.State == FileSyncState.Expiring)
                 {
-                    if (mf.IsFolder && syncSet.PrimaryIndex.Files.Values.Any(f => f.IsDeleted == false && f.RelativePath.StartsWith(mf.RelativePath)))
+                    if (mf is FolderHeader folder && primaryIndexFiles.Values.Any(f => f.State != FileSyncState.Expiring && f.RelativePath.StartsWith(mf.RelativePath)))
                     {
                         // If the folder contains anything that's not deleted, its state is "transit", even if it is marked as deleted.
                         mf.State = FileSyncState.Transit;
@@ -283,7 +298,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         mf.State = comparisons.ContainsKey(path) ? FileSyncState.Expiring : FileSyncState.Destroyed;
                     }
                 }
-                else if (comparisons.ContainsKey(path) && comparisons[path].Count == syncSet.Indexes.Count && comparisons[path].AllSame)
+                else if (comparisons.ContainsKey(path) && comparisons[path].Count == _repository.GetIndexesByLibraryId(library.ID).ToArray().Count() && comparisons[path].AllSame)
                 {
                     mf.State = FileSyncState.Synchronised;
                 }
@@ -291,6 +306,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     mf.State = FileSyncState.Transit;
                 }
+                _repository.Update(mf);
                 if (_stopSync) return actionsCount;
             }
             #endregion
@@ -300,37 +316,41 @@ namespace AssimilationSoftware.MediaSync.Core
             begin = DateTime.Now;
             #region Plan actions
             var allHashes = new Dictionary<string, LocalFileHashSet>();
+            var localIndexFiles = _repository.ListFileSystemEntries(f => f.IndexId == localIndex.ID).ToArray();
             // Merge the local index, the primary index and the local file system.
-            foreach (var f in localIndex.Files.Values)
+            foreach (var f in localIndexFiles)
             {
                 if (allHashes.ContainsKey(f.RelativePath.ToLower()))
                 {
                     allHashes[f.RelativePath.ToLower()].LocalIndexHeader = f;
-                    allHashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash + f.IsFolder;
+                    allHashes[f.RelativePath.ToLower()].LocalIndexHash = f.ContentsHash + (f is FolderHeader);
                 }
                 else
                 {
-                    allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + f.IsFolder };
+                    allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { LocalIndexHeader = f, LocalIndexHash = f.ContentsHash + (f is FolderHeader) };
                 }
                 if (_stopSync) return actionsCount;
             }
-            foreach (var f in syncSet.PrimaryIndex.Files.Values)
+
+            foreach (var f in _repository.GetFilesByIndex(primaryIndex))
             {
                 if (allHashes.ContainsKey(f.RelativePath.ToLower()))
                 {
                     allHashes[f.RelativePath.ToLower()].PrimaryHeader = f;
-                    allHashes[f.RelativePath.ToLower()].PrimaryHash = f.ContentsHash + f.IsFolder;
+                    allHashes[f.RelativePath.ToLower()].PrimaryHash = f.ContentsHash + (f is FolderHeader);
                 }
                 else
                 {
-                    allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet { PrimaryHeader = f, PrimaryHash = f.ContentsHash + f.IsFolder };
+                    allHashes[f.RelativePath.ToLower()] = new LocalFileHashSet
+                        {PrimaryHeader = f, PrimaryHash = f.ContentsHash + (f is FolderHeader)};
                 }
+
                 if (_stopSync) return actionsCount;
             }
-            foreach (var f in _fileManager.ListLocalFiles(localIndex.LocalPath))
+            foreach (var f in _fileManager.ListLocalFiles(replica.LocalPath))
             {
                 // This action can fail if the file is in use.
-                var hed = _fileManager.TryCreateFileHeader(localIndex.LocalPath, f);
+                var hed = _fileManager.TryCreateFileHeader(replica.LocalPath, f);
                 if (hed == null)
                 {
                     // Assume a file access exception. Skip this file by removing it and hope for better luck next run.
@@ -359,12 +379,12 @@ namespace AssimilationSoftware.MediaSync.Core
 
             // Gather the necessary file actions into queues first, then act and update indexes at the end.
             // One queue per type of action required: copy to local, copy to shared, delete local, delete primary, rename local, no-op.
-            var copyToLocal = new List<FileHeader>();
-            var copyToShared = new List<FileHeader>();
-            var deleteLocal = new List<FileHeader>();
-            var deletePrimary = new List<FileHeader>();
-            var renameLocal = new List<FileHeader>(); // Target names to be generated on demand when processing.
-            var noAction = new List<FileHeader>(); // Nothing to do to these, but keep a list in case of verbose preview.
+            var copyToLocal = new List<FileSystemEntry>();
+            var copyToShared = new List<FileSystemEntry>();
+            var deleteLocal = new List<FileSystemEntry>();
+            var deletePrimary = new List<FileSystemEntry>();
+            var renameLocal = new List<FileSystemEntry>(); // Target names to be generated on demand when processing.
+            var noAction = new List<FileSystemEntry>(); // Nothing to do to these, but keep a list in case of verbose preview.
             // Copy the collection for looping, so we can modify it in case of conflicts.
             foreach (var dex in allHashes.Keys)
             {
@@ -465,7 +485,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                         {
                                             Debug.WriteLine($"CONFLICT [-> SHARE]: {dex}");
                                             // Update conflict. Rename the local file and add to the processing queue.
-                                            renameLocal.Add(f.PrimaryHeader.Clone());
+                                            renameLocal.Add((FileSystemEntry) f.PrimaryHeader.Clone());
                                             copyToLocal.Add(f.PrimaryHeader);
                                         }
                                         // TODO: Detect out-of-date copies and treat them as remote updates.
@@ -479,7 +499,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 Debug.WriteLine($"DELETED [-> CANCEL TRANSIT]: {dex}");
                                 deletePrimary.Add(f.PrimaryHeader);
                             }
-                            else if (_fileManager.FileExists(sharedPath, dex) || f.PrimaryHeader.IsFolder)
+                            else if (_fileManager.FileExists(sharedPath, dex) || (f.PrimaryHeader is FolderHeader))
                             {
                                 Debug.WriteLine($"TRANSIT [LOCAL <-]: {dex}");
                                 // Update/delete conflict or remote create. Copy to local. Update local index.
@@ -506,12 +526,13 @@ namespace AssimilationSoftware.MediaSync.Core
                 else if (f.LocalFileHeader != null)
                 {
                     // Does every other remote index have the same version of the file?
-                    if (syncSet.Indexes.Count == 1 || (comparisons.ContainsKey(dex) && comparisons[dex].AllSame))
+                    var libraryIndexes = _repository.ListIndexes(i => i.LibraryId == replica.LibraryId && i.ReplicaId.HasValue);
+                    if (libraryIndexes.Count() == 1 || (comparisons.ContainsKey(dex) && comparisons[dex].AllSame))
                     {
                         // Side-channel or initial create. Just write the primary index.
                         Debug.WriteLine($"INITIAL CREATE: {dex}");
                         noAction.Add(f.LocalFileHeader);
-                        syncSet.PrimaryIndex.UpdateFile(f.LocalFileHeader);
+                        _repository.CopyFileSystemEntry(f.LocalFileHeader, primaryIndex.ID);
                     }
                     else
                     {
@@ -523,7 +544,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
                 if (_stopSync)
                 {
-                    _repository.Update(syncSet);
                     return actionsCount;
                 }
             }
@@ -538,7 +558,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (actionsCount.AnyChanges)
             {
                 Trace.WriteLine("");
-                Trace.WriteLine(actionsCount.GetDisplayString(syncSet.Name));
+                Trace.WriteLine(actionsCount.GetDisplayString(replica.LocalPath));
                 Trace.WriteLine("");
             }
             else
@@ -548,17 +568,17 @@ namespace AssimilationSoftware.MediaSync.Core
             Debug.WriteLine($"\tQueue generation: {(DateTime.Now - begin).Verbalise()}");
 
             // 3. Process the action queue according to the mode and limitations in place.
-            Trace.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Processing file actions for '{syncSet.Name}' on {MachineId}:");
+            Trace.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Processing file actions for '{replica.LocalPath}' on {MachineId}:");
             var errorList = new List<string>();
             if (!preview)
             {
                 begin = DateTime.Now;
                 #region 3.1. Rename, Copy to Local, Delete local, Delete primary
-                foreach (var r in renameLocal.OrderBy(f => f.FileName.Length))
+                foreach (var r in renameLocal)
                 {
-                    var newName = _fileManager.GetConflictFileName(Path.Combine(localIndex.LocalPath, r.RelativePath), MachineId, DateTime.Now);
-                    var newRelativePath = _fileManager.GetRelativePath(newName, localIndex.LocalPath);
-                    var fmr = _fileManager.MoveFile(Path.Combine(localIndex.LocalPath, r.RelativePath), Path.Combine(localIndex.LocalPath, newRelativePath), false);
+                    var newName = _fileManager.GetConflictFileName(Path.Combine(replica.LocalPath, r.RelativePath), MachineId, DateTime.Now);
+                    var newRelativePath = _fileManager.GetRelativePath(newName, replica.LocalPath);
+                    var fmr = _fileManager.MoveFile(Path.Combine(replica.LocalPath, r.RelativePath), Path.Combine(replica.LocalPath, newRelativePath), false);
                     if (fmr == FileCommandResult.Failure)
                     {
                         errorList.Add($"File rename failed: {r.RelativePath}");
@@ -571,60 +591,52 @@ namespace AssimilationSoftware.MediaSync.Core
 
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
                         return actionsCount;
                     }
                 }
-                foreach (var d in copyToLocal.Where(i => i.IsFolder).OrderBy(f => f.FileName.Length))
+                foreach (var d in copyToLocal.OrderBy(i => i.RelativePath.Length))
                 {
-                    _fileManager.EnsureFolder(Path.Combine(localIndex.LocalPath, d.RelativePath));
-                    if (_stopSync)
+                    if (d is FolderHeader)
                     {
-                        _repository.Update(syncSet);
-                        return actionsCount;
-                    }
-
-                }
-                foreach (var c in copyToLocal.Where(i => !i.IsFolder).OrderBy(f => f.FileName.Length))
-                {
-                    var fcr = _fileManager.CopyFile(sharedPath, c.RelativePath, localIndex.LocalPath);
-                    if (fcr == FileCommandResult.Failure)
-                    {
-                        errorList.Add($"Inbound file copy failed: {c.RelativePath}");
+                        _fileManager.EnsureFolder(Path.Combine(replica.LocalPath, d.RelativePath));
                     }
                     else
                     {
+                        var fcr = _fileManager.CopyFile(sharedPath, d.RelativePath, replica.LocalPath);
+                        if (fcr == FileCommandResult.Failure)
+                        {
+                            errorList.Add($"Inbound file copy failed: {d.RelativePath}");
+                        }
                     }
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
+                        _repository.Update(replica);
                         return actionsCount;
                     }
-
                 }
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
-                    var result = _fileManager.Delete(Path.Combine(localIndex.LocalPath, d.RelativePath));
-                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(localIndex.LocalPath, d.RelativePath)))
+                    var result = _fileManager.Delete(Path.Combine(replica.LocalPath, d.RelativePath));
+                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(replica.LocalPath, d.RelativePath)))
                     {
                     }
 
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
+                        _repository.Update(replica);
                         return actionsCount;
                     }
 
                 }
 
                 // Push.
-                foreach (var m in deletePrimary.OrderByDescending(f => f.FileName.Length))
+                foreach (var m in deletePrimary.OrderByDescending(f => f.RelativePath.Length))
                 {
-                    m.IsDeleted = true;
-                    syncSet.PrimaryIndex.UpdateFile(m);
+                    m.State = FileSyncState.Expiring;
+                    _repository.Update(m);
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
+                        _repository.Update(replica);
                         return actionsCount;
                     }
 
@@ -634,41 +646,50 @@ namespace AssimilationSoftware.MediaSync.Core
                 begin = DateTime.Now;
                 #region 3.2. Regenerate the local index.
                 // Keep a copy of the old index in case of read failures.
-                var oldIndex = new FileIndex();
-                foreach (var f in localIndex.Files)
+                // TODO: Update the index instead of a full replace. Replacing with a new index doesn't make as much sense now.
+                var oldIndex = _repository.ListFileSystemEntries(f => f.IndexId == localIndex.ID).ToDictionary(entry => entry.RelativePath);
+                var nuDex = new FileIndex
                 {
-                    oldIndex.Files.Add(f.Key, f.Value);
-                }
-                localIndex.Files.Clear();
-                foreach (var f in _fileManager.ListLocalFiles(localIndex.LocalPath))
+                    LibraryId = replica.LibraryId, ReplicaId = replica.ID, TimeStamp = DateTime.Now, ID = Guid.NewGuid()
+                };
+                foreach (var f in _fileManager.ListLocalFiles(replica.LocalPath))
                 {
                     try
                     {
-                        localIndex.UpdateFile(_fileManager.CreateFileHeader(localIndex.LocalPath, f));
+                        var onDisk = _fileManager.CreateFileHeader(replica.LocalPath, f);
+                        onDisk.IndexId = nuDex.ID;
+                        _repository.Insert(onDisk);
                     }
                     catch
                     {
                         // Keep the old file.
-                        localIndex.UpdateFile(oldIndex.GetFile(f));
+                        oldIndex[f].IndexId = nuDex.ID;
+                        _repository.Update(oldIndex[f]);
                     }
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
                         return actionsCount;
                     }
 
                 }
-                localIndex.TimeStamp = DateTime.Now;
-                syncSet.UpdateIndex(localIndex);
+                _repository.Insert(nuDex);
+                replica.IndexId = nuDex.ID;
+                _repository.Update(replica);
+                // Perhaps: _repository.PurgeOrphanedData();
+                foreach (var expiredIndex in _repository.ListIndexes()
+                    .Where(e => e.ReplicaId == replica.ID && e.LastModified < nuDex.LastModified).ToArray())
+                {
+                    _repository.Delete(expiredIndex);
+                }
                 #endregion
                 Debug.WriteLine($"\tLocal index regeneration: {(DateTime.Now - begin).Verbalise()}");
                 begin = DateTime.Now;
                 #region 3.3 Clean up the primary index and shared folder.
                 // Pre-examine the indexes, for efficiency.
                 comparisons = new Dictionary<string, ReplicaComparison>();
-                foreach (var dex in syncSet.Indexes.Values)
+                foreach (var dex in _repository.GetIndexesByLibraryId(replica.LibraryId))
                 {
-                    foreach (var file in dex.Files.Values)
+                    foreach (var file in _repository.GetFilesByIndex(dex))
                     {
                         var path = file.RelativePath.ToLower();
                         if (!comparisons.ContainsKey(path))
@@ -686,35 +707,33 @@ namespace AssimilationSoftware.MediaSync.Core
                         comparisons[path].AllHashes.Add(file.ContentsHash);
                         if (_stopSync)
                         {
-                            _repository.Update(syncSet);
                             return actionsCount;
                         }
-
                     }
                 }
 
-                foreach (var mf in syncSet.PrimaryIndex.Files.Values.ToArray().OrderByDescending(f => f.FileName.Length))
+                foreach (var mf in _repository.GetFilesByIndex(primaryIndex).ToArray())
                 {
                     var key = mf.RelativePath.ToLower();
                     var shareFileHead = _fileManager.TryCreateFileHeader(sharedPath, mf.RelativePath); // Returns null if not found.
                     try
                     {
-                        if (mf.IsDeleted)
+                        if (mf.State == FileSyncState.Expiring)
                         {
                             if (!comparisons.ContainsKey(key))
                             {
                                 // Marked deleted and has been removed from every replica.
                                 Debug.WriteLine($"DESTROYED: {mf.RelativePath}");
-                                syncSet.PrimaryIndex.Remove(mf);
+                                _repository.Delete(mf);
                             }
                         }
-                        else if (shareFileHead != null && !syncSet.PrimaryIndex.MatchesFile(shareFileHead))
-                        // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.PrimaryIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
+                        else if (shareFileHead != null && !mf.Matches(shareFileHead))
+                            // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.PrimaryIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                         {
                             // The shared file does not match the primary index. It should be removed.
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
-                        else if (_fileManager.FileExists(sharedPath, mf.RelativePath) && comparisons.ContainsKey(key) && comparisons[key].Count == syncSet.Indexes.Count && comparisons[key].AllSame && comparisons[key].Hash == mf.ContentsHash)
+                        else if (shareFileHead != null && comparisons.ContainsKey(key) && comparisons[key].Count == _repository.GetIndexesByLibraryId(library.ID).ToArray().Count() && comparisons[key].AllSame && comparisons[key].Hash == mf.ContentsHash)
                         {
                             // Successfully transmitted to every replica. Remove from shared storage.
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
@@ -722,12 +741,12 @@ namespace AssimilationSoftware.MediaSync.Core
                         else if (!comparisons.ContainsKey(key))
                         {
                             // Simultaneous side-channel delete from every replica. This file is toast.
-                            syncSet.PrimaryIndex.Remove(mf);
+                            _repository.Delete(mf);
                         }
                         else if (comparisons[key].AllHashes.All(h => h != mf.ContentsHash))
                         {
                             // Slightly more subtle. No physical matching version of this file exists any more.
-                            syncSet.PrimaryIndex.Remove(mf);
+                            _repository.Delete(mf);
                         }
                     }
                     catch
@@ -736,25 +755,24 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
                         return actionsCount;
                     }
-
                 }
+                primaryIndexFiles = _repository.ListFileSystemEntries(f => f.IndexId == primaryIndex.ID)
+                    .ToDictionary(p => p.RelativePath);
                 // Clean up shared storage. We already looked for primary/shared mismatches.
-                var minx = syncSet.PrimaryIndex;
                 var shareCleanMeta = from s in _fileManager.ListLocalFiles(sharedPath)
-                                     where File.Exists(Path.Combine(sharedPath, s)) && (!minx.Files.ContainsKey(s) || minx.GetFile(s).IsDeleted)
+                                     where File.Exists(Path.Combine(sharedPath, s)) && (
+                                         primaryIndexFiles != null && (!primaryIndexFiles.TryGetValue(s, out var minx) || minx.State == FileSyncState.Expiring))
                                      select s;
                 // For every file now in shared storage,
-                foreach (var s in shareCleanMeta.OrderByDescending(f => f.Length))
+                foreach (var s in shareCleanMeta)
                 {
                     // Shared file is missing from primary index. Get rid of it.
                     _fileManager.Delete(Path.Combine(sharedPath, s));
                     Debug.WriteLine($"SHARE CLEANUP: {s}");
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
                         return actionsCount;
                     }
 
@@ -784,7 +802,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         }
                         if (_stopSync)
                         {
-                            _repository.Update(syncSet);
+                            _repository.Update(replica);
                             return actionsCount;
                         }
 
@@ -797,28 +815,42 @@ namespace AssimilationSoftware.MediaSync.Core
                 var sharedSize = _fileManager.SharedPathSize(sharedPath);
                 // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
                 var flashDrive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(sharedPath)));
-                var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, syncSet.ReserveSpace);
-                foreach (var s in copyToShared.OrderBy(f => f.FileName.Length))
+                var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, library.MaxSharedSize);
+                foreach (var s in copyToShared.OrderBy(f => f.RelativePath.Length))
                 {
                     if (s != null)
                     {
+                        var mf = _repository.ListFileSystemEntries(f =>
+                            f.RelativePath.Equals(s.RelativePath, StringComparison.CurrentCultureIgnoreCase) &&
+                            f.IndexId == primaryIndex.ID).FirstOrDefault();
                         if (sharedSize + (ulong)s.Size < carefulSpace)
                         {
                             Debug.WriteLine($"Copying {s.RelativePath} to {sharedPath}");
-                            if (s.IsFolder)
+                            if (s is FolderHeader)
                             {
-                                s.IsDeleted = false; // To un-delete folders that were being removed, but have been re-created.
-                                syncSet.PrimaryIndex.UpdateFile(s);
+                                if (mf != null)
+                                {
+                                    mf.State = FileSyncState.Transit; // To un-delete folders that were being removed, but have been re-created.
+                                    _repository.Update(mf);
+                                }
                             }
                             else
                             {
-                                var result = _fileManager.CopyFile(localIndex.LocalPath, s.RelativePath, sharedPath);
+                                var result = _fileManager.CopyFile(replica.LocalPath, s.RelativePath, sharedPath);
                                 // Check for success.
                                 if (result == FileCommandResult.Success || result == FileCommandResult.Async)
                                 {
                                     // Assume potential success on Async.
                                     sharedSize += (ulong)s.Size;
-                                    syncSet.PrimaryIndex.UpdateFile(s);
+                                    if (mf == null)
+                                    {
+                                        _repository.CopyFileSystemEntry(s, primaryIndex.ID);
+                                    }
+                                    else
+                                    {
+                                        mf.ContentsHash = s.ContentsHash;
+                                        _repository.Update(mf);
+                                    }
                                 }
                                 else
                                 {
@@ -826,7 +858,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 }
                             }
                         }
-                        else if ((ulong)s.Size > syncSet.ReserveSpace)
+                        else if ((ulong)s.Size > library.MaxSharedSize)
                         {
                             // TODO: split the file and copy in pieces, because it will never fit.
                         }
@@ -838,7 +870,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     if (_stopSync)
                     {
-                        _repository.Update(syncSet);
                         return actionsCount;
                     }
 
@@ -855,7 +886,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 Trace.WriteLine(e);
             }
 
-            _repository.Update(syncSet);
+            _repository.Update(replica);
             return actionsCount;
         }
 
@@ -869,21 +900,46 @@ namespace AssimilationSoftware.MediaSync.Core
             _stopSync = true;
         }
 
-        public void ChangeDriveLetter(DriveInfo newDrive, string machineName)
+        public void AddMachine(string machineName, string sharedPath)
         {
-            foreach (var profile in Profiles.Values)
+            var machine = new Machine();
+            machine.Name = machineName;
+            machine.SharedPath = sharedPath;
+            _repository.Insert(machine);
+        }
+
+        public void DeleteFile(string libraryName, string filePath)
+        {
+            var library = GetLibrary(libraryName);
+            var file = _repository.GetFileByPath(library.PrimaryIndexId, filePath);
+            if (file != null)
             {
-                if (profile.ContainsParticipant(machineName))
-                {
-                    var newSharedPath = (newDrive.RootDirectory.FullName);
-                    var party = profile.GetIndex(machineName);
-                    var originalPath = party.SharedPath;
-                    if (originalPath.StartsWith(newDrive.RootDirectory.FullName)) continue; // Already there.
-                    originalPath = originalPath.Remove(0, originalPath.IndexOf(@"\", StringComparison.Ordinal) + 1);
-                    newSharedPath = Path.Combine(newSharedPath, originalPath);
-                    JoinProfile(profile.Name, party.LocalPath, newSharedPath);
-                }
+                file.State = FileSyncState.Expiring;
+                _repository.Update(file);
             }
+        }
+
+        public void UndeleteFile(string libraryName, string filePath)
+        {
+            var library = GetLibrary(libraryName);
+            var file = _repository.GetFileByPath(library.PrimaryIndexId, filePath);
+            if (file != null)
+            {
+                file.State = FileSyncState.Transit;
+                _repository.Update(file);
+            }
+        }
+
+        public void MoveReplica(Guid replicaId, string newPath, bool moveFiles)
+        {
+            var replica = _repository.GetReplicaById(replicaId);
+            if (moveFiles)
+            {
+                Directory.Move(replica.LocalPath, newPath);
+            }
+
+            replica.LocalPath = newPath;
+            _repository.Update(replica);
         }
         #endregion
 
@@ -911,9 +967,9 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             internal FileHeader LocalFileHeader;
             internal string LocalFileHash;
-            internal FileHeader LocalIndexHeader;
+            internal FileSystemEntry LocalIndexHeader;
             internal string LocalIndexHash;
-            internal FileHeader PrimaryHeader;
+            internal FileSystemEntry PrimaryHeader;
             internal string PrimaryHash;
         }
         #endregion

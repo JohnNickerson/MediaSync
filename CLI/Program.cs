@@ -289,7 +289,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 
         private static int AddLibrary(AddLibraryOptions addOptions, ViewModel api)
         {
-            api.CreateLibrary(addOptions.LibraryName, addOptions.ReserveSpaceMb*1000000);
+            api.CreateLibrary(addOptions.LibraryName, addOptions.ReserveSpaceMb * 1000000);
             if (!string.IsNullOrEmpty(addOptions.LocalPath))
             {
                 api.AddReplica(addOptions.LibraryName, addOptions.LocalPath, Settings.Default.MachineName);
@@ -300,21 +300,50 @@ namespace AssimilationSoftware.MediaSync.CLI
 
         private static int Initialise(InitOptions initOptions)
         {
+            // Check that the shared and data paths are separated.
+            var share = new DirectoryInfo(Path.GetFullPath(initOptions.SharedPath));
+            var meta = new DirectoryInfo(Path.GetFullPath(initOptions.MetadataFolder));
+            if (meta.IsSubPathOf(share))
+            {
+                Debug.WriteLine(share);
+                Debug.WriteLine(meta);
+                Console.WriteLine("The data folder must not be under the shared folder.");
+                return 1;
+            }
             Settings.Default.MachineName = initOptions.MachineName;
             Settings.Default.MetadataFolder = initOptions.MetadataFolder;
             Settings.Default.Configured = true;
 
             Settings.Default.Save();
 
-            AddMachine(Settings.Default.MachineName, initOptions.SharedPath, GetApi());
+            AddOrUpdateMachine(Settings.Default.MachineName, initOptions.SharedPath, new DataStore(Settings.Default.MetadataFolder));
 
             return 0;
         }
 
-        private static void AddMachine(string machineName, string sharedPath, ViewModel api)
+        private static void AddOrUpdateMachine(string machineName, string sharedPath, DataStore data)
         {
-            api.AddMachine(machineName, sharedPath);
-            api.Save();
+            var m = data.GetMachineByName(machineName);
+            if (m != null)
+            {
+                m.SharedPath = sharedPath;
+                data.Update(m);
+            }
+            else
+            {
+                data.Insert(new Machine
+                {
+                    ID = Guid.NewGuid(),
+                    IsDeleted = false,
+                    ImportHash = null,
+                    LastModified = DateTime.Now,
+                    Name = machineName,
+                    PrevRevision = null,
+                    RevisionGuid = Guid.NewGuid(),
+                    SharedPath = sharedPath
+                });
+            }
+            data.SaveChanges();
         }
     }
 
@@ -329,45 +358,69 @@ namespace AssimilationSoftware.MediaSync.CLI
 
         public void Run(string machineName, string libraryName, string replicaId, string localPath, bool showSubFolders)
         {
+            var printedLines = 0;
             foreach (var file in _dataStore.ListFileSystemEntries().OrderBy(f => f.RelativePath))
             {
                 var index = _dataStore.GetFileIndexById(file.IndexId);
-                    Library library = null;
-                    Replica replica = null;
-                        Machine machine = null;
-                
-                // If we are looking only for a particular replica, reject others.
-                if (index != null && !string.IsNullOrEmpty(replicaId) && index.ReplicaId.HasValue && !index.ReplicaId.Value.ToString().StartsWith(replicaId)) continue;
+                Library library = null;
+                Replica replica = null;
+                Machine machine = null;
 
-                // Check library name, if present.
                 if (index != null)
                 {
+                    // If we are looking only for a particular replica, reject others.
+                    if (!string.IsNullOrEmpty(replicaId) && index.ReplicaId.HasValue && !index.ReplicaId.Value.ToString().StartsWith(replicaId)) continue;
+
+                    // Check library name, if present.
                     library = _dataStore.GetLibraryById(index.LibraryId);
                     if (library != null && !string.IsNullOrEmpty(libraryName) && !libraryName.Equals(library.Name, StringComparison.CurrentCultureIgnoreCase)) continue;
-                }
 
-                if (index != null)
-                {
                     replica = _dataStore.GetReplicaById(index.ReplicaId);
                     if (replica != null)
                     {
                         machine = _dataStore.GetMachineById(replica.MachineId);
                         if (machine != null && !string.IsNullOrEmpty(machineName) && !machineName.Equals(machine.Name, StringComparison.CurrentCultureIgnoreCase)) continue;
-                    }
 
-                    if (replica != null && !string.IsNullOrEmpty(localPath) && !Path.Combine(replica.LocalPath, file.RelativePath)
-                        .StartsWith(localPath, StringComparison.CurrentCultureIgnoreCase)) continue;
+                        if (!string.IsNullOrEmpty(localPath))
+                        {
+                            var localDir = new DirectoryInfo(localPath);
+                            var relativeDir = new DirectoryInfo(Path.Combine(replica.LocalPath, file.RelativePath));
+                            if (!localDir.IsSubPathOf(relativeDir))
+                                continue;
+                        }
+                    }
                 }
 
                 if (machine == null)
                 {
-                    Console.WriteLine($"\\\\*\\{library?.Name}\\{replica?.ID}\\{file.RelativePath} [{file.State}]");
+                    var repName = replica?.ID.ToString() ?? "*";
+                    Console.WriteLine($"\\\\*\\{library?.Name}\\{repName}\\{file.RelativePath} [{file.State}]");
                 }
                 else
                 {
                     Console.WriteLine($"\\\\{machine.Name}\\{library?.Name}\\{replica?.ID}\\{file.RelativePath} [{file.ContentsHash}]");
                 }
-                // if (machineName != null && _dataStore.GetMachineById(machineId)...)
+                printedLines++;
+            }
+
+            if (printedLines == 0)
+            {
+                // Nothing was printed. List libraries, even if there are no replicas or files.
+                foreach (var lib in _dataStore.ListLibraries())
+                {
+                    printedLines = 0;
+                    foreach (var rep in _dataStore.ListReplicas(r => r.LibraryId == lib.ID))
+                    {
+                        var machine = _dataStore.GetMachineById(rep.MachineId)?.Name ?? "*";
+                        Console.WriteLine($"\\\\{machine}\\{lib?.Name}\\{rep?.ID}\\*");
+                        printedLines++;
+                    }
+
+                    if (printedLines == 0)
+                    {
+                        Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\*");
+                    }
+                }
             }
         }
     }

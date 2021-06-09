@@ -54,7 +54,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="FileComparerTest.cs" />
     <Compile Include="FileManagerTests.cs" />
     <Compile Include="Mocks\MockFileManager.cs" />
     <Compile Include="MachineMapperTests.cs" />

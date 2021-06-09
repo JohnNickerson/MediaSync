@@ -35,12 +35,12 @@ namespace UnitTesting.Mocks
             return CopyFile(Path.Combine(basePath, relativePath), Path.Combine(targetPath, relativePath));
         }
 
-        public FileHeader CreateFileHeader(string localPath, string relativePath)
+        public FileSystemEntry CreateFileHeader(string localPath, string relativePath)
         {
             throw new NotImplementedException();
         }
 
-        public FileHeader TryCreateFileHeader(string localPath, string relativePath)
+        public FileSystemEntry TryCreateFileHeader(string localPath, string relativePath)
         {
             throw new NotImplementedException();
         }

@@ -264,7 +264,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
                     ContentsHash = fLocalFileHeader.ContentsHash,
                     ImportHash = file.ImportHash,
                     IsDeleted = file.IsDeleted,
-                    IsFolder = file.IsFolder,
                     LastModified = DateTime.Now,
                     LastWriteTime = file.LastWriteTime,
                     PrevRevision = null,
@@ -287,7 +286,8 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
                     State = folder.State,
                     LastModified = DateTime.Now,
                     PrevRevision = null,
-                    RevisionGuid = Guid.NewGuid()
+                    RevisionGuid = Guid.NewGuid(),
+                    BasePath = folder.BasePath
                 };
             }
             if (theNewOne != null)

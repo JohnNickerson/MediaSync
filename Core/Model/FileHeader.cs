@@ -8,7 +8,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
     {
         #region Fields
         private readonly IFileHashProvider _hasher;
-        private string _contentsHash;
+
         #endregion
 
         #region Constructors
@@ -21,20 +21,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         #endregion
 
         #region Properties
-        /// <summary>
-        /// The local base path, where the file is stored.
-        /// </summary>
-        public string BasePath { get; set; }
 
         /// <summary>
         /// The name of the file.
         /// </summary>
         public string FileName => new FileInfo(Path.Combine(BasePath, RelativePath)).Name;
-
-        /// <summary>
-        /// Indicates whether this is a folder.
-        /// </summary>
-        public bool IsFolder { get; set; }
 
         /// <summary>
         /// The date and time when the file was last modified.
@@ -47,7 +38,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public override bool Matches(FileSystemEntry shareFileHead)
         {
             if (!(shareFileHead is FileHeader otherFile)) return false;
-            return base.Matches(otherFile) && IsFolder == otherFile.IsFolder;
+            return base.Matches(otherFile);
         }
 
         #endregion

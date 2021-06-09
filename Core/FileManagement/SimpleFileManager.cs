@@ -42,20 +42,19 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             return CopyFile(Path.Combine(localPath, relativePath), Path.Combine(sharedPath, relativePath));
         }
 
-        public FileHeader CreateFileHeader(string localPath, string relativePath)
+        public FileSystemEntry CreateFileHeader(string localPath, string relativePath)
         {
             var fullpath = Path.Combine(localPath, relativePath);
             if (DirectoryExists(fullpath))
             {
                 var dinfo = new DirectoryInfo(fullpath);
-                return new FileHeader
+                return new FolderHeader
                 {
                     BasePath = localPath,
                     ContentsHash = string.Empty,
                     IsDeleted = false,
                     LastModified = dinfo.LastWriteTime,
                     RelativePath = relativePath,
-                    IsFolder = DirectoryExists(fullpath)
                 };
             }
             else
@@ -68,7 +67,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     LastModified = finfo.LastWriteTime,
                     RelativePath = relativePath,
                     Size = finfo.Length,
-                    IsFolder = DirectoryExists(fullpath),
                     ContentsHash = _fileHasher.ComputeHash(fullpath)
                 };
             }
@@ -78,7 +76,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
 		/// Attempts to create a file header record for a given local file, if present.
 		/// </summary>
 		/// <returns>A FileHeader instance if possible, or null if the file does not exist.</returns>
-		public FileHeader TryCreateFileHeader(string localPath, string relativePath)
+		public FileSystemEntry TryCreateFileHeader(string localPath, string relativePath)
 		{
 			try
 			{

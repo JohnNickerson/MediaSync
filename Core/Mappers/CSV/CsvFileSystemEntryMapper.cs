@@ -30,7 +30,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.CSV
                         PrevRevision = string.IsNullOrEmpty(tokens[10]) ? (Guid?) null : Guid.Parse(tokens[10]),
                         ImportHash = tokens[11],
                         BasePath = tokens[12],
-                        IsFolder = bool.Parse(tokens[13]),
+                        //IsFolder = bool.Parse(tokens[13]),
                         LastWriteTime = DateTime.Parse(tokens[14])
                     };
                 case "FolderHeader":
@@ -58,7 +58,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.CSV
             if (obj is FileHeader file)
             {
                 return
-                    $"{file.ID},FileHeader,{file.State},{file.IndexId},{file.Size},{file.ContentsHash},{file.RelativePath},{file.LastModified:O},{file.IsDeleted},{file.RevisionGuid},{file.PrevRevision},{file.ImportHash},{file.BasePath},{file.IsFolder},{file.LastWriteTime:O}";
+                    $"{file.ID},FileHeader,{file.State},{file.IndexId},{file.Size},{file.ContentsHash},{file.RelativePath},{file.LastModified:O},{file.IsDeleted},{file.RevisionGuid},{file.PrevRevision},{file.ImportHash},{file.BasePath},false,{file.LastWriteTime:O}";
             }
             else if (obj is FolderHeader folder)
             {

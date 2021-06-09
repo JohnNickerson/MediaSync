@@ -35,6 +35,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public long Size { get; set; }
 
         /// <summary>
+        /// The local base path, where the file is stored.
+        /// </summary>
+        public string BasePath { get; set; }
+
+        /// <summary>
         /// Compares this file system entry to another, and returns true if they seem to represent copies of each other.
         /// </summary>
         /// <param name="otherFile">The file to compare to.</param>

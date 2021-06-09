@@ -358,67 +358,37 @@ namespace AssimilationSoftware.MediaSync.CLI
 
         public void Run(string machineName, string libraryName, string replicaId, string localPath, bool showSubFolders)
         {
-            var printedLines = 0;
-            foreach (var file in _dataStore.ListFileSystemEntries().OrderBy(f => f.RelativePath))
+            foreach (var lib in _dataStore.ListLibraries(l =>
+                string.IsNullOrEmpty(libraryName) ||
+                libraryName.Equals(l.Name, StringComparison.CurrentCultureIgnoreCase)))
             {
-                var index = _dataStore.GetFileIndexById(file.IndexId);
-                Library library = null;
-                Replica replica = null;
-                Machine machine = null;
-
-                if (index != null)
+                Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\*");
+                foreach (var libFile in _dataStore.ListFileSystemEntries(f => f.IndexId == lib.PrimaryIndexId).OrderBy(f => f.RelativePath))
                 {
-                    // If we are looking only for a particular replica, reject others.
-                    if (!string.IsNullOrEmpty(replicaId) && index.ReplicaId.HasValue && !index.ReplicaId.Value.ToString().StartsWith(replicaId)) continue;
+                    Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\{libFile.RelativePath} [{libFile.State}]");
+                }
 
-                    // Check library name, if present.
-                    library = _dataStore.GetLibraryById(index.LibraryId);
-                    if (library != null && !string.IsNullOrEmpty(libraryName) && !libraryName.Equals(library.Name, StringComparison.CurrentCultureIgnoreCase)) continue;
-
-                    replica = _dataStore.GetReplicaById(index.ReplicaId);
-                    if (replica != null)
+                foreach (var rep in _dataStore.ListReplicas(r =>
+                    r.LibraryId == lib.ID &&
+                    (string.IsNullOrEmpty(replicaId) || r.ID.ToString().StartsWith(replicaId))))
+                {
+                    var machine = _dataStore.GetMachineById(rep.MachineId)?.Name ?? "*";
+                    if (string.IsNullOrEmpty(machineName) || machine == machineName)
                     {
-                        machine = _dataStore.GetMachineById(replica.MachineId);
-                        if (machine != null && !string.IsNullOrEmpty(machineName) && !machineName.Equals(machine.Name, StringComparison.CurrentCultureIgnoreCase)) continue;
-
-                        if (!string.IsNullOrEmpty(localPath))
-                        {
-                            var localDir = new DirectoryInfo(localPath);
-                            var relativeDir = new DirectoryInfo(Path.Combine(replica.LocalPath, file.RelativePath));
-                            if (!localDir.IsSubPathOf(relativeDir))
-                                continue;
-                        }
-                    }
-                }
-
-                if (machine == null)
-                {
-                    var repName = replica?.ID.ToString() ?? "*";
-                    Console.WriteLine($"\\\\*\\{library?.Name}\\{repName}\\{file.RelativePath} [{file.State}]");
-                }
-                else
-                {
-                    Console.WriteLine($"\\\\{machine.Name}\\{library?.Name}\\{replica?.ID}\\{file.RelativePath} [{file.ContentsHash}]");
-                }
-                printedLines++;
-            }
-
-            if (printedLines == 0)
-            {
-                // Nothing was printed. List libraries, even if there are no replicas or files.
-                foreach (var lib in _dataStore.ListLibraries())
-                {
-                    printedLines = 0;
-                    foreach (var rep in _dataStore.ListReplicas(r => r.LibraryId == lib.ID))
-                    {
-                        var machine = _dataStore.GetMachineById(rep.MachineId)?.Name ?? "*";
                         Console.WriteLine($"\\\\{machine}\\{lib?.Name}\\{rep?.ID}\\*");
-                        printedLines++;
-                    }
+                        foreach (var repFile in _dataStore.ListFileSystemEntries(f => f.IndexId == rep.IndexId).OrderBy(f => f.RelativePath))
+                        {
+                            if (!string.IsNullOrEmpty(localPath))
+                            {
+                                var localDir = new DirectoryInfo(localPath);
+                                var relativeDir = new DirectoryInfo(Path.Combine(rep.LocalPath, repFile.RelativePath));
+                                if (!localDir.IsSubPathOf(relativeDir))
+                                    continue;
+                            }
 
-                    if (printedLines == 0)
-                    {
-                        Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\*");
+                            Console.WriteLine(
+                                $"\\\\{machine}\\{lib?.Name}\\{rep?.ID}\\{repFile.RelativePath} [{repFile.ContentsHash}]");
+                        }
                     }
                 }
             }

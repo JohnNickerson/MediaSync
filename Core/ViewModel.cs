@@ -364,14 +364,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 else if (allHashes.ContainsKey(f.ToLower()))
                 {
                     allHashes[f.ToLower()].LocalFileHeader = hed;
-                    allHashes[f.ToLower()].LocalFileHash = hed.ContentsHash + hed.IsFolder;
+                    allHashes[f.ToLower()].LocalFileHash = hed.ContentsHash + (hed is FolderHeader);
                 }
                 else
                 {
                     allHashes[f.ToLower()] = new LocalFileHashSet
                     {
                         LocalFileHeader = hed,
-                        LocalFileHash = hed.ContentsHash + hed.IsFolder
+                        LocalFileHash = hed.ContentsHash + (hed is FolderHeader)
                     };
                 }
                 if (_stopSync) return actionsCount;
@@ -610,7 +610,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     if (_stopSync)
                     {
-                        _repository.Update(replica);
                         return actionsCount;
                     }
                 }
@@ -623,7 +622,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
                     if (_stopSync)
                     {
-                        _repository.Update(replica);
                         return actionsCount;
                     }
 
@@ -632,11 +630,22 @@ namespace AssimilationSoftware.MediaSync.Core
                 // Push.
                 foreach (var m in deletePrimary.OrderByDescending(f => f.RelativePath.Length))
                 {
-                    m.State = FileSyncState.Expiring;
-                    _repository.Update(m);
+                    var mf = _repository.ListFileSystemEntries(f =>
+                        f.RelativePath.Equals(m.RelativePath, StringComparison.CurrentCultureIgnoreCase) &&
+                        f.IndexId == primaryIndex.ID).FirstOrDefault();
+                    if (mf != null)
+                    {
+                        mf.State = FileSyncState.Expiring;
+                        _repository.Update(mf);
+                    }
+                    else
+                    {
+                        m.State = FileSyncState.Expiring;
+                        _repository.CopyFileSystemEntry(m, primaryIndex.ID);
+                    }
+
                     if (_stopSync)
                     {
-                        _repository.Update(replica);
                         return actionsCount;
                     }
 
@@ -965,7 +974,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         private class LocalFileHashSet
         {
-            internal FileHeader LocalFileHeader;
+            internal FileSystemEntry LocalFileHeader;
             internal string LocalFileHash;
             internal FileSystemEntry LocalIndexHeader;
             internal string LocalIndexHash;

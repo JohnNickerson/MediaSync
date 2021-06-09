@@ -858,6 +858,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                     else
                                     {
                                         mf.ContentsHash = s.ContentsHash;
+                                        mf.State = FileSyncState.Transit;
                                         _repository.Update(mf);
                                     }
                                 }

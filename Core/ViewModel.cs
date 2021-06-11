@@ -230,10 +230,10 @@ namespace AssimilationSoftware.MediaSync.Core
             var actionsCount = new FileActionsCount();
             // Check folders, just in case.
             var localIndex = _repository.GetFileIndexById(replica.IndexId) ?? new FileIndex();
-            var sharedPath = _repository.GetMachineByName(MachineId).SharedPath;
-            if (!_fileManager.DirectoryExists(sharedPath))
+            var machine = _repository.GetMachineByName(MachineId);
+            if (!_fileManager.DirectoryExists(machine.SharedPath))
             {
-                Trace.WriteLine($"Shared storage not available ({sharedPath}). Cannot proceed.");
+                Trace.WriteLine($"Shared storage not available ({machine.SharedPath}). Cannot proceed.");
                 return actionsCount;
             }
             if (!_fileManager.DirectoryExists(replica.LocalPath))
@@ -242,6 +242,9 @@ namespace AssimilationSoftware.MediaSync.Core
                 return actionsCount;
             }
 
+            var libraryName = _repository.GetLibraryById(replica.LibraryId).Name;
+            var sharedPath = Path.Combine(machine.SharedPath, libraryName);
+            _fileManager.EnsureFolder(sharedPath);
             // 1. Compare the primary index to each remote index to determine each file's state.
             var begin = DateTime.Now;
             #region Determine State

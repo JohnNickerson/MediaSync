@@ -29,7 +29,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.CSV
         public override string ToCsv(Replica obj)
         {
             return
-                $"{obj.ID},{obj.MachineId},{obj.IndexId},{obj.LocalPath},{obj.LibraryId},{obj.IsDeleted},{obj.RevisionGuid},{obj.PrevRevision},{obj.ImportHash}";
+                $"{obj.ID},{obj.MachineId},{obj.IndexId},\"{obj.LocalPath}\",{obj.LibraryId},{obj.IsDeleted},{obj.RevisionGuid},{obj.PrevRevision},{obj.ImportHash}";
         }
 
         public override string FieldsHeader => "ID,MachineId,IndexId,LocalPath,LibraryId,IsDeleted,RevisionGuid,PrevRevision,ImportHash";

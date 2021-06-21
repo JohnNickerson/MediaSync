@@ -58,12 +58,12 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.CSV
             if (obj is FileHeader file)
             {
                 return
-                    $"{file.ID},FileHeader,{file.State},{file.IndexId},{file.Size},{file.ContentsHash},{file.RelativePath},{file.LastModified:O},{file.IsDeleted},{file.RevisionGuid},{file.PrevRevision},{file.ImportHash},{file.BasePath},false,{file.LastWriteTime:O}";
+                    $"{file.ID},FileHeader,{file.State},{file.IndexId},{file.Size},{file.ContentsHash},\"{file.RelativePath}\",{file.LastModified:O},{file.IsDeleted},{file.RevisionGuid},{file.PrevRevision},{file.ImportHash},{file.BasePath},false,{file.LastWriteTime:O}";
             }
             else if (obj is FolderHeader folder)
             {
                 return
-                    $"{folder.ID},FolderHeader,{folder.State},{folder.IndexId},{folder.Size},{folder.ContentsHash},{folder.RelativePath},{folder.LastModified:O},{folder.IsDeleted},{folder.RevisionGuid},{folder.PrevRevision},{folder.ImportHash}";
+                    $"{folder.ID},FolderHeader,{folder.State},{folder.IndexId},{folder.Size},{folder.ContentsHash},\"{folder.RelativePath}\",{folder.LastModified:O},{folder.IsDeleted},{folder.RevisionGuid},{folder.PrevRevision},{folder.ImportHash}";
             }
             else return string.Empty;
         }

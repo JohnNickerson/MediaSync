@@ -30,7 +30,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.CSV
         public override string ToCsv(Machine obj)
         {
             return
-                $"{obj.ID},{obj.Name},{obj.SharedPath},{obj.LastModified:O},{obj.IsDeleted},{obj.RevisionGuid},{obj.PrevRevision},{obj.ImportHash}";
+                $"{obj.ID},{obj.Name},\"{obj.SharedPath}\",{obj.LastModified:O},{obj.IsDeleted},{obj.RevisionGuid},{obj.PrevRevision},{obj.ImportHash}";
         }
     }
 }

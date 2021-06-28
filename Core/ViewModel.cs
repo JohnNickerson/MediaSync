@@ -50,7 +50,12 @@ namespace AssimilationSoftware.MediaSync.Core
             _repository = dataContext;
             _machineId = machineId;
             _fileManager = fileManager;
-            _sharedBasePath = dataContext.GetMachineByName(machineId).SharedPath;
+            var machine = dataContext.GetMachineByName(machineId);
+            if (machine == null)
+            {
+                throw new ArgumentException($"Unknown machine name: {machineId}");
+            }
+            _sharedBasePath = machine.SharedPath;
         }
         #endregion
 

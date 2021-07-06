@@ -30,6 +30,8 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 row.Data.Add(p.LocalPath);
                 table.Rows.Add(row);
             }
+
+            table.MaxWidth = Console.WindowWidth - 2; // Known Cuneiform bug: tables get squished unless a maximum width is specified.
             Console.WriteLine(table.ToDisplayString());
             Console.WriteLine(string.Empty);
         }

@@ -3,18 +3,13 @@ using AssimilationSoftware.MediaSync.Core;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using AssimilationSoftware.MediaSync.CLI.Properties;
 using AssimilationSoftware.MediaSync.CLI.Options;
-using AssimilationSoftware.MediaSync.Core.Mappers.XML;
 using AssimilationSoftware.MediaSync.CLI.Views;
 using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
 using AssimilationSoftware.MediaSync.Core.Extensions;
-using AssimilationSoftware.MediaSync.Core.Interfaces;
 using AssimilationSoftware.MediaSync.Core.Mappers;
-using AssimilationSoftware.MediaSync.Core.Mappers.LiteDb;
 using AssimilationSoftware.MediaSync.Core.Model;
 using CommandLine;
 
@@ -24,9 +19,6 @@ namespace AssimilationSoftware.MediaSync.CLI
     {
         static int Main(string[] args)
         {
-            var argverb = string.Empty;
-            object argsubs = null;
-
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
             Trace.Listeners.Add(new ConsoleTraceListener());
 
@@ -39,7 +31,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 
             if (!Settings.Default.Configured)
             {
-                return CommandLine.Parser.Default.ParseArguments<InitOptions>(args)
+                return Parser.Default.ParseArguments<InitOptions>(args)
                     .MapResult(
                         Initialise,
                     errs => 1);
@@ -78,7 +70,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 		            - Update a library collection to be replicated across machines.
              */
 
-            return CommandLine.Parser.Default.ParseArguments<AddLibraryOptions, AddReplicaOptions, InitOptions, ViewIndexOptions, ListProfilesSubOptions, RemoveLibraryOptions, DeleteMachineOptions, RemoveReplicaOptions, RunOptions, UpdateLibraryOptions>(args)
+            return Parser.Default.ParseArguments<AddLibraryOptions, AddReplicaOptions, InitOptions, ViewIndexOptions, ListProfilesSubOptions, RemoveLibraryOptions, DeleteMachineOptions, RemoveReplicaOptions, RunOptions, UpdateLibraryOptions>(args)
                 .MapResult(
                     (InitOptions opts) => Initialise(opts),
                     (RunOptions opts) => RunSync(opts, GetApi()),
@@ -87,125 +79,16 @@ namespace AssimilationSoftware.MediaSync.CLI
                     (RemoveLibraryOptions opts) => RemoveLibrary(opts, GetApi()),
                     (AddReplicaOptions opts) => AddReplica(opts, GetApi()),
                     (RemoveReplicaOptions opts) => RemoveReplica(opts, GetApi()),
-                    (ViewIndexOptions opts) => SearchIndexData(opts, GetApi()),
-                    (ListProfilesSubOptions opts) => DoTheListProfilesSubOptionsThing(opts, GetApi()),
+                    (ViewIndexOptions opts) => SearchIndexData(opts),
+                    (ListProfilesSubOptions opts) => DoTheListProfilesSubOptionsThing(opts),
                     (DeleteFileOptions opts) => DeleteFile(opts, GetApi()),
                     (UndeleteFileOptions opts) => UndeleteFile(opts, GetApi()),
                     (MoveReplicaOptions opts) => MoveReplica(opts, GetApi()),
                     (UpdateLibraryOptions opts) => UpdateProfile(opts, GetApi()),
                     errs => 1);
-
-            //ISyncSetMapper mapper;
-            //if (string.Equals(Settings.Default.DataFileFormat, "litedb", StringComparison.CurrentCultureIgnoreCase))
-            //{
-            //    mapper = new LiteDbSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.db"));
-            //}
-            //else
-            //{
-            //    mapper = new XmlSyncSetMapper(Path.Combine(Settings.Default.MetadataFolder, "SyncData.xml"));
-            //}
-            //var vm = new ViewModel(mapper, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
-
-            //switch (argverb)
-            //{
-            //    case "add-library":
-            //        #region Add library
-            //        {
-            //            var addOptions = (AddLibrarySubOptions)argsubs;
-            //            vm.CreateLibrary(addOptions.LibraryName, addOptions.ReserveSpaceMb * 1000000);
-            //            vm.AddReplica(addOptions.LibraryName, addOptions.LocalPath, addOptions.SharedPath);
-            //            new ProfileListConsoleView(vm).Run(false);
-            //        }
-            //        #endregion
-            //        break;
-            //    case "add-replica":
-            //        #region Add replica
-            //        {
-            //            var joinOptions = (AddReplicaSubOptions)argsubs;
-            //            vm.AddReplica(joinOptions.ProfileName, joinOptions.LocalPath, joinOptions.SharedPath);
-            //            new ProfileListConsoleView(vm).Run(false);
-            //        }
-            //        #endregion
-            //        break;
-            //    case "remove-replica":
-            //        #region Remove replica
-            //        {
-            //            var leaveOptions = (RemoveReplicaSubOptions)argsubs;
-            //            if (leaveOptions.MachineName == "this")
-            //            {
-            //                leaveOptions.MachineName = Settings.Default.MachineName;
-            //            }
-            //            vm.LeaveProfile(leaveOptions.ProfileName, leaveOptions.MachineName);
-            //            new ProfileListConsoleView(vm).Run(false);
-            //        }
-            //        #endregion
-            //        break;
-            //    case "list":
-            //        #region List profiles
-            //        {
-            //            var listOptions = (ListProfilesSubOptions)argsubs;
-            //            new ProfileListConsoleView(vm).Run(listOptions.Verbose);
-            //        }
-            //        #endregion
-            //        break;
-            //    case "list-machines":
-            //        new MachineListConsoleView(vm).Run();
-            //        break;
-            //    case "remove-machine":
-            //        #region Remove a machine from all profiles
-            //        {
-            //            var removeOptions = (RemoveMachineSubOptions)argsubs;
-            //            string machine = removeOptions.MachineName;
-            //            vm.RemoveMachine(machine);
-            //            var machineview = new MachineListConsoleView(vm);
-            //            machineview.Run();
-            //        }
-            //        #endregion
-            //        break;
-            //    case "remove-library":
-            //        #region Remove an entire library
-            //        {
-            //            var removeOptions = (RemoveLibraryOptions)argsubs;
-            //            vm.RemoveLibrary(removeOptions.ProfileName);
-            //            new ProfileListConsoleView(vm).Run(false);
-            //        }
-            //        break;
-            //    #endregion
-            //    case "run":
-            //        #region Run sync
-            //        {
-            //            // TODO: SearchSpecification for which profiles to run.
-            //            // TODO: Confirm profile selections before running.
-            //            var runOptions = (RunSubOptions)argsubs;
-            //            var begin = DateTime.Now;
-            //            var logName = Path.Combine(Settings.Default.MetadataFolder, "MediaSync.log");
-            //            if (File.Exists(logName) && new FileInfo(logName).Length > 1000000)
-            //            {
-            //                File.Move(logName, Path.Combine(Settings.Default.MetadataFolder, $"{Path.GetFileNameWithoutExtension(logName)}.{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log"));
-            //            }
-            //            Trace.Listeners.Add(new TextWriterTraceListener(logName));
-            //            vm.RunSync(runOptions.IndexOnly, runOptions.LogLevel >= 4, runOptions.ProfileSearch);
-            //            Trace.WriteLine($"Total time taken: {(DateTime.Now - begin).Verbalise()}");
-            //            Trace.Flush();
-            //        }
-            //        #endregion
-            //        break;
-            //    case "update-replica":
-            //        #region Update a replica
-            //        {
-            //            var updateOptions = (UpdateProfileSubOptions)argsubs;
-            //            vm.ResizeReserve(updateOptions.ProfileName, updateOptions.ReserveSpaceMb * 1000000);
-            //            new ProfileListConsoleView(vm).Run(true);
-            //        }
-            //        #endregion
-            //        break;
-            //    case "version":
-            //        Console.WriteLine("MediaSync v{0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
-            //        break;
-            //}
         }
 
-        private static Core.ViewModel GetApi()
+        private static ViewModel GetApi()
         {
             var repo = new DataStore(Settings.Default.MetadataFolder);
             var vm = new ViewModel(repo, Settings.Default.MachineName, new SimpleFileManager(new Sha1Calculator()));
@@ -267,13 +150,13 @@ namespace AssimilationSoftware.MediaSync.CLI
             return 0;
         }
 
-        private static int DoTheListProfilesSubOptionsThing(ListProfilesSubOptions opts, ViewModel api)
+        private static int DoTheListProfilesSubOptionsThing(ListProfilesSubOptions opts)
         {
             new ProfileListConsoleView(new DataStore(Settings.Default.MetadataFolder)).Run(opts.Verbose);
             return 0;
         }
 
-        private static int SearchIndexData(ViewIndexOptions opts, ViewModel api)
+        private static int SearchIndexData(ViewIndexOptions opts)
         {
             new IndexFileView(new DataStore(Settings.Default.MetadataFolder)).Run(opts.MachineName, opts.LibraryName,
                 opts.ReplicaId, opts.LocalPath, opts.ShowSubFolders);
@@ -375,7 +258,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                     var machine = _dataStore.GetMachineById(rep.MachineId)?.Name ?? "*";
                     if (string.IsNullOrEmpty(machineName) || machine == machineName)
                     {
-                        Console.WriteLine($"\\\\{machine}\\{lib?.Name}\\{rep?.ID}\\*");
+                        Console.WriteLine($"\\\\{machine}\\{lib?.Name}\\{rep.ID}\\*");
                         foreach (var repFile in _dataStore.ListFileSystemEntries(f => f.IndexId == rep.IndexId).OrderBy(f => f.RelativePath))
                         {
                             if (!string.IsNullOrEmpty(localPath))
@@ -387,7 +270,7 @@ namespace AssimilationSoftware.MediaSync.CLI
                             }
 
                             Console.WriteLine(
-                                $"\\\\{machine}\\{lib?.Name}\\{rep?.ID}\\{repFile.RelativePath} [{repFile.ContentsHash}]");
+                                $"\\\\{machine}\\{lib?.Name}\\{rep.ID}\\{repFile.RelativePath} [{repFile.ContentsHash}]");
                         }
                     }
                 }

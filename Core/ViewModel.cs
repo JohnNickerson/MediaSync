@@ -40,7 +40,6 @@ namespace AssimilationSoftware.MediaSync.Core
         private readonly DataStore _repository;
 
         private bool _stopSync;
-        private string _sharedBasePath;
 
         #endregion
 
@@ -55,7 +54,6 @@ namespace AssimilationSoftware.MediaSync.Core
             {
                 throw new ArgumentException($"Unknown machine name: {machineId}");
             }
-            _sharedBasePath = machine.SharedPath;
         }
         #endregion
 
@@ -272,7 +270,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
             var library = _repository.GetLibraryById(replica.LibraryId);
             var primaryIndex = _repository.GetFileIndexById(library.PrimaryIndexId);
-            Dictionary<string, FileSystemEntry> primaryIndexFiles = null;
             if (primaryIndex == null)
             {
                 // Need to create a new library index.
@@ -289,14 +286,14 @@ namespace AssimilationSoftware.MediaSync.Core
                 _repository.Insert(primaryIndex);
             }
 
-            primaryIndexFiles = _repository.GetFilesByIndex(primaryIndex)
+            var primaryIndexFiles = _repository.GetFilesByIndex(primaryIndex)
                 .ToDictionary(p => p.RelativePath);
             foreach (var mf in primaryIndexFiles.Values)
             {
                 var path = mf.RelativePath.ToLower();
                 if (mf.State == FileSyncState.Expiring)
                 {
-                    if (mf is FolderHeader folder && primaryIndexFiles.Values.Any(f => f.State != FileSyncState.Expiring && f.RelativePath.StartsWith(mf.RelativePath)))
+                    if (mf is FolderHeader && primaryIndexFiles.Values.Any(f => f.State != FileSyncState.Expiring && f.RelativePath.StartsWith(mf.RelativePath)))
                     {
                         // If the folder contains anything that's not deleted, its state is "transit", even if it is marked as deleted.
                         mf.State = FileSyncState.Transit;
@@ -306,7 +303,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         mf.State = comparisons.ContainsKey(path) ? FileSyncState.Expiring : FileSyncState.Destroyed;
                     }
                 }
-                else if (comparisons.ContainsKey(path) && comparisons[path].Count == _repository.GetIndexesByLibraryId(library.ID).ToArray().Count() && comparisons[path].AllSame)
+                else if (comparisons.ContainsKey(path) && comparisons[path].Count == _repository.GetIndexesByLibraryId(library.ID).Count() && comparisons[path].AllSame)
                 {
                     mf.State = FileSyncState.Synchronised;
                 }
@@ -762,7 +759,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             // The shared file does not match the primary index. It should be removed.
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
-                        else if (shareFileHead != null && comparisons.ContainsKey(key) && comparisons[key].Count == _repository.GetIndexesByLibraryId(library.ID).ToArray().Count() && comparisons[key].AllSame && comparisons[key].Hash == mf.ContentsHash)
+                        else if (shareFileHead != null && comparisons.ContainsKey(key) && comparisons[key].Count == _repository.GetIndexesByLibraryId(library.ID).Count() && comparisons[key].AllSame && comparisons[key].Hash == mf.ContentsHash)
                         {
                             // Successfully transmitted to every replica. Remove from shared storage.
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));

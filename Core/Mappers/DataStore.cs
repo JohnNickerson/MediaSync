@@ -189,26 +189,31 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
 
         public void Delete(FileSystemEntry entity)
         {
+            if (entity == null) return;
             Files.Delete(entity);
         }
 
         public void Delete(FileIndex entity)
         {
+            if (entity == null) return;
             Indexes.Delete(entity);
         }
 
         public void Delete(Library entity)
         {
+            if (entity == null) return;
             Libraries.Delete(entity);
         }
 
         public void Delete(Machine entity)
         {
+            if (entity == null) return;
             Machines.Delete(entity);
         }
 
         public void Delete(Replica entity)
         {
+            if (entity == null) return;
             Replicas.Delete(entity);
         }
 
@@ -222,7 +227,9 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
             // Replicas without a Machine
             foreach (var r in Replicas.Items)
             {
-                if (GetMachineById(r.MachineId) == null || GetLibraryById(r.LibraryId) == null)
+                var machineById = GetMachineById(r.MachineId);
+                var libraryById = GetLibraryById(r.LibraryId);
+                if (machineById == null || machineById.IsDeleted || libraryById == null || libraryById.IsDeleted)
                 {
                     Delete(r);
                 }
@@ -232,7 +239,8 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
             foreach (var i in Indexes.Items)
             {
                 var replica = GetReplicaById(i.ReplicaId);
-                if (GetLibraryById(i.LibraryId) == null || i.ReplicaId.HasValue && replica == null)
+                var libraryById = GetLibraryById(i.LibraryId);
+                if (libraryById == null || libraryById.IsDeleted || (i.ReplicaId.HasValue && (replica == null || replica.IsDeleted)))
                 {
                     Delete(i);
                 }

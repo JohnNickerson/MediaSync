@@ -641,6 +641,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     var responseKey = Console.ReadKey();
                     if (responseKey.KeyChar == 'y' || responseKey.KeyChar == 'Y')
                     {
+                        Console.WriteLine(" Proceeding with delete.");
                         foreach (var m in deletePrimary.OrderByDescending(f => f.RelativePath.Length))
                         {
                             var mf = _repository.ListFileSystemEntries(f =>
@@ -662,6 +663,10 @@ namespace AssimilationSoftware.MediaSync.Core
                                 return actionsCount;
                             }
                         }
+                    }
+                    else
+                    {
+                        Console.WriteLine(" Cancelling. No files will be marked deleted in the library index this time.");
                     }
                 }
                 #endregion

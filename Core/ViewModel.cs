@@ -134,6 +134,8 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             var replica = new Replica { LocalPath = localPath, LibraryId = library.ID, MachineId = machine.ID };
             _repository.Insert(replica);
+            var index = new FileIndex() {LibraryId = library.ID, ReplicaId = replica.ID};
+            _repository.Insert(index);
         }
 
         public void DeleteReplica(Guid replicaId)

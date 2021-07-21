@@ -31,10 +31,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
         {
             // Configuration will be set by this point.
             ThisMachine = Settings.Default.ThisMachine;
-            // Load the profiles for display.
-            //var mapper = new LiteDbSyncSetMapper(Settings.Default.SharedPath);
-            //_api = new ViewModel(mapper, ThisMachine, new SimpleFileManager(new Sha1Calculator()));
-            //Replicas = _api.Profiles.Values.ToList();
+            // TODO: Load the replicas for display.
         }
 
         public string ThisMachine { get; set; }
@@ -43,7 +40,7 @@ namespace AssimilationSoftware.MediaSync.WpfGui
 
         public void RunAllExecute()
         {
-            // Run the profiles in another thread.
+            // Run the sync in another thread.
             var windowLogger = new WindowLogger(this);
             Trace.Listeners.Add(windowLogger);
             IsRunning = true;

@@ -121,7 +121,6 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
 
         public void SaveChanges()
         {
-            PurgeOrphanedData();
             Files.SaveChanges();
             Indexes.SaveChanges();
             Libraries.SaveChanges();

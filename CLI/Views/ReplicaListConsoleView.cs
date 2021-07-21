@@ -5,11 +5,11 @@ using System;
 
 namespace AssimilationSoftware.MediaSync.CLI.Views
 {
-    internal class ProfileListConsoleView
+    internal class ReplicaListConsoleView
     {
         private readonly DataStore _vm;
 
-        internal ProfileListConsoleView(DataStore vm)
+        internal ReplicaListConsoleView(DataStore vm)
         {
             this._vm = vm;
         }

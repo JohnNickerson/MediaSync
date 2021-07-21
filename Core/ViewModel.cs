@@ -84,9 +84,9 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             if (LibraryExists(name))
             {
-                var profile = GetLibrary(name);
-                profile.MaxSharedSize = reserve;
-                _repository.Update(profile);
+                var library = GetLibrary(name);
+                library.MaxSharedSize = reserve;
+                _repository.Update(library);
                 _repository.SaveChanges();
             }
         }
@@ -141,6 +141,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public void DeleteReplica(Guid replicaId)
         {
             _repository.Delete(_repository.GetReplicaById(replicaId));
+            _repository.PurgeOrphanedData();
         }
 
         public List<string> Machines
@@ -158,7 +159,7 @@ namespace AssimilationSoftware.MediaSync.Core
             _repository.PurgeOrphanedData();
         }
 
-        public void RunSync(bool indexOnly, bool verbose, string profile = null)
+        public void RunSync(bool indexOnly, bool verbose, string library = null)
         {
             _stopSync = false;
             var fullResults = new FileActionsCount();
@@ -167,8 +168,8 @@ namespace AssimilationSoftware.MediaSync.Core
             var machine = _repository.ListMachines(m => m.Name == _machineId).FirstOrDefault();
             foreach (var opts in _repository.ListLibraries().ToList())
             {
-                // If we're looking for a specific profile and this one isn't it, skip it.
-                if (!string.IsNullOrEmpty(profile) && !string.Equals(opts.Name, profile, StringComparison.CurrentCultureIgnoreCase)) continue;
+                // If we're looking for a specific library and this one isn't it, skip it.
+                if (!string.IsNullOrEmpty(library) && !string.Equals(opts.Name, library, StringComparison.CurrentCultureIgnoreCase)) continue;
 
                 // If any replica of this library is on this machine...
                 var repliCount = 0;
@@ -176,7 +177,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     repliCount++;
                     Trace.WriteLine(string.Empty);
-                    Trace.WriteLine($"Processing profile {opts.Name}");
+                    Trace.WriteLine($"Processing library {opts.Name}");
 
                     VerboseMode = verbose;
                     try
@@ -185,7 +186,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         var begin = DateTime.Now;
                         var syncResult = Sync(replica, indexOnly);
                         fullResults.Add(syncResult);
-                        Trace.WriteLine($"Profile sync time taken: {(DateTime.Now - begin).Verbalise()}");
+                        Trace.WriteLine($"Library sync time taken: {(DateTime.Now - begin).Verbalise()}");
                     }
                     catch (Exception e)
                     {
@@ -205,7 +206,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 if (repliCount == 0)
                 {
-                    Trace.WriteLine($"Not participating in profile {opts.Name}");
+                    Trace.WriteLine($"No replicas here for library {opts.Name}");
                 }
             }
 

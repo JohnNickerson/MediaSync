@@ -70,7 +70,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 		            - Update a library collection to be replicated across machines.
              */
 
-            return Parser.Default.ParseArguments<AddLibraryOptions, AddReplicaOptions, InitOptions, ViewIndexOptions, ListProfilesSubOptions, RemoveLibraryOptions, DeleteMachineOptions, RemoveReplicaOptions, RunOptions, UpdateLibraryOptions>(args)
+            return Parser.Default.ParseArguments<AddLibraryOptions, AddReplicaOptions, InitOptions, ViewIndexOptions, ListReplicasOptions, RemoveLibraryOptions, DeleteMachineOptions, RemoveReplicaOptions, RunOptions, UpdateLibraryOptions>(args)
                 .MapResult(
                     (InitOptions opts) => Initialise(opts),
                     (RunOptions opts) => RunSync(opts, GetApi()),
@@ -80,11 +80,11 @@ namespace AssimilationSoftware.MediaSync.CLI
                     (AddReplicaOptions opts) => AddReplica(opts, GetApi()),
                     (RemoveReplicaOptions opts) => RemoveReplica(opts, GetApi()),
                     (ViewIndexOptions opts) => SearchIndexData(opts),
-                    (ListProfilesSubOptions opts) => DoTheListProfilesSubOptionsThing(opts),
+                    (ListReplicasOptions opts) => ListReplicas(opts),
                     (DeleteFileOptions opts) => DeleteFile(opts, GetApi()),
                     (UndeleteFileOptions opts) => UndeleteFile(opts, GetApi()),
                     (MoveReplicaOptions opts) => MoveReplica(opts, GetApi()),
-                    (UpdateLibraryOptions opts) => UpdateProfile(opts, GetApi()),
+                    (UpdateLibraryOptions opts) => UpdateLibrary(opts, GetApi()),
                     errs => 1);
         }
 
@@ -116,7 +116,7 @@ namespace AssimilationSoftware.MediaSync.CLI
             return 0;
         }
 
-        private static int UpdateProfile(UpdateLibraryOptions opts, ViewModel api)
+        private static int UpdateLibrary(UpdateLibraryOptions opts, ViewModel api)
         {
             api.ResizeReserve(opts.LibraryName, opts.ReserveSpaceMb);
             api.Save();
@@ -150,9 +150,9 @@ namespace AssimilationSoftware.MediaSync.CLI
             return 0;
         }
 
-        private static int DoTheListProfilesSubOptionsThing(ListProfilesSubOptions opts)
+        private static int ListReplicas(ListReplicasOptions opts)
         {
-            new ProfileListConsoleView(new DataStore(Settings.Default.MetadataFolder)).Run(opts.Verbose);
+            new ReplicaListConsoleView(new DataStore(Settings.Default.MetadataFolder)).Run(opts.Verbose);
             return 0;
         }
 

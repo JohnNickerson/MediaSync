@@ -60,7 +60,7 @@
     <Compile Include="Options\RemoveReplicaOptions.cs" />
     <Compile Include="Options\UndeleteFileOptions.cs" />
     <Compile Include="Options\ViewIndexOptions.cs" />
-    <Compile Include="Options\ListProfilesSubOptions.cs" />
+    <Compile Include="Options\ListReplicasOptions.cs" />
     <Compile Include="Options\DeleteMachineOptions.cs" />
     <Compile Include="Options\RemoveLibraryOptions.cs" />
     <Compile Include="Options\RunOptions.cs" />
@@ -75,7 +75,7 @@
     </Compile>
     <Compile Include="Views\ConsoleLogger.cs" />
     <Compile Include="Views\MachineListConsoleView.cs" />
-    <Compile Include="Views\ProfileListConsoleView.cs" />
+    <Compile Include="Views\ReplicaListConsoleView.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj">

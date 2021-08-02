@@ -26,7 +26,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 // ensure the target folder exists.
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
-                Trace.WriteLine($"Copied  {source}  to  {target}");
+                Trace.WriteLine($"U   {target}");
                 _fileHasher.ClearCache(target);
                 return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
             }
@@ -95,7 +95,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 if (DirectoryExists(dir))
                 {
                     Directory.Delete(dir);
-                    Trace.WriteLine($"Deleted directory  {dir}");
+                    Trace.WriteLine($" D  {dir}");
                 }
                 else
                 {
@@ -103,7 +103,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     _fileHasher.ClearCache(dir);
                     File.SetAttributes(dir, FileAttributes.Normal);
                     File.Delete(dir);
-                    Trace.WriteLine($"Deleted file  {dir}");
+                    Trace.WriteLine($"D   {dir}");
                 }
                 return FileCommandResult.Success;
             }
@@ -123,7 +123,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             if (!DirectoryExists(targetdir))
             {
                 Directory.CreateDirectory(targetdir);
-                Trace.WriteLine($"Created directory  {targetdir}");
+                Trace.WriteLine($" C  {targetdir}");
             }
         }
 
@@ -231,7 +231,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 _fileHasher.ClearCache(source);
                 _fileHasher.ClearCache(target);
                 File.Move(source, target);
-                Trace.WriteLine($"Moved file  {source}  to  {target}");
+                Trace.WriteLine($"M   {target}");
             }
             catch (Exception e)
             {

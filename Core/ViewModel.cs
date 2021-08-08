@@ -134,7 +134,7 @@ namespace AssimilationSoftware.MediaSync.Core
         {
             var replica = new Replica { LocalPath = localPath, LibraryId = library.ID, MachineId = machine.ID };
             _repository.Insert(replica);
-            var index = new FileIndex() {LibraryId = library.ID, ReplicaId = replica.ID};
+            var index = new FileIndex() { LibraryId = library.ID, ReplicaId = replica.ID };
             _repository.Insert(index);
         }
 
@@ -641,12 +641,14 @@ namespace AssimilationSoftware.MediaSync.Core
                     Console.WriteLine($"About to delete {deletePrimary.Count} files out of {primaryIndexFiles.Count}! Proceed?");
                     var responseKey = Console.ReadKey();
                     if (responseKey.KeyChar == 'y' || responseKey.KeyChar == 'Y')
+                    {
                         proceed = true;
+                        Console.WriteLine(" Proceeding with delete.");
+                    }
                     else proceed = false;
                 }
                 if (proceed)
                 {
-                    Console.WriteLine(" Proceeding with delete.");
                     foreach (var m in deletePrimary.OrderByDescending(f => f.RelativePath.Length))
                     {
                         var mf = _repository.ListFileSystemEntries(f =>

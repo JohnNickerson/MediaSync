@@ -123,7 +123,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             if (!DirectoryExists(targetdir))
             {
                 Directory.CreateDirectory(targetdir);
-                Trace.WriteLine($" C  {targetdir}");
+                Trace.WriteLine($" A  {targetdir}");
             }
         }
 

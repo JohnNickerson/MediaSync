@@ -571,9 +571,11 @@ namespace AssimilationSoftware.MediaSync.Core
             }
             else
             {
-                Trace.WriteLine($"{noAction.Count} files, no changes.");
+                Trace.WriteLine($"{noAction.Count} files, no changes. Updating index only.");
             }
 
+            actionsCount = new FileActionsCount();
+            actionsCount.NoActionCount = noAction.Count;
             // 3. Process the action queue according to the mode and limitations in place.
             var errorList = new List<string>();
             if (!preview)
@@ -592,6 +594,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     {
                         r.RelativePath = newRelativePath;
                         copyToShared.Add(r);
+                        actionsCount.RenameLocalCount++;
                     }
 
                     if (_stopSync)
@@ -612,6 +615,10 @@ namespace AssimilationSoftware.MediaSync.Core
                         {
                             errorList.Add($"Inbound file copy failed: {d.RelativePath}");
                         }
+                        else
+                        {
+                            actionsCount.CopyToLocalCount++;
+                        }
                     }
                     if (_stopSync)
                     {
@@ -623,6 +630,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     var result = _fileManager.Delete(Path.Combine(replica.LocalPath, d.RelativePath));
                     if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(replica.LocalPath, d.RelativePath)))
                     {
+                        actionsCount.DeleteLocalCount++;
                     }
 
                     if (_stopSync)
@@ -642,7 +650,6 @@ namespace AssimilationSoftware.MediaSync.Core
                     var responseKey = Console.ReadKey();
                     if (responseKey.KeyChar == 'y' || responseKey.KeyChar == 'Y')
                     {
-                        proceed = true;
                         Console.WriteLine(" Proceeding with delete.");
                     }
                     else proceed = false;
@@ -664,6 +671,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             m.State = FileSyncState.Expiring;
                             _repository.CopyFileSystemEntry(m, primaryIndex.ID);
                         }
+                        actionsCount.DeletePrimaryCount++;
 
                         if (_stopSync)
                         {
@@ -864,6 +872,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                 {
                                     mf.State = FileSyncState.Transit; // To un-delete folders that were being removed, but have been re-created.
                                     _repository.Update(mf);
+                                    actionsCount.CopyToSharedCount++;
                                 }
                             }
                             else
@@ -884,6 +893,7 @@ namespace AssimilationSoftware.MediaSync.Core
                                         mf.State = FileSyncState.Transit;
                                         _repository.Update(mf);
                                     }
+                                    actionsCount.CopyToSharedCount++;
                                 }
                                 else
                                 {
@@ -894,6 +904,7 @@ namespace AssimilationSoftware.MediaSync.Core
                         else if ((ulong)s.Size > library.MaxSharedSize)
                         {
                             // TODO: split the file and copy in pieces, because it will never fit.
+                            Trace.WriteLine($"Warning: {s.RelativePath} is larger than total reserve size and will not be copied.");
                         }
                         // Else there is no room yet. Better luck next time.
                     }

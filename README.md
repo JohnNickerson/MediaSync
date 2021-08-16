@@ -10,6 +10,8 @@ MediaSync is a portable, multi-primary, sync program designed to work from a fla
 - Sync empty folders in addition to files.
 
 # Releases
+* 2021-08-16: v3.0.0.11
+	- Fixed log files.
 * 2021-08-02: v3.0.0.10
 	- Fixed delete confirmation.
 	- Streamlined some logging.

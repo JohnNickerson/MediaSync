@@ -21,6 +21,14 @@ namespace AssimilationSoftware.MediaSync.CLI
         {
             Debug.Listeners.Add(new TextWriterTraceListener("error.log"));
             Trace.Listeners.Add(new ConsoleTraceListener());
+            if (File.Exists("MediaSync.log") && new FileInfo("MediaSync.log").Length > Math.Pow(2, 20))
+            {
+                // Archive the log file.
+                File.Move("MediaSync.log", $"MediaSync.{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log");
+            }
+            Trace.Listeners.Add(new TextWriterTraceListener("MediaSync.log"));
+            Debug.AutoFlush = true;
+            Trace.AutoFlush = true;
 
             if (Settings.Default.UpgradeRequired)
             {

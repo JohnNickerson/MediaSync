@@ -26,7 +26,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 // ensure the target folder exists.
                 EnsureFolder(new FileInfo(target).DirectoryName);
                 File.Copy(source, target, true);
-                Trace.WriteLine($"U   {target}");
                 _fileHasher.ClearCache(target);
                 return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
             }
@@ -37,9 +36,10 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             }
         }
 
-        public FileCommandResult CopyFile(string localPath, string relativePath, string sharedPath)
+        public FileCommandResult CopyFile(string sourceBasePath, string relativePath, string targetBasePath)
         {
-            return CopyFile(Path.Combine(localPath, relativePath), Path.Combine(sharedPath, relativePath));
+            Trace.WriteLine($"U   {relativePath}");
+            return CopyFile(Path.Combine(sourceBasePath, relativePath), Path.Combine(targetBasePath, relativePath));
         }
 
         public FileSystemEntry CreateFileHeader(string localPath, string relativePath)

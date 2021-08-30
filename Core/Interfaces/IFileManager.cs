@@ -13,10 +13,10 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
         /// <summary>
         /// Copies a file from one location to another.
         /// </summary>
-        /// <param name="localPath">The base path where the file exists now.</param>
+        /// <param name="sourceBasePath">The base path where the file exists now.</param>
         /// <param name="relativePath">The relative path to the file.</param>
-        /// <param name="sharedPath">The target path where the file should be copied.</param>
-        FileCommandResult CopyFile(string localPath, string relativePath, string sharedPath);
+        /// <param name="targetBasePath">The base target path where the file should be copied.</param>
+        FileCommandResult CopyFile(string sourceBasePath, string relativePath, string targetBasePath);
 
         /// <summary>
         /// Moves a file from one location to another.

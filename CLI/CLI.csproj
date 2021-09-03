@@ -57,6 +57,7 @@
     <Compile Include="Options\InitOptions.cs" />
     <Compile Include="Options\AddReplicaOptions.cs" />
     <Compile Include="Options\MoveReplicaOptions.cs" />
+    <Compile Include="Options\PurgeDataOptions.cs" />
     <Compile Include="Options\RemoveReplicaOptions.cs" />
     <Compile Include="Options\UndeleteFileOptions.cs" />
     <Compile Include="Options\ViewIndexOptions.cs" />

@@ -78,7 +78,7 @@ namespace AssimilationSoftware.MediaSync.CLI
 		            - Update a library collection to be replicated across machines.
              */
 
-            return Parser.Default.ParseArguments<AddLibraryOptions, AddReplicaOptions, InitOptions, ViewIndexOptions, ListReplicasOptions, RemoveLibraryOptions, DeleteMachineOptions, RemoveReplicaOptions, RunOptions, UpdateLibraryOptions>(args)
+            return Parser.Default.ParseArguments<AddLibraryOptions, AddReplicaOptions, InitOptions, ViewIndexOptions, ListReplicasOptions, RemoveLibraryOptions, DeleteMachineOptions, RemoveReplicaOptions, RunOptions, UpdateLibraryOptions, PurgeDataOptions>(args)
                 .MapResult(
                     (InitOptions opts) => Initialise(opts),
                     (RunOptions opts) => RunSync(opts, GetApi()),
@@ -93,7 +93,15 @@ namespace AssimilationSoftware.MediaSync.CLI
                     (UndeleteFileOptions opts) => UndeleteFile(opts, GetApi()),
                     (MoveReplicaOptions opts) => MoveReplica(opts, GetApi()),
                     (UpdateLibraryOptions opts) => UpdateLibrary(opts, GetApi()),
+                    (PurgeDataOptions opts) => PurgeDataStore(GetApi()),
                     errs => 1);
+        }
+
+        private static int PurgeDataStore(ViewModel api)
+        {
+            api.CleanUpDataStore();
+            api.Save();
+            return 0;
         }
 
         private static ViewModel GetApi()

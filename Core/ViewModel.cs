@@ -682,44 +682,53 @@ namespace AssimilationSoftware.MediaSync.Core
                 #endregion
 
                 #region 3.2. Regenerate the local index.
-                // Keep a copy of the old index in case of read failures.
-                // TODO: Update the index instead of a full replace. Replacing with a new index doesn't make as much sense now.
                 var oldIndex = _repository.ListFileSystemEntries(f => f.IndexId == localIndex.ID).ToDictionary(entry => entry.RelativePath);
-                var nuDex = new FileIndex
+                foreach (var f in oldIndex)
                 {
-                    LibraryId = replica.LibraryId,
-                    ReplicaId = replica.ID,
-                    TimeStamp = DateTime.Now,
-                    ID = Guid.NewGuid()
-                };
+                    // Remove deleted items from index.
+                    if (!_fileManager.FileExists(replica.LocalPath, f.Value.RelativePath))
+                    {
+                        _repository.Delete(f.Value);
+                    }
+                    // Update changed items.
+                    else
+                    {
+                        try
+                        {
+                            var onDisk = _fileManager.CreateFileHeader(replica.LocalPath, f.Value.RelativePath);
+                            if (onDisk.Size != f.Value.Size || onDisk.ContentsHash != f.Value.ContentsHash)
+                            {
+                                f.Value.Size = onDisk.Size;
+                                f.Value.ContentsHash = onDisk.ContentsHash;
+                                _repository.Update(f.Value);
+                            }
+                        }
+                        catch
+                        {
+                            // ignored.
+                        }
+                    }
+                }
                 foreach (var f in _fileManager.ListLocalFiles(replica.LocalPath))
                 {
-                    try
+                    // Add any local files that do not exist in the index.
+                    if (_repository.GetFileByPath(replica.IndexId, f) == null)
                     {
-                        var onDisk = _fileManager.CreateFileHeader(replica.LocalPath, f);
-                        onDisk.IndexId = nuDex.ID;
-                        _repository.Insert(onDisk);
-                    }
-                    catch
-                    {
-                        // Keep the old file.
-                        oldIndex[f].IndexId = nuDex.ID;
-                        _repository.Update(oldIndex[f]);
+                        try
+                        {
+                            var onDisk = _fileManager.CreateFileHeader(replica.LocalPath, f);
+                            onDisk.IndexId = replica.IndexId;
+                            _repository.Insert(onDisk);
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                     if (_stopSync)
                     {
                         return actionsCount;
                     }
-
-                }
-                _repository.Insert(nuDex);
-                replica.IndexId = nuDex.ID;
-                _repository.Update(replica);
-                // Perhaps: _repository.PurgeOrphanedData();
-                foreach (var expiredIndex in _repository.ListIndexes()
-                    .Where(e => e.ReplicaId == replica.ID && e.LastModified < nuDex.LastModified).ToArray())
-                {
-                    _repository.Delete(expiredIndex);
                 }
                 #endregion
 

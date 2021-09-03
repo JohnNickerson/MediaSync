@@ -57,7 +57,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     RelativePath = relativePath,
                 };
             }
-            else
+            else if (FileExists(fullpath))
             {
                 var finfo = new FileInfo(fullpath);
                 return new FileHeader(_fileHasher)
@@ -70,6 +70,8 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     ContentsHash = _fileHasher.ComputeHash(fullpath)
                 };
             }
+
+            return null;
         }
 				
 		/// <summary>

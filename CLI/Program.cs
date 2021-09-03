@@ -175,7 +175,7 @@ namespace AssimilationSoftware.MediaSync.CLI
         private static int SearchIndexData(ViewIndexOptions opts)
         {
             new IndexFileView(new DataStore(Settings.Default.MetadataFolder)).Run(opts.MachineName, opts.LibraryName,
-                opts.ReplicaId, opts.LocalPath, opts.ShowSubFolders);
+                opts.ReplicaId, opts.LocalPath, opts.ShowSubFolders, opts.State);
             return 0;
         }
 
@@ -255,7 +255,8 @@ namespace AssimilationSoftware.MediaSync.CLI
             _dataStore = dataStore;
         }
 
-        public void Run(string machineName, string libraryName, string replicaId, string localPath, bool showSubFolders)
+        public void Run(string machineName, string libraryName, string replicaId, string localPath, bool showSubFolders,
+            FileSyncState? fileSyncState)
         {
             foreach (var lib in _dataStore.ListLibraries(l =>
                 string.IsNullOrEmpty(libraryName) ||
@@ -264,7 +265,8 @@ namespace AssimilationSoftware.MediaSync.CLI
                 Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\*");
                 foreach (var libFile in _dataStore.ListFileSystemEntries(f => f.IndexId == lib.PrimaryIndexId).OrderBy(f => f.RelativePath))
                 {
-                    Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\{libFile.RelativePath} [{libFile.State}]");
+                    if (!fileSyncState.HasValue || libFile.State == fileSyncState.Value)
+                        Console.WriteLine($"\\\\*\\{lib?.Name}\\*\\{libFile.RelativePath} [{libFile.State}]");
                 }
 
                 foreach (var rep in _dataStore.ListReplicas(r =>
@@ -285,8 +287,8 @@ namespace AssimilationSoftware.MediaSync.CLI
                                     continue;
                             }
 
-                            Console.WriteLine(
-                                $"\\\\{machine}\\{lib?.Name}\\{rep.ID}\\{repFile.RelativePath} [{repFile.ContentsHash}]");
+                            if (!fileSyncState.HasValue || repFile.State == fileSyncState.Value)
+                                Console.WriteLine($"\\\\{machine}\\{lib?.Name}\\{rep.ID}\\{repFile.RelativePath} [{repFile.ContentsHash}]");
                         }
                     }
                 }

@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using AssimilationSoftware.MediaSync.Core.Model;
+using CommandLine;
 
 namespace AssimilationSoftware.MediaSync.CLI.Options
 {
@@ -15,5 +16,28 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         public string LocalPath { get; set; }
         [Option('s', "subfolders", HelpText = "True to show data for all subfolders, false to show only the target path.", Default = false)]
         public bool ShowSubFolders { get; set; }
+        [Option("state", HelpText = "Sync state to search for (Synchronised, Transit, Expiring, Destroyed)")]
+        public string StateString { get; set; }
+
+        public FileSyncState? State
+        {
+            get
+            {
+                switch (StateString.ToLower())
+                {
+                    case "synchronised":
+                    case "synchronized": // Ew, American spelling.
+                        return FileSyncState.Synchronised;
+                    case "transit":
+                        return FileSyncState.Transit;
+                    case "expiring":
+                        return FileSyncState.Expiring;
+                    case "destroyed":
+                        return FileSyncState.Destroyed;
+                    default:
+                        return null;
+                }
+            }
+        }
     }
 }

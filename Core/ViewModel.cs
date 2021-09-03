@@ -159,6 +159,11 @@ namespace AssimilationSoftware.MediaSync.Core
             _repository.PurgeOrphanedData();
         }
 
+        public void CleanUpDataStore()
+        {
+            _repository.PurgeOrphanedData();
+        }
+
         public void RunSync(bool indexOnly, bool verbose, string library = null)
         {
             _stopSync = false;

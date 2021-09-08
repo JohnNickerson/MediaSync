@@ -142,6 +142,8 @@ namespace AssimilationSoftware.MediaSync.CLI
         private static int RunSync(RunOptions opts, ViewModel api)
         {
             api.RunSync(opts.IndexOnly, opts.LogLevel == 4, opts.LibraryName);
+            // Temporary? The data store can get polluted with orphaned data. This call cleans it up regularly.
+            PurgeDataStore(api);
             return 0;
         }
 

@@ -590,6 +590,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 {
                     var newName = _fileManager.GetConflictFileName(Path.Combine(replica.LocalPath, r.RelativePath), MachineId, DateTime.Now);
                     var newRelativePath = _fileManager.GetRelativePath(newName, replica.LocalPath);
+                    Trace.WriteLine($"M   {r.RelativePath}");
                     var fmr = _fileManager.MoveFile(Path.Combine(replica.LocalPath, r.RelativePath), Path.Combine(replica.LocalPath, newRelativePath), false);
                     if (fmr == FileCommandResult.Failure)
                     {
@@ -615,6 +616,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
+                        Trace.WriteLine($"U   {d.RelativePath}");
                         var fcr = _fileManager.CopyFile(sharedPath, d.RelativePath, replica.LocalPath);
                         if (fcr == FileCommandResult.Failure)
                         {
@@ -632,8 +634,11 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
                 foreach (var d in deleteLocal.OrderByDescending(f => f.RelativePath.Length)) // Simplest way to delete deepest-first.
                 {
-                    var result = _fileManager.Delete(Path.Combine(replica.LocalPath, d.RelativePath));
-                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(Path.Combine(replica.LocalPath, d.RelativePath)))
+                    var fullPath = Path.Combine(replica.LocalPath, d.RelativePath);
+                    var prefix = _fileManager.DirectoryExists(fullPath) ? " D  " : "D   ";
+                    Trace.WriteLine($"{prefix}{d.RelativePath}");
+                    var result = _fileManager.Delete(fullPath);
+                    if (result != FileCommandResult.Failure || !_fileManager.DirectoryExists(fullPath))
                     {
                         actionsCount.DeleteLocalCount++;
                     }
@@ -891,6 +896,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else
                             {
+                                Trace.WriteLine($"U   {s.RelativePath}");
                                 var result = _fileManager.CopyFile(replica.LocalPath, s.RelativePath, sharedPath);
                                 // Check for success.
                                 if (result == FileCommandResult.Success || result == FileCommandResult.Async)

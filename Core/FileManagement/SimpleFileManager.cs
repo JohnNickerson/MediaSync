@@ -38,7 +38,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
 
         public FileCommandResult CopyFile(string sourceBasePath, string relativePath, string targetBasePath)
         {
-            Trace.WriteLine($"U   {relativePath}");
             return CopyFile(Path.Combine(sourceBasePath, relativePath), Path.Combine(targetBasePath, relativePath));
         }
 
@@ -97,7 +96,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 if (DirectoryExists(dir))
                 {
                     Directory.Delete(dir);
-                    Trace.WriteLine($" D  {dir}");
                 }
                 else
                 {
@@ -105,7 +103,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                     _fileHasher.ClearCache(dir);
                     File.SetAttributes(dir, FileAttributes.Normal);
                     File.Delete(dir);
-                    Trace.WriteLine($"D   {dir}");
                 }
                 return FileCommandResult.Success;
             }
@@ -125,7 +122,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             if (!DirectoryExists(targetdir))
             {
                 Directory.CreateDirectory(targetdir);
-                Trace.WriteLine($" A  {targetdir}");
             }
         }
 
@@ -233,7 +229,6 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 _fileHasher.ClearCache(source);
                 _fileHasher.ClearCache(target);
                 File.Move(source, target);
-                Trace.WriteLine($"M   {target}");
             }
             catch (Exception e)
             {

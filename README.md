@@ -10,6 +10,9 @@ MediaSync is a portable, multi-primary, sync program designed to work from a fla
 - Sync empty folders in addition to files.
 
 # Releases
+* 2021-09-30: v3.0.4.1
+	- Updated file action logging to reference only relative paths, and work from the view model.
+	- Removed the error log, since it contains no extra useful information.
 * 2021-09-16: v3.0.4
 	- Updated Maroon to version 0.4.3.
 * 2021-09-09: v3.0.3

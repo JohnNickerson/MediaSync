@@ -14,11 +14,12 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement.Hashing
         public string ComputeHash(string filename)
         {
             if (_cache.ContainsKey(filename)) return _cache[filename];
+            BufferedStream stream = null;
             try
             {
                 using (var cryptoProvider = new SHA1CryptoServiceProvider())
                 {
-                    var stream = new BufferedStream(File.OpenRead(filename), 1200000);
+                    stream = new BufferedStream(File.OpenRead(filename), 1200000);
                     var hash = BitConverter.ToString(cryptoProvider.ComputeHash(stream));
                     stream.Close();
                     _cache[filename] = hash;
@@ -27,8 +28,19 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement.Hashing
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                Trace.WriteLine(e.Message);
                 return null;
+            }
+            finally
+            {
+                try
+                {
+                    stream?.Close();
+                }
+                catch
+                {
+                    // ignored
+                }
             }
         }
 

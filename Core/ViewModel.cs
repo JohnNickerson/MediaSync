@@ -195,17 +195,24 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     catch (Exception e)
                     {
-                        Trace.WriteLine("Could not sync.");
-                        Trace.WriteLine(e.Message);
-                        var x = e;
-                        while (x != null)
+                        try // There have been some strange errors apparently occurring right here, causing big fatal crashes.
                         {
-                            Debug.WriteLine(DateTime.Now.ToString(CultureInfo.CurrentCulture));
-                            Debug.WriteLine(x.Message);
-                            Debug.WriteLine(x.StackTrace);
-                            Debug.WriteLine(string.Empty);
+                            Trace.WriteLine("Could not sync.");
+                            Trace.WriteLine(e.Message);
+                            var x = e;
+                            while (x != null)
+                            {
+                                Trace.WriteLine(DateTime.Now.ToString(CultureInfo.CurrentCulture));
+                                Trace.WriteLine(x.Message);
+                                Trace.WriteLine(x.StackTrace);
+                                Trace.WriteLine(string.Empty);
 
-                            x = x.InnerException;
+                                x = x.InnerException;
+                            }
+                        }
+                        catch
+                        {
+                            Console.WriteLine(e.Message);
                         }
                     }
                 }
@@ -217,7 +224,6 @@ namespace AssimilationSoftware.MediaSync.Core
 
             if (!indexOnly)
             {
-                var begin = DateTime.Now;
                 _repository.SaveChanges();
             }
             Trace.WriteLine(string.Empty);
@@ -579,13 +585,28 @@ namespace AssimilationSoftware.MediaSync.Core
                 Trace.WriteLine($"{noAction.Count} files, no changes. Updating index only.");
             }
 
-            actionsCount = new FileActionsCount();
-            actionsCount.NoActionCount = noAction.Count;
+            actionsCount = new FileActionsCount
+            {
+                NoActionCount = noAction.Count
+            };
             // 3. Process the action queue according to the mode and limitations in place.
             var errorList = new List<string>();
             if (!preview)
             {
                 #region 3.1. Rename, Copy to Local, Delete local, Delete primary
+                // Safeguard: if more than 10% of the library files are being deleted, confirm first.
+                var proceed = true;
+                if (deletePrimary.Count > primaryIndexFiles.Count * 0.1)
+                {
+                    // TODO: Call back out to a user confirmation interface independent of CLI or GUI.
+                    Console.WriteLine($"About to delete {deletePrimary.Count} files out of {primaryIndexFiles.Count}! Proceed?");
+                    var responseKey = Console.ReadKey();
+                    if (responseKey.KeyChar == 'y' || responseKey.KeyChar == 'Y')
+                    {
+                        Console.WriteLine(" Proceeding with delete.");
+                    }
+                    else proceed = false;
+                }
                 foreach (var r in renameLocal)
                 {
                     var newName = _fileManager.GetConflictFileName(Path.Combine(replica.LocalPath, r.RelativePath), MachineId, DateTime.Now);
@@ -651,19 +672,6 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
 
                 // Push.
-                // Safeguard: if more than 10% of the library files are being deleted, confirm first.
-                var proceed = true;
-                if (deletePrimary.Count > primaryIndexFiles.Count * 0.1)
-                {
-                    // TODO: Call back out to a user confirmation interface independent of CLI or GUI.
-                    Console.WriteLine($"About to delete {deletePrimary.Count} files out of {primaryIndexFiles.Count}! Proceed?");
-                    var responseKey = Console.ReadKey();
-                    if (responseKey.KeyChar == 'y' || responseKey.KeyChar == 'Y')
-                    {
-                        Console.WriteLine(" Proceeding with delete.");
-                    }
-                    else proceed = false;
-                }
                 if (proceed)
                 {
                     foreach (var m in deletePrimary.OrderByDescending(f => f.RelativePath.Length))
@@ -789,13 +797,13 @@ namespace AssimilationSoftware.MediaSync.Core
                         // else if (_fileManager.FileExists(SharedPath, mf.RelativePath) && !syncSet.PrimaryIndex.MatchesFile(_fileManager.CreateFileHeader(SharedPath, mf.RelativePath)))
                         {
                             // The shared file does not match the primary index. It should be removed.
-                            Debug.WriteLine("CLEANUP: Stale shared file");
+                            //Debug.WriteLine("CLEANUP: Stale shared file");
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
                         else if (shareFileHead != null && comparisons.ContainsKey(key) && comparisons[key].Count == replicaCount && comparisons[key].AllSame && comparisons[key].Hash == mf.ContentsHash)
                         {
                             // Successfully transmitted to every replica. Remove from shared storage.
-                            Debug.WriteLine("CLEANUP: Successfully synchronised");
+                            //Debug.WriteLine("CLEANUP: Successfully synchronised");
                             _fileManager.Delete(Path.Combine(sharedPath, mf.RelativePath));
                         }
                         else if (!comparisons.ContainsKey(key))

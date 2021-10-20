@@ -21,12 +21,12 @@ namespace AssimilationSoftware.MediaSync.CLI
         {
             if (File.Exists("MediaSync.log") && new FileInfo("MediaSync.log").Length > Math.Pow(2, 20))
             {
+                Trace.Flush();
                 // Archive the log file.
                 File.Move("MediaSync.log", $"MediaSync.{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log");
             }
             Trace.Listeners.Add(new ConsoleTraceListener());
             Trace.Listeners.Add(new TextWriterTraceListener("MediaSync.log"));
-            Trace.AutoFlush = true;
 
             if (Settings.Default.UpgradeRequired)
             {
@@ -140,7 +140,7 @@ namespace AssimilationSoftware.MediaSync.CLI
         private static int RunSync(RunOptions opts, ViewModel api)
         {
             api.RunSync(opts.IndexOnly, opts.LogLevel == 4, opts.LibraryName);
-            // Temporary? The data store can get polluted with orphaned data. This call cleans it up regularly.
+            // This should be done internally by Maroon now.
             PurgeDataStore(api);
             return 0;
         }
@@ -204,8 +204,8 @@ namespace AssimilationSoftware.MediaSync.CLI
             var meta = new DirectoryInfo(Path.GetFullPath(initOptions.MetadataFolder));
             if (meta.IsSubPathOf(share))
             {
-                Debug.WriteLine(share);
-                Debug.WriteLine(meta);
+                Trace.WriteLine(share);
+                Trace.WriteLine(meta);
                 Console.WriteLine("The data folder must not be under the shared folder.");
                 return 1;
             }

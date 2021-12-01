@@ -23,6 +23,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Options
         {
             get
             {
+                if (string.IsNullOrEmpty(StateString)) return null;
                 switch (StateString.ToLower())
                 {
                     case "synchronised":

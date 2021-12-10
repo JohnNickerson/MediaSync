@@ -70,6 +70,7 @@
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Views\IndexFileView.cs" />
     <Compile Include="Options\AddLibraryOptions.cs" />
     <Compile Include="Options\DeleteFileOptions.cs" />
     <Compile Include="Options\InitOptions.cs" />

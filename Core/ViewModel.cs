@@ -637,7 +637,7 @@ namespace AssimilationSoftware.MediaSync.Core
                     }
                     else
                     {
-                        Trace.WriteLine($"U   {d.RelativePath}");
+                        Trace.WriteLine($"R   {d.RelativePath}");
                         var fcr = _fileManager.CopyFile(sharedPath, d.RelativePath, replica.LocalPath);
                         if (fcr == FileCommandResult.Failure)
                         {
@@ -904,7 +904,7 @@ namespace AssimilationSoftware.MediaSync.Core
                             }
                             else
                             {
-                                Trace.WriteLine($"U   {s.RelativePath}");
+                                Trace.WriteLine($"S   {s.RelativePath}");
                                 var result = _fileManager.CopyFile(replica.LocalPath, s.RelativePath, sharedPath);
                                 // Check for success.
                                 if (result == FileCommandResult.Success || result == FileCommandResult.Async)

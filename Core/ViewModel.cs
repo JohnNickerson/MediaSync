@@ -755,6 +755,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 comparisons = new Dictionary<string, ReplicaComparison>();
                 foreach (var dex in _repository.GetIndexesByLibraryId(replica.LibraryId))
                 {
+                    // Bug: A new file just added to the local index is not showing up here.
                     foreach (var file in _repository.GetFilesByIndex(dex))
                     {
                         var path = file.RelativePath.ToLower();

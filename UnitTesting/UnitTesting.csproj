@@ -55,9 +55,15 @@
   </Choose>
   <ItemGroup>
     <Compile Include="FileManagerTests.cs" />
+    <Compile Include="Mocks\MockIndexMapper.cs" />
+    <Compile Include="Mocks\MockLibraryMapper.cs" />
+    <Compile Include="Mocks\MockMachineMapper.cs" />
+    <Compile Include="Mocks\MockReplicaMapper.cs" />
+    <Compile Include="Mocks\MockFileMapper.cs" />
     <Compile Include="Mocks\MockFileManager.cs" />
     <Compile Include="MachineMapperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RepositoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj">

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AssimilationSoftware.Maroon.Interfaces;
 using AssimilationSoftware.Maroon.Repositories;
 using AssimilationSoftware.MediaSync.Core.Mappers.CSV;
 using AssimilationSoftware.MediaSync.Core.Model;
@@ -25,6 +26,18 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
             Libraries = new SingleOriginRepository<Library>(new CsvLibraryMapper(), Path.Combine(_path, "Libraries.csv"));
             Machines = new SingleOriginRepository<Machine>(new CsvMachineMapper(), Path.Combine(_path, "Machines.csv"));
             Replicas = new SingleOriginRepository<Replica>(new CsvReplicaMapper(), Path.Combine(_path, "Replicas.csv"));
+            LoadAll();
+        }
+
+        public DataStore(SingleOriginRepository<FileSystemEntry> fileRepository,
+            SingleOriginRepository<FileIndex> indexRepository, SingleOriginRepository<Library> libRepository,
+            SingleOriginRepository<Machine> machineRepository, SingleOriginRepository<Replica> replicaRepository)
+        {
+            Files = fileRepository;
+            Indexes = indexRepository;
+            Libraries = libRepository;
+            Machines = machineRepository;
+            Replicas = replicaRepository;
             LoadAll();
         }
 

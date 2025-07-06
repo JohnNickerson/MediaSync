@@ -9,66 +9,81 @@
 //------------------------------------------------------------------------------
 
 namespace AssimilationSoftware.MediaSync.CLI.Properties {
-    
-    
-    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.3.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
-        
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-        
-        public static Settings Default {
-            get {
+
+
+    internal sealed partial class Settings
+    {
+
+        private static Settings defaultInstance = new Settings();
+
+        public static Settings Default
+        {
+            get
+            {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool Configured {
-            get {
-                return ((bool)(this["Configured"]));
+
+        private bool _configured;
+        public bool Configured
+        {
+            get
+            {
+                return _configured;
             }
-            set {
-                this["Configured"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{MachineName}")]
-        public string MachineName {
-            get {
-                return ((string)(this["MachineName"]));
-            }
-            set {
-                this["MachineName"] = value;
+            set
+            {
+                _configured = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".")]
-        public string MetadataFolder {
-            get {
-                return ((string)(this["MetadataFolder"]));
+
+        private string _machineName;
+        public string MachineName
+        {
+            get
+            {
+                return _machineName;
             }
-            set {
-                this["MetadataFolder"] = value;
+            set
+            {
+                _machineName = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool UpgradeRequired {
-            get {
-                return ((bool)(this["UpgradeRequired"]));
+
+        private string _metaDataFolder;
+        public string MetadataFolder
+        {
+            get
+            {
+                return _metaDataFolder;
             }
-            set {
-                this["UpgradeRequired"] = value;
+            set
+            {
+                _metaDataFolder = value;
             }
+        }
+
+        private bool _upgradeRequired;
+        public bool UpgradeRequired
+        {
+            get
+            {
+                return _upgradeRequired;
+            }
+            set
+            {
+                _upgradeRequired = value;
+            }
+        }
+
+        public void Upgrade()
+        {
+            // Nothing for now.
+        }
+
+        public void Save()
+        {
+            // TODO: Save settings as JSON in machine-specific file.
         }
     }
 }

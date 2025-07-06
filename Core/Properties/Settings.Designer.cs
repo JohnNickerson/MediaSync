@@ -11,61 +11,50 @@
 namespace AssimilationSoftware.MediaSync.Core.Properties {
     
     
-    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.3.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class Settings {
         
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+        private static Settings defaultInstance = new Settings();
         
         public static Settings Default {
             get {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=|DataDirectory|\\MediaSync.sdf")]
+
+        private string _mediaSyncConnectionString;
         public string MediaSyncConnectionString {
             get {
-                return ((string)(this["MediaSyncConnectionString"]));
+                return _mediaSyncConnectionString;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+
+        private bool _configured;
         public bool Configured {
             get {
-                return ((bool)(this["Configured"]));
+                return _configured;
             }
             set {
-                this["Configured"] = value;
+                _configured = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".")]
+
+        private string _metaDataFolder;
         public string MetadataFolder {
             get {
-                return ((string)(this["MetadataFolder"]));
+                return _metaDataFolder;
             }
             set {
-                this["MetadataFolder"] = value;
+                _metaDataFolder = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{MachineName}")]
+
+        private string _machineName;
         public string MachineName {
             get {
-                return ((string)(this["MachineName"]));
+                return _machineName;
             }
             set {
-                this["MachineName"] = value;
+                _machineName = value;
             }
         }
     }

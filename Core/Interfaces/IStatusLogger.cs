@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Remoting.Channels;
 
 namespace AssimilationSoftware.MediaSync.Core.Interfaces
 {

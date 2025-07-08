@@ -14,7 +14,7 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
             this._vm = vm;
         }
 
-        internal void Run(bool showPaths)
+        internal void Run(bool verbose)
         {
             var table = new Table();
             table.AddColumns("Library", "Machine", "Replica", "Path");
@@ -26,8 +26,8 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
                 var row = new TableRow([
                     new Markup(library?.Name ?? "Unknown Library"),
                     new Markup(machine?.Name ?? "Unknown Machine"),
-                    new Markup(p.ID.ToString()),
-                    showPaths ? new Markup(p.LocalPath) : new Markup("N/A")
+                    new Markup(verbose?p.ID.ToString() : p.ID.ToString().Substring(0, 8)),
+                    new Markup(p.LocalPath)
                 ]);
                 table.Rows.Add(row);
             }

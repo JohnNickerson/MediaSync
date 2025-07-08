@@ -11,9 +11,6 @@
     <AssemblyFileVersion>3.0.6.0</AssemblyFileVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Cuneiform">
-      <HintPath>..\Library\Cuneiform.dll</HintPath>
-    </Reference>
     <Reference Include="Maroon">
       <HintPath>..\Library\Maroon.dll</HintPath>
     </Reference>
@@ -28,5 +25,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Spectre.Console" Version="0.50.0" />
   </ItemGroup>
 </Project>

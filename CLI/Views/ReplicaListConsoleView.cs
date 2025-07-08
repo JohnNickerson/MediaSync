@@ -1,6 +1,6 @@
-﻿using AssimilationSoftware.Cuneiform;
-using AssimilationSoftware.MediaSync.Core.Mappers;
+﻿using AssimilationSoftware.MediaSync.Core.Mappers;
 using AssimilationSoftware.MediaSync.Core.Model;
+using Spectre.Console;
 using System;
 
 namespace AssimilationSoftware.MediaSync.CLI.Views
@@ -23,16 +23,15 @@ namespace AssimilationSoftware.MediaSync.CLI.Views
             {
                 var library = _vm.GetLibraryById(p.LibraryId);
                 var machine = _vm.GetMachineById(p.MachineId);
-                var row = new Row();
-                row.Data.Add(library?.Name);
-                row.Data.Add(machine.Name);
-                row.Data.Add(p.ID);
-                row.Data.Add(p.LocalPath);
+                var row = new TableRow([
+                    new Markup(library?.Name ?? "Unknown Library"),
+                    new Markup(machine?.Name ?? "Unknown Machine"),
+                    new Markup(p.ID.ToString()),
+                    showPaths ? new Markup(p.LocalPath) : new Markup("N/A")
+                ]);
                 table.Rows.Add(row);
             }
-
-            table.MaxWidth = Console.WindowWidth - 2; // Known Cuneiform bug: tables get squished unless a maximum width is specified.
-            Console.WriteLine(table.ToDisplayString());
+            AnsiConsole.Write(table);
             Console.WriteLine(string.Empty);
         }
     }

@@ -13,25 +13,8 @@ using AssimilationSoftware.MediaSync.Core.Mappers;
 
 namespace AssimilationSoftware.MediaSync.Core
 {
-    public class ViewModel : INotifyPropertyChanged
+    public class ViewModel
     {
-        #region Events
-        /// <summary>
-        /// Fires when a data-bindable property has changed.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Raises the PropertyChanged event for a single property.
-        /// </summary>
-        /// <param name="propertyname">The name of the changed property. Default: caller.</param>
-        private void NotifyPropertyChanged([CallerMemberName] string propertyname = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
-        }
-
-        #endregion
-
         #region Fields
         public bool VerboseMode;
 
@@ -1023,7 +1006,6 @@ namespace AssimilationSoftware.MediaSync.Core
             set
             {
                 _machineId = value;
-                NotifyPropertyChanged();
             }
         }
 

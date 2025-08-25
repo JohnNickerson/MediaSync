@@ -1,9 +1,9 @@
-﻿using AssimilationSoftware.MediaSync.Core.FileManagement.Hashing;
-using AssimilationSoftware.MediaSync.Core.Model;
+﻿using AssimilationSoftware.MediaSync.Core.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using AssimilationSoftware.MediaSync.Core.FileManagement;
+using UnitTesting.Mocks;
 
 namespace UnitTesting
 {

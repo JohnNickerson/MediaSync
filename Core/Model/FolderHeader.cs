@@ -11,8 +11,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         public override bool Matches(FileSystemEntry shareFileHead)
         {
             return shareFileHead is FolderHeader &&
-                   (string.Equals(RelativePath, shareFileHead.RelativePath,
-                       StringComparison.CurrentCultureIgnoreCase) && base.Matches(shareFileHead));
+                   string.Equals(RelativePath, shareFileHead.RelativePath,
+                       StringComparison.CurrentCultureIgnoreCase) && base.Matches(shareFileHead);
         }
     }
 }

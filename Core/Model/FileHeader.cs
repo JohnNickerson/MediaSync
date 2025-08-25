@@ -6,18 +6,8 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class FileHeader : FileSystemEntry
     {
-        #region Fields
-        private readonly IFileHashProvider _hasher;
-
-        #endregion
-
         #region Constructors
-        public FileHeader() : this(null) { }
-
-        public FileHeader(IFileHashProvider hasher)
-        {
-            _hasher = hasher;
-        }
+        public FileHeader() { }
         #endregion
 
         #region Properties

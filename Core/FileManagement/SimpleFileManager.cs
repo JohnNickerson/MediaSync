@@ -59,7 +59,7 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             else if (FileExists(fullpath))
             {
                 var finfo = new FileInfo(fullpath);
-                return new FileHeader(_fileHasher)
+                return new FileHeader()
                 {
                     BasePath = localPath,
                     IsDeleted = false,

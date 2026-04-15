@@ -14,7 +14,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The path of the file, relative to the local base path.
         /// </summary>
-        public string RelativePath { get; set; }
+        public string RelativePath { get; set; } = string.Empty;
 
         /// <summary>
         /// Indicates the state of the file on disk.
@@ -27,7 +27,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// A hash of the file contents, used to determine if changes have been made.
         /// </summary>
-        public string ContentsHash { get; set; }
+        public string ContentsHash { get; set; } = string.Empty;
 
         /// <summary>
         /// The size of the file, in bytes.
@@ -37,7 +37,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The local base path, where the file is stored.
         /// </summary>
-        public string BasePath { get; set; }
+        public string BasePath { get; set; } = string.Empty;
 
         /// <summary>
         /// Compares this file system entry to another, and returns true if they seem to represent copies of each other.

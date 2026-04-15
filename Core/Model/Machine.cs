@@ -9,11 +9,11 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class Machine : Maroon.Model.ModelObject
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// The path, on the local machine, where shared storage for file transfers is accessed.
         /// </summary>
-        public string SharedPath { get; set; }
+        public string SharedPath { get; set; } = string.Empty;
     }
 }

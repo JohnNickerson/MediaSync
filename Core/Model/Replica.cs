@@ -16,7 +16,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
         /// <summary>
         /// The path on the local machine where the replica is stored.
         /// </summary>
-        public string LocalPath { get; set; }
+        public string LocalPath { get; set; } = string.Empty;
 
         public Guid LibraryId { get; set; }
     }

@@ -24,7 +24,11 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             try
             {
                 // ensure the target folder exists.
-                EnsureFolder(new FileInfo(target).DirectoryName);
+                var targetDir = new FileInfo(target).DirectoryName;
+                if (!string.IsNullOrEmpty(targetDir))
+                {
+                    EnsureFolder(targetDir);
+                }
                 File.Copy(source, target, true);
                 _fileHasher.ClearCache(target);
                 return File.Exists(target) ? FileCommandResult.Success : FileCommandResult.Failure;
@@ -225,7 +229,11 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
             if (FileExists(target) && !overwrite) return FileCommandResult.Success;
             try
             {
-                EnsureFolder(new FileInfo(target).DirectoryName);
+                var targetDir = new FileInfo(target).DirectoryName;
+                if (!string.IsNullOrEmpty(targetDir))
+                {
+                    EnsureFolder(targetDir);
+                }
                 _fileHasher.ClearCache(source);
                 _fileHasher.ClearCache(target);
                 File.Move(source, target);

@@ -10,7 +10,7 @@ namespace AssimilationSoftware.MediaSync.Core.Model
 {
     public class Library : Maroon.Model.ModelObject
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public Guid PrimaryIndexId { get; set; }
         public ulong MaxSharedSize { get; set; }
     }

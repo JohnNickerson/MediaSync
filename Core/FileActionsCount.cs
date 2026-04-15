@@ -18,7 +18,7 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public bool AnyChanges => CopyToLocalCount + CopyToSharedCount + DeleteLocalCount + DeletePrimaryCount + RenameLocalCount > 0;
 
-        public string GetDisplayString(string header = null)
+        public string GetDisplayString(string? header = null)
         {
             var table = new StringBuilder();
             table.Append(header);

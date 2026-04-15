@@ -21,13 +21,6 @@ namespace AssimilationSoftware.MediaSync.Core.Properties {
             }
         }
 
-        private string _mediaSyncConnectionString;
-        public string MediaSyncConnectionString {
-            get {
-                return _mediaSyncConnectionString;
-            }
-        }
-
         private bool _configured;
         public bool Configured {
             get {

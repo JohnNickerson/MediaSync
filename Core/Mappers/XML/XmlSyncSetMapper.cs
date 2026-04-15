@@ -18,7 +18,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.XML
             _filename = filename;
         }
 
-        public Library Read(string name)
+        public Library? Read(string name)
         {
             var allsyncsets = LoadAll();
             if (allsyncsets.Any(ss => ss.Name == name))

@@ -19,7 +19,7 @@ namespace AssimilationSoftware.MediaSync.Core
         /// <summary>
         /// Fires when a data-bindable property has changed.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         /// Raises the PropertyChanged event for a single property.
@@ -85,6 +85,7 @@ namespace AssimilationSoftware.MediaSync.Core
             if (LibraryExists(name))
             {
                 var library = GetLibrary(name);
+                if (library == null) return;
                 library.MaxSharedSize = reserve;
                 _repository.Update(library);
                 _repository.SaveChanges();
@@ -96,7 +97,7 @@ namespace AssimilationSoftware.MediaSync.Core
             return _repository.ListLibraries().Any(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        private Library GetLibrary(string name)
+        private Library? GetLibrary(string name)
         {
             return _repository.ListLibraries().FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase));
         }
@@ -140,8 +141,12 @@ namespace AssimilationSoftware.MediaSync.Core
 
         public void DeleteReplica(Guid replicaId)
         {
-            _repository.Delete(_repository.GetReplicaById(replicaId));
-            _repository.PurgeOrphanedData();
+            var replica = _repository.GetReplicaById(replicaId);
+            if (replica != null)
+            {
+                _repository.Delete(replica);
+                _repository.PurgeOrphanedData();
+            }
         }
 
         public List<string> Machines
@@ -155,8 +160,11 @@ namespace AssimilationSoftware.MediaSync.Core
         public void RemoveMachine(string machine)
         {
             var m = _repository.GetMachineByName(machine);
-            _repository.Delete(m);
-            _repository.PurgeOrphanedData();
+            if (m != null)
+            {
+                _repository.Delete(m);
+                _repository.PurgeOrphanedData();
+            }
         }
 
         public void CleanUpDataStore()
@@ -164,13 +172,18 @@ namespace AssimilationSoftware.MediaSync.Core
             _repository.PurgeOrphanedData();
         }
 
-        public void RunSync(bool indexOnly, bool verbose, string library = null)
+        public void RunSync(bool indexOnly, bool verbose, string? library = null)
         {
             _stopSync = false;
             var fullResults = new FileActionsCount();
             Trace.WriteLine(string.Empty);
             Trace.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Starting run on {MachineId}");
             var machine = _repository.ListMachines(m => m.Name == _machineId).FirstOrDefault();
+            if (machine == null)
+            {
+                Trace.WriteLine($"Machine not found: {_machineId}");
+                return;
+            }
             foreach (var opts in _repository.ListLibraries().ToList())
             {
                 // If we're looking for a specific library and this one isn't it, skip it.
@@ -234,8 +247,11 @@ namespace AssimilationSoftware.MediaSync.Core
         public void RemoveLibrary(string libraryName)
         {
             var library = _repository.ListLibraries(l => l.Name.Equals(libraryName, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
-            _repository.Delete(library);
-            _repository.PurgeOrphanedData();
+            if (library != null)
+            {
+                _repository.Delete(library);
+                _repository.PurgeOrphanedData();
+            }
         }
 
         /// <summary>
@@ -247,9 +263,9 @@ namespace AssimilationSoftware.MediaSync.Core
             // Check folders, just in case.
             var localIndex = _repository.GetFileIndexById(replica.IndexId) ?? new FileIndex();
             var machine = _repository.GetMachineByName(MachineId);
-            if (!_fileManager.DirectoryExists(machine.SharedPath))
+            if (machine == null || !_fileManager.DirectoryExists(machine.SharedPath))
             {
-                Trace.WriteLine($"Shared storage not available ({machine.SharedPath}). Cannot proceed.");
+                Trace.WriteLine($"Shared storage not available. Cannot proceed.");
                 return actionsCount;
             }
             if (!_fileManager.DirectoryExists(replica.LocalPath))
@@ -258,7 +274,13 @@ namespace AssimilationSoftware.MediaSync.Core
                 return actionsCount;
             }
 
-            var libraryName = _repository.GetLibraryById(replica.LibraryId).Name;
+            var library = _repository.GetLibraryById(replica.LibraryId);
+            if (library == null)
+            {
+                Trace.WriteLine($"Library not found: {replica.LibraryId}");
+                return actionsCount;
+            }
+            var libraryName = library.Name;
             var sharedPath = Path.Combine(machine.SharedPath, libraryName);
             _fileManager.EnsureFolder(sharedPath);
             // 1. Compare the primary index to each remote index to determine each file's state.
@@ -281,7 +303,7 @@ namespace AssimilationSoftware.MediaSync.Core
                 }
             }
 
-            var library = _repository.GetLibraryById(replica.LibraryId);
+            // library already loaded above
             var primaryIndex = _repository.GetFileIndexById(library.PrimaryIndexId);
             if (primaryIndex == null)
             {
@@ -882,7 +904,13 @@ namespace AssimilationSoftware.MediaSync.Core
                 #region 3.4. Copy to shared
                 var sharedSize = _fileManager.SharedPathSize(sharedPath);
                 // Check the drive's available space (ie DriveInfo.AvailableFreeSpace) to keep from using more than 90% of the total space, regardless of reserve.
-                var flashDrive = new DriveInfo(Path.GetPathRoot(Path.GetFullPath(sharedPath)));
+                var root = Path.GetPathRoot(Path.GetFullPath(sharedPath));
+                if (string.IsNullOrEmpty(root))
+                {
+                    Trace.WriteLine($"Unable to determine drive root for {sharedPath}");
+                    return actionsCount;
+                }
+                var flashDrive = new DriveInfo(root);
                 var carefulSpace = Math.Min(flashDrive.AvailableFreeSpace - 0.1 * flashDrive.TotalSize, library.MaxSharedSize);
                 foreach (var s in copyToShared.OrderBy(f => f.RelativePath.Length))
                 {
@@ -983,6 +1011,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public void DeleteFile(string libraryName, string filePath)
         {
             var library = GetLibrary(libraryName);
+            if (library == null) return;
             var file = _repository.GetFileByPath(library.PrimaryIndexId, filePath);
             if (file != null)
             {
@@ -994,6 +1023,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public void UndeleteFile(string libraryName, string filePath)
         {
             var library = GetLibrary(libraryName);
+            if (library == null) return;
             var file = _repository.GetFileByPath(library.PrimaryIndexId, filePath);
             if (file != null)
             {
@@ -1005,6 +1035,7 @@ namespace AssimilationSoftware.MediaSync.Core
         public void MoveReplica(Guid replicaId, string newPath, bool moveFiles)
         {
             var replica = _repository.GetReplicaById(replicaId);
+            if (replica == null) return;
             if (moveFiles)
             {
                 Directory.Move(replica.LocalPath, newPath);
@@ -1030,19 +1061,19 @@ namespace AssimilationSoftware.MediaSync.Core
         private class ReplicaComparison
         {
             internal bool AllSame;
-            internal string Hash;
+            internal string Hash = string.Empty;
             internal int Count;
-            internal List<string> AllHashes;
+            internal List<string> AllHashes = new List<string>();
         }
 
         private class LocalFileHashSet
         {
-            internal FileSystemEntry LocalFileHeader;
-            internal string LocalFileHash;
-            internal FileSystemEntry LocalIndexHeader;
-            internal string LocalIndexHash;
-            internal FileSystemEntry PrimaryHeader;
-            internal string PrimaryHash;
+            internal FileSystemEntry? LocalFileHeader;
+            internal string? LocalFileHash;
+            internal FileSystemEntry? LocalIndexHeader;
+            internal string? LocalIndexHash;
+            internal FileSystemEntry? PrimaryHeader;
+            internal string? PrimaryHash;
         }
         #endregion
     }

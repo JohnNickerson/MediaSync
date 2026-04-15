@@ -1,4 +1,5 @@
-﻿using AssimilationSoftware.MediaSync.Core.Interfaces;
+﻿#nullable enable
+using AssimilationSoftware.MediaSync.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,7 @@ namespace UnitTesting.Mocks
             throw new NotImplementedException();
         }
 
-        public FileSystemEntry TryCreateFileHeader(string localPath, string relativePath)
+        public FileSystemEntry? TryCreateFileHeader(string localPath, string relativePath)
         {
             throw new NotImplementedException();
         }

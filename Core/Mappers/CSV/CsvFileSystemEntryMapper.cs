@@ -49,7 +49,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers.CSV
                         ImportHash = tokens[11],
                     };
                 default:
-                    return null;
+                    throw new InvalidOperationException($"Unknown entry type: {tokens[1]}");
             }
         }
 

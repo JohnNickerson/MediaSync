@@ -74,14 +74,14 @@ namespace AssimilationSoftware.MediaSync.Core.FileManagement
                 };
             }
 
-            return null;
+            throw new FileNotFoundException(fullpath);
         }
 				
 		/// <summary>
 		/// Attempts to create a file header record for a given local file, if present.
 		/// </summary>
 		/// <returns>A FileHeader instance if possible, or null if the file does not exist.</returns>
-		public FileSystemEntry TryCreateFileHeader(string localPath, string relativePath)
+        public FileSystemEntry? TryCreateFileHeader(string localPath, string relativePath)
 		{
 			try
 			{

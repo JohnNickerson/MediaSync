@@ -11,7 +11,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
 {
     public class DataStore
     {
-        private readonly string _path;
+        private readonly string? _path;
         private SingleOriginRepository<FileSystemEntry> Files;
         private SingleOriginRepository<FileIndex> Indexes;
         private SingleOriginRepository<Library> Libraries;
@@ -50,27 +50,27 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
             Replicas.FindAll();
         }
 
-        public FileSystemEntry GetFileSystemEntryById(Guid id)
+        public FileSystemEntry? GetFileSystemEntryById(Guid id)
         {
             return Files.Find(id);
         }
 
-        public FileIndex GetFileIndexById(Guid id)
+        public FileIndex? GetFileIndexById(Guid id)
         {
             return Indexes.Find(id);
         }
 
-        public Library GetLibraryById(Guid id)
+        public Library? GetLibraryById(Guid id)
         {
             return Libraries.Find(id);
         }
 
-        public Machine GetMachineById(Guid id)
+        public Machine? GetMachineById(Guid id)
         {
             return Machines.Find(id);
         }
 
-        public Replica GetReplicaById(Guid? id)
+        public Replica? GetReplicaById(Guid? id)
         {
             return id.HasValue ? Replicas.Find(id.Value) : null;
         }
@@ -105,7 +105,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
             return Files.Items.AsQueryable().Where(predicate).AsEnumerable();
         }
 
-        public virtual FileSystemEntry GetFileByPath(Guid indexId, string relativePath)
+        public virtual FileSystemEntry? GetFileByPath(Guid indexId, string relativePath)
         {
             return Files.Items
                 .FirstOrDefault(f => f.IndexId == indexId &&
@@ -199,37 +199,37 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
             Replicas.Update(entity);
         }
 
-        public void Delete(FileSystemEntry entity)
+        public void Delete(FileSystemEntry? entity)
         {
             if (entity == null) return;
             Files.Delete(entity);
         }
 
-        public void Delete(FileIndex entity)
+        public void Delete(FileIndex? entity)
         {
             if (entity == null) return;
             Indexes.Delete(entity);
         }
 
-        public void Delete(Library entity)
+        public void Delete(Library? entity)
         {
             if (entity == null) return;
             Libraries.Delete(entity);
         }
 
-        public void Delete(Machine entity)
+        public void Delete(Machine? entity)
         {
             if (entity == null) return;
             Machines.Delete(entity);
         }
 
-        public void Delete(Replica entity)
+        public void Delete(Replica? entity)
         {
             if (entity == null) return;
             Replicas.Delete(entity);
         }
 
-        public Machine GetMachineByName(string name)
+        public Machine? GetMachineByName(string name)
         {
             return Machines.Items.FirstOrDefault(m => m.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
         }
@@ -273,7 +273,7 @@ namespace AssimilationSoftware.MediaSync.Core.Mappers
         public void CopyFileSystemEntry(FileSystemEntry fLocalFileHeader, Guid primaryIndexId)
         {
             // Add a new copy of the given file system entry to the given primary index.
-            FileSystemEntry theNewOne = null;
+            FileSystemEntry? theNewOne = null;
             if (fLocalFileHeader is FileHeader file)
             {
                 theNewOne = new FileHeader

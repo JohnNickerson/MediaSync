@@ -36,17 +36,21 @@ namespace AssimilationSoftware.MediaSync.Core.Interfaces
         string[] ListLocalFiles(string path, params string[] searchPatterns);
 
         FileSystemEntry CreateFileHeader(string localPath, string relativePath);
-		
-		/// <summary>
-		/// Attempts to create a file header record for a given local file, if present.
-		/// </summary>
-		/// <returns>A FileHeader instance if possible, or null if the file does not exist.</returns>
-		FileSystemEntry TryCreateFileHeader(string localPath, string relativePath);
-		
+
+        /// <summary>
+        /// Attempts to create a file header record for a given local file, if present.
+        /// </summary>
+        /// <returns>A FileHeader instance if possible, or null if the file does not exist.</returns>
+        FileSystemEntry? TryCreateFileHeader(string localPath, string relativePath);
+
         string GetRelativePath(string fullPath, string basePath);
+
         bool DirectoryExists(string sharedPath);
+
         bool FileExists(string localPath, string relativePath);
+
         string GetConflictFileName(string localFile, string machineId, DateTime now);
+
         #endregion
 
         #region Properties

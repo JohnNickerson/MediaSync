@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>AssimilationSoftware.MediaSync.CLI</RootNamespace>
     <AssemblyName>MediaSync</AssemblyName>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AssemblyCompany>Assimilation Software</AssemblyCompany>
     <AssemblyProduct>MediaSync</AssemblyProduct>
     <Copyright>Copyright © Assimilation Software 2025</Copyright>
